@@ -1,0 +1,86 @@
+@startuml
+scale 350 width
+
+[*] --> CheckCharge
+CheckCharge: DEV3/TOTAL >= DEV3/TOTAL_SP
+
+CheckCharge -right-> ChargeComplete : TRUE
+
+  state ChargeComplete {
+
+    CloseChgDev: (DEV5 == STOP) AND (DEV4 == CLOSE) AND (DEV2 == 0)
+    CloseChgDev --> ChgDevClosed: True
+
+      state ChgDevClosed {
+
+        ChkBlwdn: RP007 == TRUE (if needed)
+        ChkBlwdn --> N2VlvClose: TRUE
+        N2VlvClose: DEV8 == CLOSE
+
+        ChkBlwdn --> BlwdnNeeded: FALSE
+
+
+
+            Blowdown: DEV8 == OPEN
+            Blowdown --> BlwdnTime: TRUE
+
+              BlwdnTime: TIME >= OP005
+              BlwdnTime --> BlwdnComplete: TRUE
+                BlwdnComplete: DEV8 == CLOSE
+                BlwdnComplete --> Pass1: TRUE
+                  Pass1: Test Result
+
+                BlwdnComplete --> FailClose2: FALSE
+                  FailClose2: Test Result
+
+
+              BlwdnTime -up-> BlwdnTime: FALSE
+
+          Blowdown --> FailBlwdn: FALSE
+            FailBlwdn: Test Result
+
+      }
+
+    CloseChgDev --> FailClose1 : False
+      FailClose1: Test result
+  }
+
+  note left of ChargeComplete
+    This part can
+    also be used in
+    Close All Command
+  end note
+
+CheckCharge --> ChargeNotComplete: FALSE
+
+
+  state ChargeNotComplete {
+
+    CheckOwnership: OWNER_ID.CV != "(NONE)"
+    CheckOwnership --> OwnershipLost: FALSE
+    OwnershipLost: Test result
+
+    CheckOwnership --> RightOwnership: TRUE
+
+    state RightOwnership {
+    CheckReqDev : (DEV5 == START) AND (DEV4 == OPEN) AND (DEV8 == OPEN) AND (DEV2 == OP002)
+    CheckReqDev --> DevFail: FALSE
+      DevFail: Test Result
+    CheckReqDev --> ReqDevOpen : TRUE
+
+      state ReqDevOpen {
+      CheckFlowSP: PV_REF >= MINFLOW
+      CheckFlowSP --> Pass2: TRUE
+        Pass2: Test Result
+      CheckFlowSP --> LowFlow: FALSE
+        LowFlow: Test Result
+      }
+
+    }
+
+  }
+
+ChargeComplete --> [*]
+Pass2 -up-> CheckCharge
+
+@enduml
