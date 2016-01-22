@@ -24,7 +24,7 @@ for item in line_index:
     arrow = "-->"
     start = "[*]"
     colon = ":"
-    if not arrows and not start and not colon in line_content[item]:
+    if (arrows and start and colon) not in line_content[item]:
         # ignore unuseful lines
         continue
 
