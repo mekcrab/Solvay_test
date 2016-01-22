@@ -29,7 +29,9 @@ for item in line_index:
         continue
 
     else:
-    # All arrows and colon can be indexed in each line, if any. Then use the index and 0, len(line) to represent "before" and "after". Is there better way to express before and after?
+    # All arrows and colon can be indexed in each line, if any.
+    # Then use the index and 0, len(line) to represent "before" and "after".
+    # Is there better way to express before and after?
 
 
         def reader():
