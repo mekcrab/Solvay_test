@@ -17,8 +17,7 @@ CheckCharge -right-> ChargeComplete : TRUE
         ChkBlwdn --> N2VlvClose: TRUE
         N2VlvClose: DEV8 == CLOSE
 
-        ChkBlwdn --> BlwdnNeeded: FALSE
-
+        ChkBlwdn --> Blowdown: FALSE
 
 
             Blowdown: DEV8 == OPEN
@@ -33,13 +32,14 @@ CheckCharge -right-> ChargeComplete : TRUE
                 BlwdnComplete --> FailClose2: FALSE
                   FailClose2: Test Result
 
-
               BlwdnTime -up-> BlwdnTime: FALSE
 
           Blowdown --> FailBlwdn: FALSE
             FailBlwdn: Test Result
 
+
       }
+
 
     CloseChgDev --> FailClose1 : False
       FailClose1: Test result
