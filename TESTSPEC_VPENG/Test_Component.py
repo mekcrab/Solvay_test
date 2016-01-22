@@ -17,7 +17,6 @@ line_content = diagram.readlines() #type(lines) = 'List' so we can read the txt 
 line_index = [l for l in range(0,len(line_content)-1)]
 
 
-
 for item in line_index:
     #start reading: line_content[item]; use line_content[item].lstrip() to remove whitespace before the code
     #data mining?
