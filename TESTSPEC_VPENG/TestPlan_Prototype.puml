@@ -1,0 +1,33 @@
+@startuml
+scale 350 width
+
+[*] --> ParentState
+ParentState: CheckPoint1
+
+ParentState --> Domain1: Condition1
+ParentState --> Domain2: Condition2
+
+state Domain1{
+
+SubState_before1 --> SubState_after1: Condition3
+SubState_before1: CheckPoint2
+
+SubState_after1 --> SubState_after_after1: Condition4
+SubState_after1: CheckPoint3
+
+
+}
+
+
+state Domain2{
+
+SubState_before2 --> SubState_after2: Condition3
+SubState_before2: CheckPoint2
+
+SubState_after2 --> SubState_after_after2: Condition4
+SubState_after2: CheckPoint3
+
+}
+
+
+@enduml
