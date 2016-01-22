@@ -1,0 +1,25 @@
+@startuml
+scale 350 width
+
+Tripped --> NotTripped: Reset True
+NotTripped --> Tripped: Causes True
+
+state NotTripped
+NotTripped: CV-2473/PV_D.CV = CLOSED
+
+
+state Tripped{
+    [*] --> Effect1
+    [*] --> Effect2
+    [*] --> Effect3
+
+    Effect1 : CV-3008 Passive
+    Effect2 : HS-406 Stopped
+    Effect3 : PIC-1854/OUT.CV = 0
+
+    Effect1 --> [*]
+    Effect2 --> [*]
+    Effect3 --> [*]
+}
+
+@enduml

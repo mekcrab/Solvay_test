@@ -1,0 +1,74 @@
+@startuml
+scale 500 width
+
+title S_EMC_CHARGE - TK-36
+
+state ChargeCmd{
+
+    [*] -right-> WaitForCharge
+
+    WaitForCharge : Wait for charge request from reactor
+
+    WaitForCharge --> Setup
+
+    state Setup{
+        Setup: Set CONTROL_VALVE/MODE
+        Setup: Reset FQIC/TOTAL
+        Setup: Reset FQIC/TARGET
+    }
+
+    Setup --> Charge
+
+    state Charge{
+      [*] --> Operator : OWNER_ID=Operator
+      [*] --> Recipe : OWNER_ID!=Operator
+
+      state Operator : Prompt CHARGE_QTY
+
+      state Recipe : Calculate CHARGE_QTY
+
+      Operator --> PrepTank : FQIC/TARGET = CHARGE_QTY
+      Recipe --> PrepTank : FQIC/TARGET = CHARGE_QTY
+
+      PrepTank : Open bottom valve
+      PrepTank : Start pump
+      PrepTank : Set recirc valve
+
+      PrepTank --> Feed
+
+      Feed : Reset interlock
+      Feed : Open reactor valve
+      Feed : Flow control valve mode = AUTO
+
+      Feed --> Dribble : Control valve SP > 100 \n AND \n Mode = AUTO
+      Feed --> Dribble : Control valve OUT > 20 \n AND \n Mode = MAN
+
+      Dribble : Control valve action = 0.5 * (current action)
+
+      Dribble -right-> StopCharge : FQIC/TOTAL = FQIC/TARGET
+    }
+
+    state StopCharge{
+        [*] --> CloseValves
+        CloseValves --> Blowdown
+        Blowdown --> StopPump : No pending requests
+        Blowdown --> WaitForCharge : Pending charge request
+
+        state CloseValves{
+            CloseValves: Close all valves
+        }
+
+        state Blowdown{
+          Blowdown: Open N2 Valve for 5 seconds
+        }
+    }
+
+    state StopPump{
+      StopPump: Shut off MCA pump
+    }
+
+    StopPump -down-> WaitForCharge
+
+}
+
+@enduml

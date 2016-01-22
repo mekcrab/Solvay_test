@@ -1,0 +1,105 @@
+Aliases:
+
+@FQIC = DEV1
+@bottom valve
+
+@startuml
+scale 30 width
+
+title S_EMC_CHARGE - TK-36
+
+state ChargeCmd{
+
+    [*] --> WaitForCharge
+
+    WaitForCharge : Wait for charge request from reactor
+
+    Setup --> WaitForCharge : Charge active
+    WaitForCharge --> Setup : DEST_TANK = [R6, R9, R10]
+
+    state Setup{
+        Setup: Set CONTROL_VALVE/MODE
+        Setup: Reset FQIC/TOTAL
+        Setup: Reset FQIC/TARGET
+    }
+
+    Setup --> Charge
+
+    state Charge{
+      [*] --> Operator : OWNER_ID=Operator
+      [*] --> Recipe : OWNER_ID!=Operator
+      [*] --> StopCharge : FQIC/TOTAL = FQIC/TARGET
+
+      state Operator : Prompt CHARGE_QTY
+
+      state Recipe : Calculate CHARGE_QTY
+
+      Operator --> PrepTank : FQIC/TARGET = CHARGE_QTY
+      Recipe --> PrepTank : FQIC/TARGET = CHARGE_QTY
+
+      PrepTank : Open bottom valve
+      PrepTank : Start pump
+      PrepTank : Set recirc valve
+
+      PrepTank --> Feed
+
+      Feed : Reset interlock
+      Feed : Open reactor valve
+      Feed : Flow control valve mode = AUTO
+
+      Feed --> Dribble : Control valve SP > 100 \n AND \n Mode = AUTO
+      Feed --> Dribble : Control valve OUT > 20 \n AND \n Mode = MAN
+
+      Dribble : Control valve action = 0.5 * (current action)
+
+      Dribble --> StopCharge : FQIC/TOTAL = FQIC/TARGET
+    }
+
+    state StopCharge{
+        [*] --> CloseValves
+        CloseValves --> Blowdown
+        Blowdown --> StopPump : No pending requests
+        Blowdown -left-> WaitForCharge : Pending charge request
+
+        state CloseValves{
+            CloseValves: Close all valves
+        }
+
+        state Blowdown{
+          Blowdown: Open N2 Valve for 5 seconds
+        }
+
+        state StopPump{
+          StopPump: Shut off MCA pump
+        }
+    }
+
+    StopPump --> WaitForCharge
+
+}
+
+@enduml
+
+# Any text is permissable ourside of @startuml, @enduml tags
+
+# State specifications, in addition to project standards, go here.
+# Basic grammar is: when <state_id> if <ATTRIBUTE conditional>
+#        then <action pseudocode or ATTRIBUTE condition>
+
+# Test rules will be confined to a set of @startrules, @endrules tags
+@startrules
+
+when Charge if OWNER_ID.CV = "(NONE)" then A_TARGET.CV = HOLD
+
+when Charge if OP001 < FQIC/TOTAL then StopCharge
+
+when ChargeCmd if DEVx/FAILURE.CV = TRUE then
+                            A_TARGET.CV = HOLD
+                            MONITOR/FAILURE.CV != ""
+
+when PrepTank if OP001_VALUE.CV < TP001_VALUE.CV then StopCharge
+
+when Feed if CANCEL_ALL = _CANCEL_WAIT:Cancelled then
+                            Dribble
+
+@endrules
