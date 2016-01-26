@@ -1,0 +1,54 @@
+@startuml
+scale 350 width
+
+[*] --> Acquire
+
+state Acquire {
+  Acquire: DEV_LIST = [#TANK_WEIGHT#, #TK15_WEIGHT#]
+  Acquire : PARAM_LIST = [R_BATCHSIZE, R_A165_PCT, R_A165_FLOW, P_A165_TGT]
+  !include Standard_Procedures/Acquire.puml
+}
+
+Acquire --> Charge
+
+state Charge{
+
+    Charge: [HMxxx ACTIVE for HM in HM_LIST]
+    Charge: [SMxxx ACTIVE for SM in SM_LIST]
+
+    [*] --> SP
+
+    state "SetPressure" as SP{
+        SP : #RX_PRESS_EM#/SETPOINT = R_A165_PAD_SP * 2
+        SP : #RX_PRESS_EM#/LAST_VALUE = R_A165_PAD_SP
+        SP : #RX_PRESS_EM#: PRESSURE AUTO
+    }
+
+    SP --> ST
+
+    state "SetTemperature" as ST{
+        ST : #RX_JKT_CTRL_EM#/SETPOINT = R_A165_TEMP_SP
+        ST : #RX_JKT_CTRL_EM#: COOL
+    }
+
+    ST --> RT
+
+    state "ResetTotalizers" as RT{
+        RT : #RX_TARE2#/TOT_RESET = TRUE
+    }
+
+    RT --> Charge_A165
+
+    state Charge_A165{
+        Charge_A165 : Calculate P_A165_TGT:
+        Charge_A165 : \tP_TARGET = #THISUNIT#/OP001_VALUE * R_A165_PCT
+
+        Charge_A165 : TK_15_EM:CHARGE
+    }
+        Charge_A165 -->[*] : TK_15_EM: COMPLETE
+}
+
+Charge --> [*]
+
+
+@enduml

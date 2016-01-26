@@ -1,0 +1,23 @@
+@startuml
+scale 350 width
+[*] --> AcquireDevices
+
+state AcquireDevices{
+    AcquireDevices: [OWNER_ID = THIS_UNIT for DEV in DEVICE_LIST]
+
+}
+
+AcquireDevices --> ConfigureParams
+
+state ConfigureParams {
+  ConfigureParams : [OP_xxx = BATCH_PARAM_xxx for PARAM in PARAM_LIST]
+}
+
+ConfigureParams -down-> [*] : All parameters written
+ConfigureParams --> NAcqOAR : DEV not acquired
+
+NAcqOAR : PROMPT_YESNO <Devices not acquired?>
+NAcqOAR --> AcquireDevices: Yes
+NAcqOAR --> NAcqOAR : No
+
+@enduml
