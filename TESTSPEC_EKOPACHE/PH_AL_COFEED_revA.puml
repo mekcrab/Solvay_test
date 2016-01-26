@@ -1,5 +1,5 @@
 @startuml
-scale 350 width
+scale 400 width
 
 [*] --> StartCooling
 
@@ -12,23 +12,38 @@ state Acquire{
     !include Standard_Procedures/Acquire.puml
 }
 
-Acquire --> ResetTotalizers
-
-state ResetTotalizers{
-    !include Standard_Procedures/ResetTotalizer.puml
-    RESET_TOTAL(PT7_CHG_EM, [*])
-    RESET_TOTAL(NAOH_CHG_EM, [*])
-}
-
-ResetTotalizers --> CalcFeedQty
+Acquire --> CalcFeedQty
 
 CalcFeedQty : R_ACL_TGT = R_BATCHSIZE * R_ACL_PCT
 
-CalcFeedQty --> VentRx
+CalcFeedQty --> ResetTotalizers
+
+state ResetTotalizers{
+    !include Standard_Procedures/ResetTotalizer.puml
+    [*] --> PT7_CHG_EM_Totalizer_Reset : PT-7/LEVEL >= (AC_TGT * 0.95)
+    [*] --> PromptRefill : PT-7/LEVEL < (AC_TGT * 0.95)
+
+    PromptRefill : Prompt_YESNO <Refill PT-7, YES to continue.>
+    PromptRefill --> PromptRefill : NO
+    PromptRefill --> PT7_CHG_EM_Totalizer_Reset : YES
+
+    RESET_TOTAL(PT7_CHG_EM, PromptUse)
+
+    PromptUse : P_TANK_EMPTY = \n Prompt_YESNO <Will the shot tank be emptied on this batch?>
+    PromptUse --> [*]
+    --
+    RESET_TOTAL(NAOH_CHG_EM, [*])
+    --
+    RESET_TOTAL(RX_TARE, [*])
+}
+
+ResetTotalizers --> VentRx
 
 state VentRx{
+    VentRx : [HMaaa, SMbbb] ACTIVE
+
     !include Standard_Procedures/SetPressure.puml
-    SET_PRESSURE(RX_PRESS_EM, R_VENTSP, VENT_TO_SCRUBBER, WaitVent)
+    SET_PRESSURE(RX_PRESS_EM, R_VENTSP, VENT TO SCRUBBER, WaitVent)
     }
 
 WaitVent : RX_PRESS_EM/PV >= 0.5 psig
@@ -40,10 +55,45 @@ state Cofeed{
     Cofeed : [SMxxx, SMyyy, SMzzz] ACTIVE
 
     !include Standard_Procedures/StartCharge.puml
-    [*] --> AClCharge
-    [*] --> NaOHCharge
-    START_CHARGE(ACl, PT7_CHG_EM, R_ACL_TGT, R_ACL_FLOW, CHARGE, [*])
-    START_CHARGE(NaOH, TK50_CHG_EM, AC_TGT, AC_FLOW, CHARGE, [*])
+
+    [*] --> StartCharge
+
+    state StartCharge{
+        StartCharge : USM/TIMR1 RESET
+        StartCharge : TK50_SRC_EM: RUN
+    }
+
+    StartCharge --> AClCharge
+    StartCharge --> NaOHCharge
+
+    START_CHARGE(ACl, PT7_CHG_EM, R_ACL_TGT*0.9, R_ACL_FLOW, CHARGE, pH_Control)
+    START_CHARGE(NaOH, TK50_CHG_EM, AC_TGT, AC_FLOW, CHARGE, pH_Control)
+
+    state pH_Control{
+        pH_Control : TK50_CHG_EM/PH_CONTROL = TRUE
+
+        [*] --> ACl_Main_Charge
+
+        ACl_Main_Charge : ACl_FQIC/TOTAL < R_ACL_TGT*0.9
+
+        ACl_Main_Charge --> CloseACl_N2 : P_TANK_EMPTY = FALSE (NO)
+        ACl_Main_Charge --> AClFinish : P_TANK_EMPTY = TRUE (YES)
+
+        AClFinish : ACl_FQIC/TOTAL < (R_ACL_TGT - 100lbs)
+
+        AClFinish --> CloseACl_N2
+
+        state CloseACl_N2{
+            CloseACl_N2 : PT7_CHG_EM: CLOSE_N2_SUPPLY
+        }
+        CloseACl_N2 --> CompleteCharge
+
+        CompleteCharge : PT7_CHG_EM: CLOSE ALL
+        CompleteCharge : TK50_CHG_EM: CLOSE ALL
+        CompleteCharge : TK50_SRC_MGR: AUTOMATIC
+
+        CompleteCharge --> [*]
+    }
 }
 
 Cofeed --> StartHeating
@@ -51,7 +101,6 @@ Cofeed --> StartHeating
 state StartHeating{
     SET_TEMP(RX_JKT_CTRL_EM, R_TEMP_SP, HEAT, [*])
 }
-
 
 StartHeating --> [*]
 
