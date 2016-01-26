@@ -1,0 +1,58 @@
+@startuml
+scale 350 width
+
+[*] --> StartCooling
+
+state StartCooling{
+    !include Standard_Procedures/SetTemperature.puml
+    SET_TEMP(RX_JKT_CTRL_EM, R_TEMP_SP, COOL, Acquire)
+}
+
+state Acquire{
+    !include Standard_Procedures/Acquire.puml
+}
+
+Acquire --> ResetTotalizers
+
+state ResetTotalizers{
+    !include Standard_Procedures/ResetTotalizer.puml
+    RESET_TOTAL(PT7_CHG_EM, [*])
+    RESET_TOTAL(NAOH_CHG_EM, [*])
+}
+
+ResetTotalizers --> CalcFeedQty
+
+CalcFeedQty : R_ACL_TGT = R_BATCHSIZE * R_ACL_PCT
+
+CalcFeedQty --> VentRx
+
+state VentRx{
+    !include Standard_Procedures/SetPressure.puml
+    SET_PRESSURE(RX_PRESS_EM, R_VENTSP, VENT_TO_SCRUBBER, WaitVent)
+    }
+
+WaitVent : RX_PRESS_EM/PV >= 0.5 psig
+
+WaitVent --> Cofeed : RX_PRES_EM/PV < 0.5 psig
+
+state Cofeed{
+    Cofeed : [HMxxx, HMyyy, HMzzz] ACTIVE
+    Cofeed : [SMxxx, SMyyy, SMzzz] ACTIVE
+
+    !include Standard_Procedures/StartCharge.puml
+    [*] --> AClCharge
+    [*] --> NaOHCharge
+    START_CHARGE(ACl, PT7_CHG_EM, R_ACL_TGT, R_ACL_FLOW, CHARGE, [*])
+    START_CHARGE(NaOH, TK50_CHG_EM, AC_TGT, AC_FLOW, CHARGE, [*])
+}
+
+Cofeed --> StartHeating
+
+state StartHeating{
+    SET_TEMP(RX_JKT_CTRL_EM, R_TEMP_SP, HEAT, [*])
+}
+
+
+StartHeating --> [*]
+
+@enduml

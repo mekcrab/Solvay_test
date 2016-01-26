@@ -1,0 +1,16 @@
+@startuml
+scale 350 width
+!definelong START_CHARGE(material_name,charge_em,charge_sp,charge_flow,charge_cmd,charge_next)
+    !define mat_id material_name
+    !define CHG_NAME(mat_id) mat_id##Charge
+
+    state CHG_NAME(mat_id) {
+        CHG_NAME(mat_id) : charge_em##/TARGET = charge_sp
+        CHG_NAME(mat_id) : charge_em##/FLOW = charge_flow
+        CHG_NAME(mat_id) : charge_em##: charge_cmd
+    }
+    CHG_NAME(mat_id) --> charge_next
+
+!enddefinelong
+
+@enduml

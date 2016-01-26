@@ -1,0 +1,15 @@
+@startuml
+scale 350 width
+
+!definelong SET_PRESSURE(pres_em,pres_setpoint,pres_command,pres_next)
+
+state "SetPressure" as SP{
+    SP : pres_em/SETPOINT = pres_setpoint
+    SP : pres_em : pres_command
+}
+
+SP --> pres_next
+
+!enddefinelong
+
+@enduml

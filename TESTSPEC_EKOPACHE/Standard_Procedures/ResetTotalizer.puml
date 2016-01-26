@@ -1,0 +1,15 @@
+@startuml
+scale 350 width
+
+!definelong RESET_TOTAL(totalizer_name,RT_next)
+    !define dev_id totalizer_name
+    !define RT_NAME(dev_id) dev_id##_Totalizer_Reset
+
+    state RT_NAME(dev_id){
+        RT_NAME(dev_id) : dev_id##/TOTAL_RESET = TRUE
+    }
+    RT_NAME(dev_id) --> RT_next
+
+!enddefinelong
+
+@enduml

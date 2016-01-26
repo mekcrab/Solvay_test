@@ -1,0 +1,17 @@
+@startuml
+scale 350 width
+
+!definelong SET_TEMP(temp_em,temp_setpoint,temp_command,temp_next)
+    !define cmd temp_command
+    !define TEMP_STATE(cmd) cmd##_Control
+
+    state TEMP_STATE(cmd){
+        TEMP_STATE(cmd) : temp_em/SETPOINT = temp_setpoint
+        TEMP_STATE(cmd) : temp_em:temp_command
+    }
+
+TEMP_STATE(cmd) --> temp_next
+
+!enddefinelong
+
+@enduml
