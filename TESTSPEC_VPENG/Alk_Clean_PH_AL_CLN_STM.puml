@@ -1,0 +1,74 @@
+@startuml
+scale 550 width
+
+[*] --> TaskPointer0: TASK_PTR = 0
+[*] --> TaskPointer1: TASK_PTR = 1
+[*] --> TaskPointer2: TASK_PTR = 2
+[*] --> TaskPointer3: TASK_PTR = 3
+[*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer99: TASK_PTR = 99
+
+
+TaskPointer0: Initialize Phase
+state TaskPointer0{
+
+PromptOK: Set up reactor for steamout. Rinse Reactor. \n Open Valve. Program Steams
+PromptOK -up-> PromptOK: No
+
+PromptOK --> PromptIn1: OK
+PromptIn1: Declare Cleanout Time ( Small, Medium or Lagre)
+PromptIn1 -up-> PromptIn1: No Response
+
+PromptIn1 --> PromptIn2: Responsed
+PromptIn2: Confirm Cleaning Time
+PromptIn2 -up-> PromptIn2: No
+
+}
+
+
+TaskPointer1:  Acquire Equipment \n Set OAR Prompt \n Reset Hold_REQ
+
+state TaskPointer1 {
+
+PromptIn2 --> AcquireEquipment: Yes
+AcquireEquipment --> SetOAR: Acquire Failed
+SetOAR --> HOLD_REQ
+AcquireEquipment --> HOLD_REQ: Device Acquired
+
+}
+
+
+
+TaskPointer2: Set HM and SM \n Acquire CMs
+
+state TaskPointer2 {
+
+AcquireEquipment --> SetMonitors: Device Acquired
+HOLD_REQ --> SetMonitors
+SetMonitors --> InitializeCM
+
+
+}
+
+
+
+
+TaskPointer3: Start Cleaning
+
+state TaskPointer3 {
+
+InitializeCM --> OpenSteam
+OpenSteam --> CloseSteam: Reactor Temp \n > Clean Temp
+OpenSteam: Agitator, Condensate Block vlv, ovhd block valve \n Recirc valve, dump valve, steam valve to spray balls
+CloseSteam: Agitator, Condensate Block vlv, \n ovhd block valve, Recirc valve, dump valve
+
+}
+
+CloseSteam --> TaskPointer4
+TaskPointer4: Disable HM and SM
+
+TaskPointer4 --> TaskPointer99
+TaskPointer99: Final Step
+
+TaskPointer99 --> [*]
+@enduml
