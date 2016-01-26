@@ -19,7 +19,7 @@ PromptOK --> PromptIn1: OK
 PromptIn1: Declare Cleanout Time ( Small, Medium or Lagre)
 PromptIn1 -up-> PromptIn1: No Response
 
-PromptIn1 --> PromptIn2: Responsed
+PromptIn1 --> PromptIn2: Responded
 PromptIn2: Confirm Cleaning Time
 PromptIn2 -up-> PromptIn2: No
 
