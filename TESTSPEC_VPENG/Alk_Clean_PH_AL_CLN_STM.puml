@@ -51,8 +51,6 @@ SetMonitors --> InitializeCM
 }
 
 
-
-
 TaskPointer3: Start Cleaning
 
 state TaskPointer3 {
