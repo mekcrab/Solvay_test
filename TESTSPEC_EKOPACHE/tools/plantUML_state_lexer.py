@@ -3,8 +3,9 @@ Python module for lexing plantUML state diagrams.
 '''
 __author__ = 'ekopache'
 
+import re
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Name, Text
+from pygments.token import Name, Text, Error
 
 # token definitions
 
@@ -21,62 +22,158 @@ IGNORE = Text # stuff to ignore
 class puml_state_lexer(RegexLexer):
 
     # regex mode flags
-    # flags = re.XXX    # (not used)
+    flags = re.MULTILINE
 
     tokens = {
-
         'root': [
-            (r'(?i)^(hide|show)?[\s ]*footbox$', IGNORE),
-            (r'(?i)^(left[\s ]to[\s ]right|top[\s ]to[\s ]bottom)[\s ]+direction$', IGNORE),
-            (r'^(?:state[\s ]+)(?:([\p{L}0-9_.]+)[\s ]+as[\s ]+["“”«»]([^"“”«»]+)["“”«»]|["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+([\p{L}0-9_.]+)|([\p{L}0-9_.]+)|["“”«»]([^"“”«»]+)["“”«»])[\s ]*(\<\<.*\>\>)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])?[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*(?:##(?:\[(dotted|dashed|bold)\])?(\w+)?)?[\s ]*(?::[\s ]*(.*))?$', IGNORE, 'state'),            (r'^([\p{L}0-9_.]+|[\p{L}0-9_.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\p{L}0-9_.]+)(?:==+))[\s ]*(\<\<.*\>\>)?[\s ]*(#\w+)?[\s ]*(x)?(-+)(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?(left|right|up|down|le?|ri?|up?|do?)?(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?(-*)\>(o[\s ]+)?[\s ]*([\p{L}0-9_.]+|[\p{L}0-9_.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\p{L}0-9_.]+)(?:==+))[\s ]*(\<\<.*\>\>)?[\s ]*(#\w+)?[\s ]*(?::[\s ]*([^"“”«»]+))?$', STATE),
-            (r'^state[\s ]+(?:([\p{L}0-9_.]+)[\s ]+as[\s ]+["“”«»]([^"“”«»]+)["“”«»]|(?:["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+)?([\p{L}0-9_.]+))[\s ]*(\<\<.*\>\>)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])?[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*(?:##(?:\[(dotted|dashed|bold)\])?(\w+)?)?(?:[\s ]*\{|[\s ]+begin)$', IGNORE, 'state'),
-            (r'(?i)^(end[\s ]?state|\})$', IGNORE, '#pop'),
-            (r'^(?:([\p{L}0-9_.]+)|["“”«»]([^"“”«»]+)["“”«»])[\s ]*:[\s ]*(.*)$', SATTR),
-            (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate
+            (r'(?i)^(hide|show)?[\s]*footbox$', IGNORE),
+            (r'(?i)^(left[\s]to[\s]right|top[\s]to[\s]bottom)[\s]+direction$', IGNORE),
+            (r'^(?:state[\s]+)'\
+                 # non-cap ( "STATE" as IGNORE | STATE as "IGNORE" )
+                '(?:([\w\.]+)[\s]+as[\s]+["]([^"]+)["]|["]([^"]+)["][\s]+as[\s]+([\w\.]+)|'\
+                # STATE | "STATE"
+                '([\w\.]+)|["]([^"]+)["])'\
+                # <<IGNORE>>,
+                '[\s]*(\<\<.*\>\>)?[\s]*'\
+                    # ([["IGNORE"]|[IGNORE]])
+                    '(\[\[(["][^"]+["]|[^{}\s\]\[]*)'\
+                    # non-cap inner state defs {} - RECURSIVE REGEX
+                    '(?:[\s]*\{([^{}]+)\})?'\
+                    # non-cap  inner defs [] - more recursion
+                    '(?:[\s]*([^\]\[]+))?\]\])?'\
+                    # hash then words
+                    '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
+                    # non-cap ((non-cap string elide or [text format])?
+                    '(?:##(?:\[(dotted|dashed|bold)\])?'\
+                        # words)
+                        '(\w+)?)?'\
+                    # non-cap state attribute
+                    '[\s]*(?::[\s]*(.*))?$',
+                                    bygroups(STATE, IGNORE, STATE, IGNORE,
+                                             STATE, STATE,
+                                             IGNORE,
+                                             IGNORE, IGNORE,
+                                             IGNORE,
+                                             IGNORE,
+                                             IGNORE, IGNORE, IGNORE,
+                                             SATTR),),
+            (# TSOURCE
+             r'^([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
+             # <<IGNORE>>
+             '[\s]*(\<\<.*\>\>)?[\s]*'\
+             # IGNORE, IGNORE, IGNORE (transition start -)
+             '(#\w+)?[\s]*(x)?(-+)'\
+             # IGNORE
+             '(?:\[('\
+                '(?:#\w+|dotted|dashed|bold|hidden)'\
+                '(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
+             #IGNORE (arrow direction)
+             '(left|right|up|down|le?|ri?|up?|do?)?'\
+             #IGNORE (formatting)
+             '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
+             # IGNORE(transition end ->), IGNORE
+             '(-*)\>(o[\s]+)?[\s]*'\
+             # TDEST
+             '([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
+             # <<IGNORE>>
+             '[\s]*(\<\<.*\>\>)?[\s]*'\
+             # hash words IGNORE
+             '(#\w+)?[\s]*'\
+             # TATTR
+             '(?::[\s]*([^"]+))?$',
+                                 bygroups(TSOURCE,
+                                          IGNORE,
+                                          IGNORE, IGNORE, IGNORE,
+                                          IGNORE,
+                                          IGNORE,
+                                          IGNORE,
+                                          IGNORE, IGNORE,
+                                          TDEST,
+                                          IGNORE,
+                                          IGNORE,
+                                          TATTR)   ), #transition definition
+            (# IGNORE
+             r'^state[\s]+'\
+             # STATE as "IGNORE", "STATE" as IGNORE, STATE
+             '(?:([\w\.]+)[\s]+as[\s]+["]([^"]+)["]|(?:["]([^"]+)["][\s]+as[\s]+)?([\w\.]+))[\s]*'\
+             # <<IGNORE>>, [["IGNORE"]]
+             '(\<\<.*\>\>)?[\s]*(\[\[(["][^"]+["]|[^{}\s\]\[]*)'\
+                # non-cap
+                '(?:[\s]*'\
+                # IGNORE
+                '\{([^{}]+)\})?'\
+                # IGNORE
+                '(?:[\s]*([^\]\[]+))?\]\])?'\
+                # hash words IGNORE
+                '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
+            # IGNORE formatting
+            '(?:##(?:\[(dotted|dashed|bold)\])?'\
+                # IGNORE
+                '(\w+)?)?'\
+                           '(?:[\s]*\{|[\s]+begin)$', bygroups(STATE, IGNORE, STATE, IGNORE, STATE,
+                                                            IGNORE, IGNORE,
+                                                            IGNORE,
+                                                            IGNORE,
+                                                            IGNORE,
+                                                            IGNORE,
+                                                            IGNORE), 'state'),
+            (r'(?i)^(end[\s]?state|\})$', IGNORE, '#pop'),
+            (r'^(?:([\w\.]+)|["]([^"]+)["])'\
+             '[\s]*:[\s]*'\
+             '(.*)$', bygroups(STATE, STATE, SATTR), ),
+            (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate (-- or ||)
             # START note
-            (r'^note[\s +(right|left|top|bottom)(?:[\s ]+of[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])|)[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*\{?$', IGNORE, 'note'),
-            (r'(?i)^(hide|show)[\s ]+empty[\s ]+description$', IGNORE),
-            (r'^note[\s ]+(right|left|top|bottom)(?:[\s ]+of[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])|)[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*:[\s ]*(.*)$', IGNORE),
-            (r'^note[\s ]+(right|left|top|bottom)?[\s ]*on[\s ]+link[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*:[\s ]*(.*)$', IGNORE),
+            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
+            (r'(?i)^(hide|show)[\s]+empty[\s]+description$', IGNORE),
+            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
+            (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
             # START note
-            (r'^note[\s ]+(right|left|top|bottom)?[\s ]*on[\s ]+link[\s ]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
-            (r'(?i)^url[\s ]*(?:of|for)?[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])[\s ]+(?:is)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])$', IGNORE),
-            (r'^note[\s ]+["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+([\p{L}0-9_.]+)[\s ]*(#\w+[-\\|/]?\w+)?$', IGNORE),
+            (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
+            (r'(?i)^url[\s]*(?:of|for)?[\s]+([\w\.]+|["][^"]+["])[\s]+(?:is)?[\s]*(\[\[(["][^"]+["]|[^{}\s\]\[]*)(?:[\s]*\{([^{}]+)\})?(?:[\s]*([^\]\[]+))?\]\])$', IGNORE),
+            (r'^note[\s]+["]([^"]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE),
             # START note
-            (r'^(note)[\s ]+as[\s ]+([\p{L}0-9_.]+)[\s ]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
+            (r'^(note)[\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # blank lines
-            (r'(?i)^[\s ]*$', IGNORE),
-            (r"(?i)^[\s ]*(['‘’].*||/['‘’].*['‘’]/[\s ]*)$", IGNORE), # comment
+            (r'(?i)^[\s]*$', IGNORE),
+            (r"(?i)^[\s]*(['].*||/['].*[']/[\s]*)$", IGNORE), # comment
             # START Comment
-            (r"(?i)^[\s ]*/['‘’].*$", IGNORE, 'comment'),
-            (r'(?i)^!pragma[\s ]+([A-Za-z_][A-Za-z_0-9]*)(?:[\s ]+(.*))?$', IGNORE, ), # pre-processor definitions
-            (r'(?i)^title(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$', IGNORE, ), # diagram title
+            (r"(?i)^[\s]*/['].*$", IGNORE, 'comment'),
+            (r'(?i)^!pragma[\s]+([A-Za-z_][A-Za-z_0-9]*)(?:[\s]+(.*))?$', IGNORE, ), # pre-processor definitions
+            (r'(?i)^title(?:[\s]*:[\s]*|[\s]+)(.*[\w\.].*)$', IGNORE, ), # diagram title
             # START title
             (r'(?i)^title$', IGNORE, 'title'),
-            # legend state
-            (r'START: ^legend(?:[\s ]+(top|bottom))?(?:[\s ]+(left|right|center))?$', IGNORE, ),
-            (r'(?i)^(?:(left|right|center)?[\s ]*)footer(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$', IGNORE, ),
-            # footer state
-            (r'START: (?i)^(?:(left|right|center)?[\s ]*)footer$', IGNORE, ),
-            (r'(?i)^(?:(left|right|center)?[\s ]*)header(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$', IGNORE, ),
-            (r'START: (?i)^(?:(left|right|center)?[\s ]*)header$', IGNORE, ),
-            (r'(?i)^(skinparam|skinparamlocked)[\s ]+([\w.]*(?:\<\<.*\>\>)?[\w.]*)[\s ]+([^{}]*)$', IGNORE, ),
-            (r'BRACKET: (?i)^skinparam[\s ]*(?:[\s ]+([\w.]*(?:\<\<.*\>\>)?[\w.]*))?[\s ]*\{$', IGNORE, ),
-            (r'(?i)^minwidth[\s ]+(\d+)$', IGNORE, ),
-            (r'(?i)^rotate$', IGNORE, ),
-            (r'(?i)^scale[\s ]+([0-9.]+)(?:[\s ]*/[\s ]*([0-9.]+))?$', IGNORE, ),
-            (r'(?i)^scale[\s ]+([0-9.]+)[\s ]*[*x][\s ]*([0-9.]+)$', IGNORE, ),
-            (r'(?i)^scale[\s ]+([0-9.]+)[\s ]+(width|height)$', IGNORE, ),
+            # START legend state
+            (r'^legend(?:[\s]+(top|bottom))?(?:[\s]+(left|right|center))?$', IGNORE, 'legend'),
 
-            (r'(?i)^!transformation[\s ]+([^{}]*)$', IGNORE, ),
-            (r'START: (?i)^!transformation[\s ]+\{[\s ]*$', IGNORE, ),
-            (r'(?i)^(hide|show)[\s ]+unlinked$', IGNORE, ),
-            # sprite state
-            (r'START: ^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*(?:\[(\d+)x(\d+)/(\d+)(z)?\])?[\s ]*\{$', IGNORE, ),
-            (r'^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*(?:\[(\d+)x(\d+)/(\d+)(z)\])?[\s ]+([-_A-Za-z0-9]+)$', IGNORE, ),
-            (r'^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*[\s ]+(.*)$', IGNORE, ),
-            (r'^(hide|show)[\s ]+((?:public|private|protected|package)?(?:[,\s ]+(?:public|private|protected|package))*)[\s ]+(members?|attributes?|fields?|methods?)$', IGNORE, ),
-            (r'^(hide|show)[\s ]+(?:(class|interface|enum|annotation|abstract|[\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»]|\<\<.*\>\>)[\s ]+)*?(?:(empty)[\s ]+)?(members?|attributes?|fields?|methods?|circle\w*|stereotypes?)$', IGNORE, ),
+            (r'(?i)^(?:(left|right|center)?[\s]*)footer(?:[\s]*:[\s]*|[\s]+)(.*[\w\.].*)$', IGNORE, ),
+            # START footer state
+            (r'(?i)^(?:(left|right|center)?[\s]*)footer$', IGNORE, 'footer'),
+
+            (r'(?i)^(?:(left|right|center)?[\s]*)header(?:[\s]*:[\s]*|[\s]+)(.*[\w\.].*)$', IGNORE, ),
+            # START header state
+            (r'(?i)^(?:(left|right|center)?[\s]*)header$', IGNORE, 'header'),
+            (r'(?i)^(skinparam|skinparamlocked)[\s]+([\w.]*(?:\<\<.*\>\>)?[\w.]*)[\s]+([^{}]*)$', IGNORE, ),
+            (r'BRACKET: (?i)^skinparam[\s]*(?:[\s]+([\w.]*(?:\<\<.*\>\>)?[\w.]*))?[\s]*\{$', IGNORE, ),
+            (r'(?i)^minwidth[\s]+(\d+)$', IGNORE, ),
+            (r'(?i)^rotate$', IGNORE, ),
+            (r'(?i)^scale[\s]+([0-9.]+)(?:[\s]*/[\s]*([0-9.]+))?$', IGNORE, ),
+            (r'(?i)^scale[\s]+([0-9.]+)[\s]*[*x][\s]*([0-9.]+)$', IGNORE, ),
+            (r'(?i)^scale[\s]+([0-9.]+)[\s]+(width|height)$', IGNORE, ),
+
+            (r'(?i)^!transformation[\s]+([^{}]*)$', IGNORE, ),
+            # START transformation
+            (r'(?i)^!transformation[\s]+\{[\s]*$', IGNORE, 'transformation'),
+            (r'(?i)^(hide|show)[\s]+unlinked$', IGNORE, ),
+            # START sprite state
+            (r'^sprite[\s]+\$?([\w\.]+)[\s]*(?:\[(\d+)x(\d+)/(\d+)(z)?\])?[\s]*\{$', IGNORE, 'sprite'),
+            (r'^sprite[\s]+\$?([\w\.]+)[\s]*(?:\[(\d+)x(\d+)/(\d+)(z)\])?[\s]+([-_A-Za-z0-9]+)$', IGNORE, ),
+            (r'^sprite[\s]+\$?([\w\.]+)[\s]*[\s]+(.*)$', IGNORE, ),
+            (r'^(hide|show)[\s]+((?:public|private|protected|package)?(?:[,\s]+(?:public|private|protected|package))*)[\s]+(members?|attributes?|fields?|methods?)$', IGNORE, ),
+            (r'^(hide|show)[\s]+(?:(class|interface|enum|annotation|abstract|[\w\.]+|["][^"]+["]|\<\<.*\>\>)[\s]+)*?(?:(empty)[\s]+)?(members?|attributes?|fields?|methods?|circle\w*|stereotypes?)$', IGNORE, ),
+
+            # Consume whitespace, strip tags
+            (r'^([\s\n]+)$', IGNORE, ),
+            (r'^(@startuml|@enduml)$', IGNORE),
         ],
 
         'state': [
@@ -95,6 +192,7 @@ class puml_state_lexer(RegexLexer):
         ],
 
         'comment': [
+            include('root'),
             # END comment
             (r'(?i)^.*[%q]/[%s]*$', IGNORE, '#pop'),
         ],
@@ -108,7 +206,7 @@ class puml_state_lexer(RegexLexer):
         'legend': [
             include('root'),
             # END legend
-            (r'END: (?i)^end[%s]?legend$', IGNORE, '#pop'),
+            (r'(?i)^end[%s]?legend$', IGNORE, '#pop'),
         ],
 
         'footer': [
@@ -120,26 +218,40 @@ class puml_state_lexer(RegexLexer):
         'header': [
             include('root'),
             # END header
-            (r'END: (?i)^end[%s]?header$',IGNORE , '#pop'),
+            (r'(?i)^end[%s]?header$',IGNORE , '#pop'),
         ],
 
         'transformation': [
             include('root'),
             #END transformation
-            (r'END: (?i)^[%s]*!\}[%s]*$', IGNORE, '#pop'),
+            (r'(?i)^[%s]*!\}[%s]*$', IGNORE, '#pop'),
         ],
 
         'sprite': [
             include('root'),
             #END sprite
-            (r'END: (?i)^end[%s]?sprite|\}$', IGNORE, ),
+            (r'(?i)^end[%s]?sprite|\}$', IGNORE, ),
         ],
 
     }
 
-    def get_tokens_unprocessed(self, text, stack=('root',)):
+    def get_tokens_unprocessed(self, text, stack=('root',) ):
         '''Catch-all for anything missed above'''
-        for index, token, value in RegexLexer.get_tokens_unprocessed(self, text):
+        pos = 0
+        tokendefs = self._tokens
+        statestack = list(stack)
+        statetokens = tokendefs[statestack[-1]]
+
+        for rexmatch, action, new_state in statetokens:
+            rex = rexmatch.__self__
+            print rex.pattern, '\n\t', rex.groups, '\t', rex.flags
+
+            m = rexmatch(text, pos)
+            if m:
+                print "====================MATCH FOUND:========="
+                print m.re.pattern, len(m.string)
+                print "========================================="
+        for index, token, value in RegexLexer.get_tokens_unprocessed(self, text, stack):
             yield index, token, value
 
 
@@ -152,12 +264,15 @@ if __name__ == "__main__":
     formatter = HtmlFormatter(style='vim', full=True, encoding='utf-8')
 
     with open('../interlock.puml') as ftest:
-        test_text = ftest.read()
+        test_text = ftest.read().encode('utf-8')
 
-    tokens = lex(test_text, lexer)
+    tkns = lex(test_text, lexer)
 
-    with open('test_out.html', mode='w') as test_output:
-        formatter.format(tokens, test_output)
+    # with open('test_out.html', mode='w') as test_output:
+    #     formatter.format(tokens, test_output)
+
+    for token in tkns:
+        print token
 
     print "Testing complete."
 
