@@ -1,0 +1,90 @@
+@startuml
+scale 550 width
+
+[*] --> TaskPointer0: TASK_PTR = 0
+[*] --> TaskPointer1: TASK_PTR = 1
+[*] --> TaskPointer2: TASK_PTR = 2
+[*] --> TaskPointer3: TASK_PTR = 3
+[*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer5: TASK_PTR = 5
+[*] --> TaskPointer99: TASK_PTR = 99
+
+
+TaskPointer0: Initialize Phase
+state TaskPointer0{
+
+PromptOK: Set up reactor for steamout. Rinse Reactor. \n Open Valve. Program Steams
+PromptOK -up-> PromptOK: No
+
+PromptOK --> PromptIn: OK
+PromptIn: Enter Cleanout Time \n and confirm ( Small, Medium or Lagre)
+PromptIn -up-> PromptIn: No 
+
+
+}
+
+
+TaskPointer1:  Acquire Equipment \n Set OAR Prompt \n Reset Hold_REQ
+
+state TaskPointer1 {
+
+PromptIn --> AcquireEquipment: Yes
+AcquireEquipment --> SetOAR: Acquire Failed
+AcquireEquipment: All of valves and agitator CM
+SetOAR --> AcquireEquipment
+AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
+
+
+}
+
+
+
+TaskPointer2: Set HM and SM \n Acquire CMs
+
+state TaskPointer2 {
+
+AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
+HOLD_REQ --> SetMonitors
+
+}
+
+
+TaskPointer3: Start Cleaning
+
+state TaskPointer3 {
+
+SetMonitors --> SetTimer
+SetTimer: Minute/Countdown Timer \n "small" = 15, "medium" = 30, \n "large" = 45
+
+SetTimer --> OpenSteam
+OpenSteam: Agitator, Condensate valves, ovhd block valve \n Recirc valve, dump valve, steam valve to spray balls
+
+OpenSteam --> StartTimer
+
+}
+
+
+TaskPointer4: Close Steam
+state TaskPointer4{
+StartTimer --> CloseSteam: Reactor Temp > Clean Temp \n Countdown Timer Complete
+CloseSteam: Agitator, Condensate valves, \n ovhd block valve, Recirc valve, dump valve
+
+}
+
+
+TaskPointer5: Disable HM and SM
+
+state TaskPointer5 {
+CloseSteam --> DisableMonitors
+
+DisableMonitors --> OARPrompt
+
+OARPrompt --> TaskPointer99: YES
+OARPrompt: Steam cleaning complete, \n verify all manual valves closed
+
+}
+
+TaskPointer99: Final Step, Release CM, \n Upload Request
+
+TaskPointer99 --> [*]
+@enduml

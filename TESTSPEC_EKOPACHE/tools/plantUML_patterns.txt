@@ -1,0 +1,53 @@
+StateDiagram
+(?i)^(hide|show)?[\s ]*footbox$
+(?i)^(left[\s ]to[\s ]right|top[\s ]to[\s ]bottom)[\s ]+direction$
+^(?:state[\s ]+)(?:([\p{L}0-9_.]+)[\s ]+as[\s ]+["“”«»]([^"“”«»]+)["“”«»]|["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+([\p{L}0-9_.]+)|([\p{L}0-9_.]+)|["“”«»]([^"“”«»]+)["“”«»])[\s ]*(\<\<.*\>\>)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])?[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*(?:##(?:\[(dotted|dashed|bold)\])?(\w+)?)?[\s ]*(?::[\s ]*(.*))?$
+^([\p{L}0-9_.]+|[\p{L}0-9_.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\p{L}0-9_.]+)(?:==+))[\s ]*(\<\<.*\>\>)?[\s ]*(#\w+)?[\s ]*(x)?(-+)(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?(left|right|up|down|le?|ri?|up?|do?)?(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?(-*)\>(o[\s ]+)?[\s ]*([\p{L}0-9_.]+|[\p{L}0-9_.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\p{L}0-9_.]+)(?:==+))[\s ]*(\<\<.*\>\>)?[\s ]*(#\w+)?[\s ]*(?::[\s ]*([^"“”«»]+))?$
+^state[\s ]+(?:([\p{L}0-9_.]+)[\s ]+as[\s ]+["“”«»]([^"“”«»]+)["“”«»]|(?:["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+)?([\p{L}0-9_.]+))[\s ]*(\<\<.*\>\>)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])?[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*(?:##(?:\[(dotted|dashed|bold)\])?(\w+)?)?(?:[\s ]*\{|[\s ]+begin)$
+(?i)^(end[\s ]?state|\})$
+^(?:([\p{L}0-9_.]+)|["“”«»]([^"“”«»]+)["“”«»])[\s ]*:[\s ]*(.*)$
+(?i)^(--+|\|\|+)$
+START: ^note[\s ]+(right|left|top|bottom)(?:[\s ]+of[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])|)[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*\{?$
+END: (?i)^(end[%s]?note|\})$
+(?i)^(hide|show)[\s ]+empty[\s ]+description$
+^note[\s ]+(right|left|top|bottom)(?:[\s ]+of[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])|)[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*:[\s ]*(.*)$
+^note[\s ]+(right|left|top|bottom)?[\s ]*on[\s ]+link[\s ]*(#\w+[-\\|/]?\w+)?[\s ]*:[\s ]*(.*)$
+START: ^note[\s ]+(right|left|top|bottom)?[\s ]*on[\s ]+link[\s ]*(#\w+[-\\|/]?\w+)?$
+END: (?i)^end[%s]?note$
+(?i)^url[\s ]*(?:of|for)?[\s ]+([\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»])[\s ]+(?:is)?[\s ]*(\[\[(["“”«»][^"“”«»]+["“”«»]|[^{}\s \]\[]*)(?:[\s ]*\{([^{}]+)\})?(?:[\s ]*([^\]\[]+))?\]\])$
+^note[\s ]+["“”«»]([^"“”«»]+)["“”«»][\s ]+as[\s ]+([\p{L}0-9_.]+)[\s ]*(#\w+[-\\|/]?\w+)?$
+START: ^(note)[\s ]+as[\s ]+([\p{L}0-9_.]+)[\s ]*(#\w+[-\\|/]?\w+)?$
+END: (?i)^end[%s]?note$
+(?i)^[\s ]*$
+(?i)^[\s ]*(['‘’].*||/['‘’].*['‘’]/[\s ]*)$
+START: (?i)^[\s ]*/['‘’].*$
+END: (?i)^.*[%q]/[%s]*$
+(?i)^!pragma[\s ]+([A-Za-z_][A-Za-z_0-9]*)(?:[\s ]+(.*))?$
+(?i)^title(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$
+START: (?i)^title$
+END: (?i)^end[%s]?title$
+START: ^legend(?:[\s ]+(top|bottom))?(?:[\s ]+(left|right|center))?$
+END: (?i)^end[%s]?legend$
+(?i)^(?:(left|right|center)?[\s ]*)footer(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$
+START: (?i)^(?:(left|right|center)?[\s ]*)footer$
+END: (?i)^end[%s]?footer$
+(?i)^(?:(left|right|center)?[\s ]*)header(?:[\s ]*:[\s ]*|[\s ]+)(.*[\p{L}0-9_.].*)$
+START: (?i)^(?:(left|right|center)?[\s ]*)header$
+END: (?i)^end[%s]?header$
+(?i)^(skinparam|skinparamlocked)[\s ]+([\w.]*(?:\<\<.*\>\>)?[\w.]*)[\s ]+([^{}]*)$
+BRACKET: (?i)^skinparam[\s ]*(?:[\s ]+([\w.]*(?:\<\<.*\>\>)?[\w.]*))?[\s ]*\{$
+(?i)^minwidth[\s ]+(\d+)$
+(?i)^rotate$
+(?i)^scale[\s ]+([0-9.]+)(?:[\s ]*/[\s ]*([0-9.]+))?$
+(?i)^scale[\s ]+([0-9.]+)[\s ]*[*x][\s ]*([0-9.]+)$
+(?i)^scale[\s ]+([0-9.]+)[\s ]+(width|height)$
+(?i)^!transformation[\s ]+([^{}]*)$
+START: (?i)^!transformation[\s ]+\{[\s ]*$
+END: (?i)^[%s]*!\}[%s]*$
+(?i)^(hide|show)[\s ]+unlinked$
+START: ^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*(?:\[(\d+)x(\d+)/(\d+)(z)?\])?[\s ]*\{$
+END: (?i)^end[%s]?sprite|\}$
+^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*(?:\[(\d+)x(\d+)/(\d+)(z)\])?[\s ]+([-_A-Za-z0-9]+)$
+^sprite[\s ]+\$?([\p{L}0-9_]+)[\s ]*[\s ]+(.*)$
+^(hide|show)[\s ]+((?:public|private|protected|package)?(?:[,\s ]+(?:public|private|protected|package))*)[\s ]+(members?|attributes?|fields?|methods?)$
+^(hide|show)[\s ]+(?:(class|interface|enum|annotation|abstract|[\p{L}0-9_.]+|["“”«»][^"“”«»]+["“”«»]|\<\<.*\>\>)[\s ]+)*?(?:(empty)[\s ]+)?(members?|attributes?|fields?|methods?|circle\w*|stereotypes?)$
