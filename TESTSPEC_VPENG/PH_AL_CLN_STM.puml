@@ -6,6 +6,7 @@ scale 550 width
 [*] --> TaskPointer2: TASK_PTR = 2
 [*] --> TaskPointer3: TASK_PTR = 3
 [*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer5: TASK_PTR = 5
 [*] --> TaskPointer99: TASK_PTR = 99
 
 
@@ -66,7 +67,7 @@ OpenSteam --> StartTimer
 TaskPointer4: Close Steam
 state TaskPointer4{
 StartTimer --> CloseSteam: Reactor Temp > Clean Temp \n Countdown Timer Complete
-CloseSteam: Agitator, Condensate Block vlv, \n ovhd block valve, Recirc valve, dump valve
+CloseSteam: Agitator, Condensate valves, \n ovhd block valve, Recirc valve, dump valve
 
 }
 
@@ -78,8 +79,8 @@ CloseSteam --> DisableMonitors
 
 DisableMonitors --> OARPrompt
 
-OARPrompt --> TaskPointer99
-OARPrompt: Steam cleaning complete, close all manual valves
+OARPrompt --> TaskPointer99: YES
+OARPrompt: Steam cleaning complete, \n verify all manual valves closed
 
 }
 
