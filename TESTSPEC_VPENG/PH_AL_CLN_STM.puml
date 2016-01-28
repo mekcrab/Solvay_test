@@ -15,13 +15,10 @@ state TaskPointer0{
 PromptOK: Set up reactor for steamout. Rinse Reactor. \n Open Valve. Program Steams
 PromptOK -up-> PromptOK: No
 
-PromptOK --> PromptIn1: OK
-PromptIn1: Declare Cleanout Time ( Small, Medium or Lagre)
-PromptIn1 -up-> PromptIn1: No Response
+PromptOK --> PromptIn: OK
+PromptIn: Enter Cleanout Time \n and confirm ( Small, Medium or Lagre)
+PromptIn -up-> PromptIn: No Response
 
-PromptIn1 --> PromptIn2: Responded
-PromptIn2: Confirm Cleaning Time
-PromptIn2 -up-> PromptIn2: No
 
 }
 
@@ -30,10 +27,12 @@ TaskPointer1:  Acquire Equipment \n Set OAR Prompt \n Reset Hold_REQ
 
 state TaskPointer1 {
 
-PromptIn2 --> AcquireEquipment: Yes
+PromptIn --> AcquireEquipment: Yes
 AcquireEquipment --> SetOAR: Acquire Failed
-SetOAR --> HOLD_REQ
-AcquireEquipment --> HOLD_REQ: Device Acquired
+AcquireEquipment: All of valves and agitator CM
+SetOAR --> AcquireEquipment
+AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
+
 
 }
 
@@ -43,10 +42,8 @@ TaskPointer2: Set HM and SM \n Acquire CMs
 
 state TaskPointer2 {
 
-AcquireEquipment --> SetMonitors: Device Acquired
+AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
 HOLD_REQ --> SetMonitors
-SetMonitors --> InitializeCM
-
 
 }
 
@@ -55,17 +52,37 @@ TaskPointer3: Start Cleaning
 
 state TaskPointer3 {
 
-InitializeCM --> OpenSteam
-OpenSteam --> CloseSteam: Reactor Temp \n > Clean Temp
-OpenSteam: Agitator, Condensate Block vlv, ovhd block valve \n Recirc valve, dump valve, steam valve to spray balls
+SetMonitors --> SetTimer
+SetTimer: Minute/Countdown Timer \n "small" = 15, "medium" = 30, \n "large" = 45
+
+SetTimer --> OpenSteam
+OpenSteam: Agitator, Condensate valves, ovhd block valve \n Recirc valve, dump valve, steam valve to spray balls
+
+OpenSteam --> StartTimer
+
+}
+
+
+TaskPointer4: Close Steam
+state TaskPointer4{
+StartTimer --> CloseSteam: Reactor Temp > Clean Temp \n Countdown Timer Complete
 CloseSteam: Agitator, Condensate Block vlv, \n ovhd block valve, Recirc valve, dump valve
 
 }
 
-CloseSteam --> TaskPointer4
-TaskPointer4: Disable HM and SM
 
-TaskPointer4 --> TaskPointer99
+TaskPointer5: Disable HM and SM
+
+state TaskPointer5 {
+CloseSteam --> DisableMonitors
+
+DisableMonitors --> OARPrompt
+
+OARPrompt --> TaskPointer99
+OARPrompt: Steam cleaning complete, close all manual valves
+
+}
+
 TaskPointer99: Final Step
 
 TaskPointer99 --> [*]
