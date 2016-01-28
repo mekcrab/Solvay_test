@@ -84,7 +84,7 @@ OARPrompt: Steam cleaning complete, \n verify all manual valves closed
 
 }
 
-TaskPointer99: Final Step
+TaskPointer99: Final Step, Release CM, \n Upload Request
 
 TaskPointer99 --> [*]
 @enduml
