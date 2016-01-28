@@ -1,0 +1,90 @@
+@startuml
+scale 350 width
+[*] --> TaskPointer0: TASK_PTR = 0
+[*] --> TaskPointer1: TASK_PTR = 1
+[*] --> TaskPointer2: TASK_PTR = 2
+[*] --> TaskPointer3: TASK_PTR = 3
+[*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer5: TASK_PTR = 5
+[*] --> TaskPointer6: TASK_PTR = 6
+[*] --> TaskPointer7: TASK_PTR = 7
+[*] --> TaskPointer99: TASK_PTR = 99
+
+TaskPointer0: Message initialize phase
+
+state TaskPointer1 {
+
+TaskPointer0 --> AcquireEquipment
+
+AcquireEquipment --> SetOAR: Acquire Failed
+AcquireEquipment: All of valves and agitator CM
+SetOAR --> AcquireEquipment
+AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
+
+}
+
+state TaskPointer2 {
+AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
+HOLD_REQ --> SetMonitors
+
+}
+
+state TaskPointer3 {
+SetMonitors --> WT_TARE
+WT_TARE: Reset the Zero & Tare \n Reactor Scales Weights
+
+}
+
+state TaskPointer4 {
+WT_TARE --> PRESSURE_AUTO
+PRESSURE_AUTO: RX_PRESS_EM, \n setpoint = Init_Press
+
+}
+
+
+
+state TaskPointer5 {
+
+PRESSURE_AUTO --> WTR_CHG_EM: RX_PRESS > init Press - 0.2 \n (pressure drops 0.2 psig \n from initial)
+WTR_CHG_EM: CHARGE
+WTR_CHG_EM --> Monitor
+Monitor: null
+
+Monitor -left-> StopCharge: reactor pressure \n < Stop_Press
+Monitor --> PAD: reactor pressure \n > End_Press
+
+PAD: Open vent valve (SP = Vent_Press), \n Open N2 valve (SP = PAD_Press)
+
+StopCharge: close WTR_CHG_VLV
+
+StopCharge --> ResumeCharge: reactor pressure \n > Resume_Press
+ResumeCharge: Open WTR_CHG_VLV
+
+ResumeCharge --> Monitor
+}
+
+
+state TaskPointer6 {
+PAD --> OPEN_VENT: H2O in reactor > Target
+OPEN_VENT: Setpoint = R_VENT_SP
+
+OPEN_VENT --> OPEN_N2
+OPEN_N2: setpoint = R_PRESS_SP
+
+}
+
+state TaskPointer7 {
+
+OPEN_N2 --> PROMPTOK
+PROMPTOK: Cleanout is complete
+
+PROMPTOK --> DisableMonitors
+
+}
+
+DisableMonitors --> TaskPointer99
+TaskPointer99: Final step, release equipment, \n upload reports
+
+TaskPointer99 --> [*]
+
+@enduml
