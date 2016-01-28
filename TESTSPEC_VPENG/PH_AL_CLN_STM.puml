@@ -18,7 +18,7 @@ PromptOK -up-> PromptOK: No
 
 PromptOK --> PromptIn: OK
 PromptIn: Enter Cleanout Time \n and confirm ( Small, Medium or Lagre)
-PromptIn -up-> PromptIn: No Response
+PromptIn -up-> PromptIn: No 
 
 
 }
