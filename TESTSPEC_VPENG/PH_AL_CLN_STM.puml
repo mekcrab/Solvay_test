@@ -14,11 +14,11 @@ TaskPointer0: Initialize Phase
 state TaskPointer0{
 
 PromptOK: Set up reactor for steamout. Rinse Reactor. \n Open Valve. Program Steams
-PromptOK -up-> PromptOK: No
+
 
 PromptOK --> PromptIn: OK
 PromptIn: Enter Cleanout Time \n and confirm ( Small, Medium or Lagre)
-PromptIn -up-> PromptIn: No 
+PromptIn -up-> PromptIn: No
 
 
 }
@@ -39,7 +39,7 @@ AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
 
 
 
-TaskPointer2: Set HM and SM \n Acquire CMs
+TaskPointer2: Set HM and SM
 
 state TaskPointer2 {
 
@@ -59,14 +59,14 @@ SetTimer: Minute/Countdown Timer \n "small" = 15, "medium" = 30, \n "large" = 45
 SetTimer --> OpenSteam
 OpenSteam: Agitator, Condensate valves, ovhd block valve \n Recirc valve, dump valve, steam valve to spray balls
 
-OpenSteam --> StartTimer
+OpenSteam --> StartTimer: Reactor Temp > Clean Temp
 
 }
 
 
 TaskPointer4: Close Steam
 state TaskPointer4{
-StartTimer --> CloseSteam: Reactor Temp > Clean Temp \n Countdown Timer Complete
+StartTimer --> CloseSteam: Countdown Timer Complete
 CloseSteam: Agitator, Condensate valves, \n ovhd block valve, Recirc valve, dump valve
 
 }
