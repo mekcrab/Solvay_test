@@ -42,7 +42,6 @@ PRESSURE_AUTO: RX_PRESS_EM, \n setpoint = Init_Press
 }
 
 
-
 state TaskPointer5 {
 
 PRESSURE_AUTO --> WTR_CHG_EM: RX_PRESS > init Press - 0.2 \n (pressure drops 0.2 psig \n from initial)
