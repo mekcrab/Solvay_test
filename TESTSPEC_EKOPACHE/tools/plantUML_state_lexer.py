@@ -5,7 +5,7 @@ __author__ = 'ekopache'
 
 import re
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Name, Text, Error
+from pygments.token import Name, Text, Error, _TokenType
 
 # token definitions
 
@@ -61,9 +61,9 @@ class puml_state_lexer(RegexLexer):
              r'^([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
              # <<IGNORE>>
              '[\s]*(\<\<.*\>\>)?[\s]*'\
-             # IGNORE, IGNORE, IGNORE (transition start -)
+             # IGNORE, IGNORE, IGNORE (transition start -+)
              '(#\w+)?[\s]*(x)?(-+)'\
-             # IGNORE
+             # IGNORE [# formatting crap ]
              '(?:\[('\
                 '(?:#\w+|dotted|dashed|bold|hidden)'\
                 '(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
@@ -71,7 +71,7 @@ class puml_state_lexer(RegexLexer):
              '(left|right|up|down|le?|ri?|up?|do?)?'\
              #IGNORE (formatting)
              '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
-             # IGNORE(transition end ->), IGNORE
+             # IGNORE(transition end ->), IGNORE (o maker)
              '(-*)\>(o[\s]+)?[\s]*'\
              # TDEST
              '([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
@@ -91,26 +91,28 @@ class puml_state_lexer(RegexLexer):
                                           TDEST,
                                           IGNORE,
                                           IGNORE,
-                                          TATTR)   ), #transition definition
+                                          TATTR),   ), #transition definition
             (# IGNORE
              r'^state[\s]+'\
              # STATE as "IGNORE", "STATE" as IGNORE, STATE
              '(?:([\w\.]+)[\s]+as[\s]+["]([^"]+)["]|(?:["]([^"]+)["][\s]+as[\s]+)?([\w\.]+))[\s]*'\
              # <<IGNORE>>, [["IGNORE"]]
              '(\<\<.*\>\>)?[\s]*(\[\[(["][^"]+["]|[^{}\s\]\[]*)'\
-                # non-cap
-                '(?:[\s]*'\
+             # non-cap
+             '(?:[\s]*'\
                 # IGNORE
                 '\{([^{}]+)\})?'\
-                # IGNORE
-                '(?:[\s]*([^\]\[]+))?\]\])?'\
-                # hash words IGNORE
-                '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
-            # IGNORE formatting
-            '(?:##(?:\[(dotted|dashed|bold)\])?'\
-                # IGNORE
-                '(\w+)?)?'\
-                           '(?:[\s]*\{|[\s]+begin)$', bygroups(STATE, IGNORE, STATE, IGNORE, STATE,
+             # IGNORE
+             '(?:[\s]*([^\]\[]+))?\]\])?'\
+             # hash words IGNORE
+             '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
+             # IGNORE formatting
+             '(?:##(?:\[(dotted|dashed|bold)\])?'\
+             # IGNORE
+             '(\w+)?)?'\
+                 # non-cap
+                 '(?:[\s]*\{|[\s]+begin)$',
+                                        bygroups(STATE, IGNORE, STATE, IGNORE, STATE,
                                                             IGNORE, IGNORE,
                                                             IGNORE,
                                                             IGNORE,
@@ -134,8 +136,8 @@ class puml_state_lexer(RegexLexer):
             # START note
             (r'^(note)[\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # blank lines
-            (r'(?i)^[\s]*$', IGNORE),
-            (r"(?i)^[\s]*(['].*||/['].*[']/[\s]*)$", IGNORE), # comment
+            (r'(?i)^[\s]+$', IGNORE),
+            # (r"(?i)^[\s]*(['].+||/['].+[']/[\s]*)$", IGNORE), # comment
             # START Comment
             (r"(?i)^[\s]*/['].*$", IGNORE, 'comment'),
             (r'(?i)^!pragma[\s]+([A-Za-z_][A-Za-z_0-9]*)(?:[\s]+(.*))?$', IGNORE, ), # pre-processor definitions
@@ -172,7 +174,7 @@ class puml_state_lexer(RegexLexer):
             (r'^(hide|show)[\s]+(?:(class|interface|enum|annotation|abstract|[\w\.]+|["][^"]+["]|\<\<.*\>\>)[\s]+)*?(?:(empty)[\s]+)?(members?|attributes?|fields?|methods?|circle\w*|stereotypes?)$', IGNORE, ),
 
             # Consume whitespace, strip tags
-            (r'^([\s\n]+)$', IGNORE, ),
+            # (r'^(?:\s\n)$', IGNORE, ),
             (r'^(@startuml|@enduml)$', IGNORE),
         ],
 
@@ -235,24 +237,68 @@ class puml_state_lexer(RegexLexer):
 
     }
 
-    def get_tokens_unprocessed(self, text, stack=('root',) ):
+    def get_tokens_unprocessed(self, text, stack=('root',), debug = True):
         '''Catch-all for anything missed above'''
         pos = 0
         tokendefs = self._tokens
         statestack = list(stack)
         statetokens = tokendefs[statestack[-1]]
 
-        for rexmatch, action, new_state in statetokens:
-            rex = rexmatch.__self__
-            print rex.pattern, '\n\t', rex.groups, '\t', rex.flags
+        #print tons of debugging if defined
+        if debug:
+            for rexmatch, action, new_state in statetokens:
+                rex = rexmatch.__self__
+                print rex.pattern, '\n\t', rex.groups, '\t', rex.flags
 
-            m = rexmatch(text, pos)
-            if m:
-                print "====================MATCH FOUND:========="
-                print m.re.pattern, len(m.string)
-                print "========================================="
-        for index, token, value in RegexLexer.get_tokens_unprocessed(self, text, stack):
-            yield index, token, value
+        while 1:
+            for rexmatch, action, new_state in statetokens:
+                m = rexmatch(text, pos)
+
+                if m:
+                    if debug:
+                        print "====================MATCH FOUND:========="
+                        print m.re.pattern, len(m.string)
+                        print "========================================="
+
+                    if action is not None:
+                        if type(action) is _TokenType:
+                            yield pos, action, m.group()
+                        else:
+                            for item in action(self, m):
+                                yield item
+                    pos = m.end()
+                    if new_state is not None:
+                        # state transition
+                        if isinstance(new_state, tuple):
+                            for state in new_state:
+                                if state == '#pop':
+                                    statestack.pop()
+                                elif state == '#push':
+                                    statestack.append(statestack[-1])
+                                else:
+                                    statestack.append(state)
+                        elif isinstance(new_state, int):
+                            # pop
+                            del statestack[new_state:]
+                        elif new_state == '#push':
+                            statestack.append(statestack[-1])
+                        else:
+                            assert False, "wrong state def: %r" % new_state
+                        statetokens = tokendefs[statestack[-1]]
+                    break
+            else:
+                try:
+                    if text[pos] == '\n':
+                        # at EOL, reset state to "root"
+                        statestack = ['root']
+                        statetokens = tokendefs['root']
+                        yield pos, Text, u'\n'
+                        pos += 1
+                        continue
+                    yield pos, Error, text[pos]
+                    pos += 1
+                except IndexError:
+                    break
 
 
 if __name__ == "__main__":
