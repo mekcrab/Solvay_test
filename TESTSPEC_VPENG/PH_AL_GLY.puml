@@ -1,0 +1,59 @@
+@startuml
+scale 350 width
+[*] --> TaskPointer0: TASK_PTR = 0
+[*] --> TaskPointer1: TASK_PTR = 1
+[*] --> TaskPointer2: TASK_PTR = 2
+[*] --> TaskPointer3: TASK_PTR = 3
+[*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer5: TASK_PTR = 5
+[*] --> TaskPointer99: TASK_PTR = 99
+
+TaskPointer0: Message initialize phase
+
+state TaskPointer1 {
+
+TaskPointer0 --> AcquireEquipment
+
+AcquireEquipment --> SetOAR: Acquire Failed
+AcquireEquipment: EM: BT4_CHG_EM, RX_JKT_CTRL_EM
+SetOAR --> AcquireEquipment
+AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
+
+}
+
+state TaskPointer2 {
+AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
+HOLD_REQ --> SetMonitors
+
+SetMonitors --> Prompt
+Prompt: Charge materila to BT-4; \n are you ready to continue?
+
+}
+
+state TaskPointer3 {
+
+SetMonitors --> StartCharge: BT-4 > R_GLY_TGT * 0.9
+Prompt --> StartCharge: BT-4 <= R_GLY_TGT * 0.9
+StartCharge: BT4_CHG_EM: CHARGE; \n SP = R_CLY_TGT
+
+}
+
+state TaskPointer4 {
+
+StartCharge --> TempCool
+TempCool: RX_JKT_CTRL_EM: COOL, \n OP003 = R_CW_VLV_POSITION, \n OP001 = R_TEMP_SP
+
+}
+
+state TaskPointer5 {
+
+TempCool --> DisableMonitors
+
+}
+
+DisableMonitors --> TaskPointer99
+TaskPointer99: Final step, release equipment, \n upload reports
+
+TaskPointer99 --> [*]
+
+@enduml
