@@ -24,9 +24,10 @@ class puml_state_lexer(RegexLexer):
 
     def embedded_state(lexer, match, ctx):
         '''function provides for recursive lexing of embedded states'''
-        print '***********Embedded state found: ********'
+        print '***********Embedded state found: ******************'
         for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state',)):
             yield i,t,v
+        print '******************End embedded*********************'
 
 
     # regex mode flags
@@ -253,15 +254,14 @@ class puml_state_lexer(RegexLexer):
 
     }
 
-
-    def get_tokens_unprocessed(self, text, stack=('root',), debug = True, debug_regex=False):
+    def get_tokens_unprocessed(self, text, stack=('root',), debug=False, debug_regex=False):
         '''Catch-all for anything missed above'''
         pos = 0
         tokendefs = self._tokens
         statestack = list(stack)
         statetokens = tokendefs[statestack[-1]]
 
-        #print tons of debugging if defined
+        #print debugging if defined
         if debug_regex:
             for rexmatch, action, new_state in statetokens:
                 rex = rexmatch.__self__
@@ -272,7 +272,7 @@ class puml_state_lexer(RegexLexer):
                 m = rexmatch(text, pos)
 
                 if m:
-                    if debug:
+                    if debug: # debugging for regex matches
                         print "====================MATCH FOUND:========="
                         print stack
                         print m.re.pattern, len(m.string)
@@ -319,9 +319,25 @@ class puml_state_lexer(RegexLexer):
                     break
 
 
-def preprocess_plantUML(file):
-    '''functon to run plantUML pre-processor, returning straight plantUML text file'''
-    pass
+def preprocess_puml(file_path):
+    """
+    Function to run plantUML pre-processor,
+    returning text file containing only plantUML text with
+    no pre-processor definitions
+    :param file_path: path to plantUML file for pre-processing
+    :returns pre-processed text file
+    """
+    import TESTSPEC_EKOPACHE.tools.config as config
+
+    plantUML_path = config.plantUML_jar
+
+    # generate plantUML diagram hash
+    
+    # decompile text file from hash
+
+    # return decompiled text
+    return
+
 
 if __name__ == "__main__":
     from pygments.formatters import HtmlFormatter
@@ -331,7 +347,7 @@ if __name__ == "__main__":
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(style='vim', full=True, encoding='utf-8')
 
-    with open('../PH_AL_A165.puml') as ftest:
+    with open('../interlock.puml') as ftest:
         test_text = ftest.read().encode('utf-8')
 
     tkns = lex(test_text, selected_lexer)
@@ -339,12 +355,11 @@ if __name__ == "__main__":
     # with open('test_out.html', mode='w') as test_output:
     #     formatter.format(tokens, test_output)
 
-    for tkn in tkns:
-        if tkn != Error:
-            print tkn
+    for (tkn, val) in tkns:
+        if tkn not in [IGNORE]:
+            print tkn, '\t', val
 
-    print "Testing complete."
-
+    print "=================Testing complete=================="
 
 
 
