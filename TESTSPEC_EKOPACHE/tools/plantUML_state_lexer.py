@@ -10,6 +10,7 @@ from pygments.token import Name, Text, Error, _TokenType
 # token definitions
 
 STATE = Name.Class  # state definition
+SALIAS = Name.Variable # state alias
 SATTR = Name.Attribute # state attribute
 SNOTE = Name.Label # state notes
 
@@ -21,6 +22,13 @@ IGNORE = Text # stuff to ignore
 
 class puml_state_lexer(RegexLexer):
 
+    def embedded_state(lexer, match, ctx):
+        '''function provides for recursive lexing of embedded states'''
+        print '***********Embedded state found: ********'
+        for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state',)):
+            yield i,t,v
+
+
     # regex mode flags
     flags = re.MULTILINE
 
@@ -29,17 +37,19 @@ class puml_state_lexer(RegexLexer):
             (r'(?i)^(hide|show)?[\s]*footbox$', IGNORE),
             (r'(?i)^(left[\s]to[\s]right|top[\s]to[\s]bottom)[\s]+direction$', IGNORE),
             (r'^(?:state[\s]+)'\
-                 # non-cap ( "STATE" as IGNORE | STATE as "IGNORE" )
-                '(?:([\w\.]+)[\s]+as[\s]+["]([^"]+)["]|["]([^"]+)["][\s]+as[\s]+([\w\.]+)|'\
+                 # STATE as "SALIAS" |
+                '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
+                # "STATE" as SALIAS |
+                '["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)|'\
                 # STATE | "STATE"
-                '([\w\.]+)|["]([^"]+)["])'\
-                # <<IGNORE>>,
+                '([\w\.]+)|["]([^"\n]+)["])'\
+                # skip spaces <<IGNORE>> skip spaces
                 '[\s]*(\<\<.*\>\>)?[\s]*'\
                     # ([["IGNORE"]|[IGNORE]])
-                    '(\[\[(["][^"]+["]|[^{}\s\]\[]*)'\
+                    '(\[\[(["][^"\n]+["]|[^{}\s\]\[]*)'\
                     # non-cap inner state defs {} - RECURSIVE REGEX
                     '(?:[\s]*\{([^{}]+)\})?'\
-                    # non-cap  inner defs [] - more recursion
+                    # non-cap  inner defs [[]] - more recursion
                     '(?:[\s]*([^\]\[]+))?\]\])?'\
                     # hash then words
                     '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
@@ -49,16 +59,16 @@ class puml_state_lexer(RegexLexer):
                         '(\w+)?)?'\
                     # non-cap state attribute
                     '[\s]*(?::[\s]*(.*))?$',
-                                    bygroups(STATE, IGNORE, STATE, IGNORE,
-                                             STATE, STATE,
+                                    bygroups(SALIAS, STATE,
+                                             STATE,
                                              IGNORE,
-                                             IGNORE, IGNORE,
-                                             IGNORE,
+                                             embedded_state,
+                                             embedded_state,
                                              IGNORE,
                                              IGNORE, IGNORE, IGNORE,
                                              SATTR),),
             (# TSOURCE
-             r'^([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
+             r'^(?:[\s]*)([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
              # <<IGNORE>>
              '[\s]*(\<\<.*\>\>)?[\s]*'\
              # IGNORE, IGNORE, IGNORE (transition start -+)
@@ -78,9 +88,9 @@ class puml_state_lexer(RegexLexer):
              # <<IGNORE>>
              '[\s]*(\<\<.*\>\>)?[\s]*'\
              # hash words IGNORE
-             '(#\w+)?[\s]*'\
+             '(#\w+)?(?:[\s]*)'\
              # TATTR
-             '(?::[\s]*([^"]+))?$',
+             '(?::[\s]*([^"\n]+))?(?:[\s]*)$',
                                  bygroups(TSOURCE,
                                           IGNORE,
                                           IGNORE, IGNORE, IGNORE,
@@ -92,47 +102,54 @@ class puml_state_lexer(RegexLexer):
                                           IGNORE,
                                           IGNORE,
                                           TATTR),   ), #transition definition
-            (# IGNORE
+            (# no group
              r'^state[\s]+'\
-             # STATE as "IGNORE", "STATE" as IGNORE, STATE
-             '(?:([\w\.]+)[\s]+as[\s]+["]([^"]+)["]|(?:["]([^"]+)["][\s]+as[\s]+)?([\w\.]+))[\s]*'\
-             # <<IGNORE>>, [["IGNORE"]]
-             '(\<\<.*\>\>)?[\s]*(\[\[(["][^"]+["]|[^{}\s\]\[]*)'\
-             # non-cap
-             '(?:[\s]*'\
-                # IGNORE
-                '\{([^{}]+)\})?'\
-             # IGNORE
-             '(?:[\s]*([^\]\[]+))?\]\])?'\
-             # hash words IGNORE
-             '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
-             # IGNORE formatting
+             # SALIAS as "STATE" |
+             '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
+                # ("SALIAS" as) STATE
+                 '(?:["]([^"\n]+?)["][\s]+as[\s]+)?([\w\.]+))'\
+             # skip spaces
+             '(?:[\s]*)'\
+             # <<IGNORE>>, skip spaces,
+             '(\<\<.*\>\>)?(?:[\s]*)'\
+             # [["?\S"? non cap
+             '(\[\['
+                # trash inside brackets
+                 '(?:["][^"]+["]|[^{}\s\]\[]*)'\
+                 # skip spaces, {CALLBACK: embedded state} (want line returns)
+                 '(?:[\s]*\{[\s]*(?:[^{}]+)\})?'\
+                 # more trash
+                 '(?:[\s]*(?:[^\]\[]+))?'\
+             '\]\])?'\
+             # skip space, hash words IGNORE, skip space
+             '(?:[\s]*)(?:\w+[-\\|/]?\w+)?(?:[\s]*)'\
+             # non-cap formatting, IGNORE
              '(?:##(?:\[(dotted|dashed|bold)\])?'\
-             # IGNORE
-             '(\w+)?)?'\
-                 # non-cap
-                 '(?:[\s]*\{|[\s]+begin)$',
-                                        bygroups(STATE, IGNORE, STATE, IGNORE, STATE,
-                                                            IGNORE, IGNORE,
-                                                            IGNORE,
-                                                            IGNORE,
-                                                            IGNORE,
-                                                            IGNORE,
-                                                            IGNORE), 'state'),
-            (r'(?i)^(end[\s]?state|\})$', IGNORE, '#pop'),
-            (r'^(?:([\w\.]+)|["]([^"]+)["])'\
-             '[\s]*:[\s]*'\
-             '(.*)$', bygroups(STATE, STATE, SATTR), ),
+                # IGNORE more formatting words?
+                '(\w+)?)?'\
+             # non-cap, now in embedded state
+             '(?:[\s]*\{|[\s]+begin[\s]*)([^{}]+)(?:\}[\s]*)$',
+                               bygroups(
+                                        SALIAS, STATE,
+                                        SALIAS, STATE,
+                                        IGNORE,
+                                        IGNORE,
+                                        IGNORE, IGNORE,
+                                        embedded_state
+                               ), ),
+            (r'^(?:[\s]*)(?:([\w\.]+)|["]([^"\n]+)["])'\
+             '(?:[\s]*:[\s]*)'\
+             '(.*)(?:[\s]*)$', bygroups(STATE, STATE, SATTR), ),
             (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate (-- or ||)
             # START note
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
+            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
             (r'(?i)^(hide|show)[\s]+empty[\s]+description$', IGNORE),
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
+            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
             (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
             # START note
             (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
-            (r'(?i)^url[\s]*(?:of|for)?[\s]+([\w\.]+|["][^"]+["])[\s]+(?:is)?[\s]*(\[\[(["][^"]+["]|[^{}\s\]\[]*)(?:[\s]*\{([^{}]+)\})?(?:[\s]*([^\]\[]+))?\]\])$', IGNORE),
-            (r'^note[\s]+["]([^"]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE),
+            (r'(?i)^url[\s]*(?:of|for)?[\s]+([\w\.]+|["][^"\n]+["])[\s]+(?:is)?[\s]*(\[\[(["][^"\n]+["]|[^{}\s\]\[\n]*)(?:[\s]*\{([^{}\n]+)\})?(?:[\s]*([^\]\[\n]+))?\]\])$', IGNORE),
+            (r'^note[\s]+["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE),
             # START note
             (r'^(note)[\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # blank lines
@@ -173,14 +190,13 @@ class puml_state_lexer(RegexLexer):
             (r'^(hide|show)[\s]+((?:public|private|protected|package)?(?:[,\s]+(?:public|private|protected|package))*)[\s]+(members?|attributes?|fields?|methods?)$', IGNORE, ),
             (r'^(hide|show)[\s]+(?:(class|interface|enum|annotation|abstract|[\w\.]+|["][^"]+["]|\<\<.*\>\>)[\s]+)*?(?:(empty)[\s]+)?(members?|attributes?|fields?|methods?|circle\w*|stereotypes?)$', IGNORE, ),
 
-            # Consume whitespace, strip tags
-            # (r'^(?:\s\n)$', IGNORE, ),
+            # Consume strip tags
             (r'^(@startuml|@enduml)$', IGNORE),
         ],
 
         'state': [
             include('root'),
-            # note lexer state?
+            (r'(?i)^(end[\s]?state|\})$', IGNORE, '#pop'),
         ],
 
         'note': [
@@ -214,7 +230,7 @@ class puml_state_lexer(RegexLexer):
         'footer': [
             include('root'),
             # END footer
-            (r'(?i)^end[%s]?footer$', IGNORE, ),
+            (r'(?i)^end[%s]?footer$', IGNORE, '#pop'),
         ],
 
         'header': [
@@ -232,12 +248,13 @@ class puml_state_lexer(RegexLexer):
         'sprite': [
             include('root'),
             #END sprite
-            (r'(?i)^end[%s]?sprite|\}$', IGNORE, ),
+            (r'(?i)^end[%s]?sprite|\}$', IGNORE, '#pop'),
         ],
 
     }
 
-    def get_tokens_unprocessed(self, text, stack=('root',), debug = True):
+
+    def get_tokens_unprocessed(self, text, stack=('root',), debug = True, debug_regex=False):
         '''Catch-all for anything missed above'''
         pos = 0
         tokendefs = self._tokens
@@ -245,7 +262,7 @@ class puml_state_lexer(RegexLexer):
         statetokens = tokendefs[statestack[-1]]
 
         #print tons of debugging if defined
-        if debug:
+        if debug_regex:
             for rexmatch, action, new_state in statetokens:
                 rex = rexmatch.__self__
                 print rex.pattern, '\n\t', rex.groups, '\t', rex.flags
@@ -257,6 +274,7 @@ class puml_state_lexer(RegexLexer):
                 if m:
                     if debug:
                         print "====================MATCH FOUND:========="
+                        print stack
                         print m.re.pattern, len(m.string)
                         print "========================================="
 
@@ -301,24 +319,29 @@ class puml_state_lexer(RegexLexer):
                     break
 
 
+def preprocess_plantUML(file):
+    '''functon to run plantUML pre-processor, returning straight plantUML text file'''
+    pass
+
 if __name__ == "__main__":
     from pygments.formatters import HtmlFormatter
     from pygments import lex
 
     # quick lexer test
-    lexer = puml_state_lexer()
+    selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(style='vim', full=True, encoding='utf-8')
 
-    with open('../interlock.puml') as ftest:
+    with open('../PH_AL_A165.puml') as ftest:
         test_text = ftest.read().encode('utf-8')
 
-    tkns = lex(test_text, lexer)
+    tkns = lex(test_text, selected_lexer)
 
     # with open('test_out.html', mode='w') as test_output:
     #     formatter.format(tokens, test_output)
 
-    for token in tkns:
-        print token
+    for tkn in tkns:
+        if tkn != Error:
+            print tkn
 
     print "Testing complete."
 
