@@ -1,0 +1,113 @@
+@startuml
+
+[*] --> TaskPointer0: TASK_PTR = 0
+[*] --> TaskPointer1: TASK_PTR = 1
+[*] --> TaskPointer2: TASK_PTR = 2
+[*] --> TaskPointer3: TASK_PTR = 3
+[*] --> TaskPointer4: TASK_PTR = 4
+[*] --> TaskPointer5: TASK_PTR = 5
+[*] --> TaskPointer6: TASK_PTR = 6
+[*] --> TaskPointer7: TASK_PTR = 7
+[*] --> TaskPointer99: TASK_PTR = 99
+
+
+TaskPointer0: Message initialize phase
+
+state TaskPointer1 {
+
+TaskPointer0 --> Diverge
+Diverge --> ConfirmRecipe: THISUNIT = R_UNIT.CVS
+Diverge --> ConfirmFormula: THISUNIT != R_UNIT.CVS
+
+ConfirmFormula: OARYN - Selected formula does \nnot run on this recipe. \n(R_FORMULA_NAME)\nClick Yes to Abort Recipe
+ConfirmFormula -up-> ConfirmFormula: NO
+ConfirmFormula --> [*]: YES
+
+ConfirmRecipe: OARYN - Start batch recipe on this unit \n(R_RECIPE_NAME)
+ConfirmRecipe --> [*]: NO
+ConfirmRecipe --> SetUnitParameters: YES
+
+SetUnitParameters: Timer, THISUNIT/OP001-020
+SetUnitParameters --> VerifyBatchSize
+
+VerifyBatchSize: OARYN - Is Batch size correct? \n(R_BATCH_SIZE)
+VerifyBatchSize --> SaveBatchSize: YES
+VerifyBatchSize --> NewBatchSize: NO
+
+NewBatchSize: OAR_INPUT - Enter New Batch Size
+NewBatchSize --> SaveNewBatchSize
+}
+
+state TaskPointer2 {
+
+SaveBatchSize --> AcquireEquipment
+SaveNewBatchSize --> AcquireEquipment
+
+AcquireEquipment --> SetOAR: Acquire Failed
+SetOAR --> AcquireEquipment
+AcquireEquipment --> HOLD_REQ: Device Acquired  \n & pending confirm = 0
+
+AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
+HOLD_REQ --> SetMonitors
+}
+
+state TaskPointer3 {
+
+SetMonitors --> CloseValves
+CloseValves: Reset Interlock, Set Mode, \nClose Valve and Motors
+
+CloseValves --> InitializeDevices
+InitializeDevices: Reset Interlocks on EMs, \n Reset Totalizer, Close All on EMs, \n Write Batch info to Historian
+}
+
+state TaskPointer4 {
+
+InitializeDevices --> CheckRXWeight
+
+CheckRXWeight: OARYN - Is reactor weight > 1000lb?
+CheckRXWeight --> CheckRawMaterial: YES
+CheckRXWeight --> [*]: NO
+
+CheckRawMaterial: OARYN - Is Raw Material Present in Reactor?
+CheckRawMaterial --> [*]: NO
+}
+
+
+state TaskPointer5 {
+CheckRawMaterial --> RX_OIL_CTRL_EM: YES
+RX_OIL_CTRL_EM: OFF
+
+RX_OIL_CTRL_EM --> RX_JKT_CTRL_EM
+RX_JKT_CTRL_EM: BLOWDOWN
+
+RX_JKT_CTRL_EM --> RX_VLVSTATE_EM
+RX_VLVSTATE_EM: TBD
+}
+
+
+state TaskPointer6 {
+
+RX_VLVSTATE_EM --> TareWeight
+TareWeight --> GEROPON_ACT_OFF
+}
+
+state TaskPointer7 {
+
+GEROPON_ACT_OFF --> VerifyCleanRX
+VerifyCleanRX: OAROK - Confirm Reactor Clean. \nOpen AEEA and CFA manual valves. \nOpen CW flow, charge water to decanter. \nSetup decanter pumjp to reflux to column.
+
+VerifyCleanRX --> ConfirmStart: OK
+
+ConfirmStart: OAROK - Ready to start charging raw materials?
+}
+
+
+state TaskPointer99 {
+
+ConfirmStart --> ClearPHAlarm
+
+}
+
+ClearPHAlarm --> [*]
+
+@enduml
