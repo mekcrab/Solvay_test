@@ -4,8 +4,9 @@ scale 350 width
 Tripped --> NotTripped: Reset True
 NotTripped --> Tripped: Causes True
 
-state NotTripped
-NotTripped: CV-2473/PV_D.CV = CLOSED
+state NotTripped {
+    NotTripped: CV-2473/PV_D.CV = CLOSED
+}
 
 
 state Tripped{
