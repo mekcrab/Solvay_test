@@ -1,15 +1,7 @@
 @startuml
 
-[*] --> TaskPointer0: TASK_PTR = 0
-[*] --> TaskPointer1: TASK_PTR = 1
-[*] --> TaskPointer2: TASK_PTR = 2
-[*] --> TaskPointer3: TASK_PTR = 3
-[*] --> TaskPointer4: TASK_PTR = 4
-[*] --> TaskPointer5: TASK_PTR = 5
-[*] --> TaskPointer6: TASK_PTR = 6
-[*] --> TaskPointer7: TASK_PTR = 7
-[*] --> TaskPointer99: TASK_PTR = 99
 
+[*] --> TaskPointer0: TASK_PTR = 0
 
 TaskPointer0: Message initialize phase
 
