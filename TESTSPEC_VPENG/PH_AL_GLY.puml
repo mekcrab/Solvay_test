@@ -25,23 +25,26 @@ state TaskPointer2 {
 AcquireEquipment --> SetMonitors: Device Acquired \n & pending confirm = 1
 HOLD_REQ --> SetMonitors
 
-SetMonitors --> Prompt
+SetMonitors --> Calculation
+Calculation --> Prompt: BT-4 <= P_GLY_TGT * 0.9
+Calculation: P_GLY_TGT = R_GLY_PCT / BATCHSIZE * 0.01
+
 Prompt: Charge materila to BT-4; \n are you ready to continue?
 
 }
 
 state TaskPointer3 {
 
-SetMonitors --> StartCharge: BT-4 > R_GLY_TGT * 0.9
-Prompt --> StartCharge: BT-4 <= R_GLY_TGT * 0.9
-StartCharge: BT4_CHG_EM: CHARGE; \n SP = R_CLY_TGT
+Calculation --> StartCharge: BT-4 > P_GLY_TGT * 0.9
+Prompt --> StartCharge
+StartCharge: BT4_CHG_EM: CHARGE; \n SP = P_GLY_TGT
 
 }
 
 state TaskPointer4 {
 
 StartCharge --> TempCool
-TempCool: RX_JKT_CTRL_EM: COOL, \n OP003 = R_CW_VLV_POSITION, \n OP001 = R_TEMP_SP
+TempCool: RX_JKT_CTRL_EM: COOL, \n OP003 = R_CW_FLOWSP, \n OP001 = R_TEMP_SP
 
 }
 
