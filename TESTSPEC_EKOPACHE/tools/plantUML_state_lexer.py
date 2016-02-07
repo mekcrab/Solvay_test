@@ -5,20 +5,35 @@ __author__ = 'ekopache'
 
 import re
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Name, Text, Error, _TokenType
+from pygments.token import Text, Error, _TokenType, STANDARD_TYPES
+from pygments.style import Style
 
 # token definitions
+# fixme: define custom token types so the names make sense
+Token = _TokenType()
+STATE = Token.State  # state definition
+SALIAS = Token.StateAlias # state alias
+SATTR = Token.StateAttr # state attribute
+SNOTE = Token.StateNote # state notes
 
-STATE = Name.Class  # state definition
-SALIAS = Name.Variable # state alias
-SATTR = Name.Attribute # state attribute
-SNOTE = Name.Label # state notes
-
-TSOURCE = Name.Variable # transition source
-TDEST = Name.Entity # transition destination
-TATTR = Name.Other # transition attribute
+TSOURCE = Token.SourceState # transition source
+TDEST = Token.DestState # transition destination
+TATTR = Token.TransAttr # transition attribute
 
 IGNORE = Text # stuff to ignore
+
+class puml_style(Style):
+    default_style = ""
+    styles = {
+        Token: '',
+        Token.State: 'bold #888',
+        Token.StateAlias: 'italic #005',
+        Token.StateAttr: '#f00',
+        Token.StateNote: '#0f0',
+        Token.SourceState: 'italic #050',
+        Token.SourceDest: 'italic #500',
+        Token.TransAttr: '#00f'
+    }
 
 class puml_state_lexer(RegexLexer):
 
@@ -260,7 +275,7 @@ class puml_state_lexer(RegexLexer):
         tokendefs = self._tokens
         statestack = list(stack)
         statetokens = tokendefs[statestack[-1]]
-
+        print statestack
         #print debugging if defined
         if debug_regex:
             for rexmatch, action, new_state in statetokens:
@@ -332,7 +347,7 @@ def preprocess_puml(file_path):
     plantUML_path = config.plantUML_jar
 
     # generate plantUML diagram hash
-    
+
     # decompile text file from hash
 
     # return decompiled text
@@ -345,16 +360,16 @@ if __name__ == "__main__":
 
     # quick lexer test
     selected_lexer = puml_state_lexer()
-    formatter = HtmlFormatter(style='vim', full=True, encoding='utf-8')
+    formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    with open('../interlock.puml') as ftest:
+    with open('../../TESTSPEC_VPENG/PH_AL_CLN_WTR.puml') as ftest:
         test_text = ftest.read().encode('utf-8')
 
     tkns = lex(test_text, selected_lexer)
+    with open('test_out.html', mode='w') as test_output:
+        formatter.format(tkns, test_output)
 
-    # with open('test_out.html', mode='w') as test_output:
-    #     formatter.format(tokens, test_output)
-
+    tkns = lex(test_text, selected_lexer)
     for (tkn, val) in tkns:
         if tkn not in [IGNORE]:
             print tkn, '\t', val
