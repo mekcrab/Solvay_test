@@ -1,0 +1,78 @@
+@startuml
+
+[*] -up-> SetResult
+
+SetResult: '^/P_AA_RESULT.CV'; '^/P_SMCA_RESULT.CV'
+
+SetResult --> LargeAA: '^/P_AA_RESULT.CV' > '^/R_SMPL_AA_SPEC.CV';
+
+SetResult --> SmallAA: '^/P_AA_RESULT.CV' <= '^/R_SMPL_AA_SPEC.CV';
+
+state LargeAA {
+
+VerifyRatioPrompt: Set OAR Input Yes/No
+VerifyRatioPrompt --> AddSMCAPrompt: ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:NO' )
+
+VerifyRatioPrompt --> RunTimer: ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:YES' )
+AddSMCAPrompt: Set Yes to Prompt
+
+AddSMCAPrompt --> RunTimer
+RunTimer: '//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+RunTimer --> SetResult
+
+
+}
+
+
+
+state SmallAA {
+
+Check_SPEC: '^/R_SMPL_SMCA_SPEC.CV'
+Check_SPEC --> [*]: '^/P_SMCA_RESULT.CV' <= '^/R_SMPL_SMCA_SPEC.CV';
+Check_SPEC --> SPEC25: '^/P_SMCA_RESULT.CV' > '^/R_SMPL_SMCA_SPEC.CV';
+
+SPEC25 --> SetResult: '^/P_SMCA_RESULT.CV' <=  ( '^/R_SMPL_SMCA_SPEC.CV' + 25 );
+
+SPEC25 --> AddCond: '^/P_SMCA_RESULT.CV' >  ( '^/R_SMPL_SMCA_SPEC.CV' + 25 );
+AddCond: Set OAR Input Yes/No
+
+AddCond --> RunTimer2: ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:YES' )
+
+AddCond --> CheckPH:  ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:NO' )
+CheckPH: '^/R_SMPL_PH_SPEC.CV'
+
+CheckPH --> RunTimer2: '//#RX_PH#/PV.CV' >= '^/R_SMPL_PH_SPEC.CV';
+CheckPH --> ACKLowPH: '//#RX_PH#/PV.CV'  < '^/R_SMPL_PH_SPEC.CV';
+ACKLowPH --> RunTimer2
+
+ACKLowPH: Set Yes to Prompt
+
+RunTimer2: '//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+
+RunTimer2 --> SetResult
+
+
+}
+
+
+@enduml
+
+Simplified:
+
+state LargeAA {
+
+RunTimer1: '//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+
+}
+
+
+state SmallAA {
+
+Check_SPEC: '^/R_SMPL_SMCA_SPEC.CV'
+Check_SPEC --> [*]: '^/P_SMCA_RESULT.CV' <= '^/R_SMPL_SMCA_SPEC.CV';
+Check_SPEC --> RunTimer2: '^/P_SMCA_RESULT.CV' > '^/R_SMPL_SMCA_SPEC.CV';
+RunTimer2: '//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+
+
+}
+
