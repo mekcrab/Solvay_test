@@ -1,0 +1,29 @@
+@startuml
+
+[*] -up-> SetResult
+
+SetResult: '^/P_AA_RESULT.CV'; '^/P_SMCA_RESULT.CV'
+
+SetResult --> LargeAA: '^/P_AA_RESULT.CV' > '^/R_SMPL_AA_SPEC.CV';
+
+SetResult --> SmallAA: '^/P_AA_RESULT.CV' <= '^/R_SMPL_AA_SPEC.CV';
+
+state LargeAA {
+
+RunTimer1: '//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+
+}
+
+
+state SmallAA {
+
+Check_SPEC: '^/R_SMPL_SMCA_SPEC.CV'
+Check_SPEC --> [*]: '^/P_SMCA_RESULT.CV' <= '^/R_SMPL_SMCA_SPEC.CV';
+Check_SPEC --> RunTimer2: '^/P_SMCA_RESULT.CV' > '^/R_SMPL_SMCA_SPEC.CV';
+RunTimer2: '//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+
+
+}
+
+@enduml
+
