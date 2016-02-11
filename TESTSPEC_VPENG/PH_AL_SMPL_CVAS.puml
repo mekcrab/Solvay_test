@@ -1,8 +1,14 @@
 @startuml
 
-[*] -up-> SetResult
+[*] -up-> SetTimers
 
-SetResult: '^/P_AA_RESULT.CV'; '^/P_SMCA_RESULT.CV'
+SetTimers: (//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV = '^/R_SMPL_AA_DLY.CV')
+SetTimers: (//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV = '^/R_SMPL_SMCA_DLY.CV')
+
+SetTimers -up-> SetResult
+
+SetResult: '^/P_AA_RESULT.CV'
+SetResult: '^/P_SMCA_RESULT.CV'
 
 SetResult --> LargeAA: '^/P_AA_RESULT.CV' > '^/R_SMPL_AA_SPEC.CV';
 
@@ -25,7 +31,6 @@ RunTimer --> SetResult
 
 state SmallAA {
 
-Check_SPEC: '^/R_SMPL_SMCA_SPEC.CV'
 Check_SPEC --> [*]: '^/P_SMCA_RESULT.CV' <= '^/R_SMPL_SMCA_SPEC.CV';
 Check_SPEC --> SPEC25: '^/P_SMCA_RESULT.CV' > '^/R_SMPL_SMCA_SPEC.CV';
 
@@ -37,7 +42,6 @@ AddCond: Set OAR Input Yes/No
 AddCond --> RunTimer2: ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:YES' )
 
 AddCond --> CheckPH:  ( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:NO' )
-CheckPH: '^/R_SMPL_PH_SPEC.CV'
 
 CheckPH --> RunTimer2: '//#RX_PH#/PV.CV' >= '^/R_SMPL_PH_SPEC.CV';
 CheckPH --> ACKLowPH: '//#RX_PH#/PV.CV'  < '^/R_SMPL_PH_SPEC.CV';
