@@ -48,10 +48,6 @@ ACKLowPH: Set Yes to Prompt
 RunTimer2: '//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV' := '_TIMER_HOLD:Run';
 
 RunTimer2 --> SetResult
-
-
 }
-
-
 @enduml
 

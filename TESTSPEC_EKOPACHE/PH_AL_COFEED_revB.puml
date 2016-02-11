@@ -18,5 +18,16 @@ state Configuring {
      State1 -> State2
   }
 
+
+Shooting --> NotShooting
+
 }
+
+Configuring : Some Attr
+
+state Configuring{
+  config : attr1
+  config : attr2
+}
+
 @enduml

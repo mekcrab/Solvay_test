@@ -41,12 +41,12 @@ class puml_state_lexer(RegexLexer):
 
     def embedded_state(lexer, match, ctx):
         '''function provides for recursive lexing of embedded states'''
-        print '***********Embedded state found: ******************'
+        # print '****************Embedded state found: ******************'
         # print match._text
         for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state', )):
             yield i,t,v
         yield len(match._text), SEND, u''
-        print '******************End embedded*********************'
+        # print '**************~~~~End embedded~~~~******************'
 
 
     # regex mode flags
@@ -366,22 +366,28 @@ def preprocess_puml(file_path):
 if __name__ == "__main__":
     from pygments.formatters import HtmlFormatter
     from pygments import lex
+    import glob
+
 
     # quick lexer test
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    with open('../../TESTSPEC_VPENG/PH_AL_SMPL_CVAS.puml') as ftest:
-        test_text = ftest.read().encode('utf-8')
+    test_dir = '../../TESTSPEC_VPENG/'
 
-    tkns = lex(test_text, selected_lexer)
-    with open('test_out.html', mode='w') as test_output:
-        formatter.format(tkns, test_output)
+    for test_file in glob.glob1(test_dir, '*.puml'):
+        print 'File name ::::', test_file
+        with open(test_dir + test_file) as ftest:
+            test_text = ftest.read().encode('utf-8')
 
-    tkns = lex(test_text, selected_lexer)
-    for (tkn, val) in tkns:
-        if tkn not in [IGNORE]:
-            print tkn, '\t', val
+        tkns = lex(test_text, selected_lexer)
+        with open('test_out.html', mode='w') as test_output:
+            formatter.format(tkns, test_output)
+
+        tkns = lex(test_text, selected_lexer)
+        for (tkn, val) in tkns:
+            if tkn not in [IGNORE]:
+                print tkn, '\t', val
 
     print "=================Testing complete=================="
 
