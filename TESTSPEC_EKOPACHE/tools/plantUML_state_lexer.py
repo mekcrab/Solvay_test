@@ -42,8 +42,10 @@ class puml_state_lexer(RegexLexer):
     def embedded_state(lexer, match, ctx):
         '''function provides for recursive lexing of embedded states'''
         print '***********Embedded state found: ******************'
+        # print match._text
         for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state', )):
             yield i,t,v
+        yield len(match._text), SEND, u''
         print '******************End embedded*********************'
 
 
@@ -87,29 +89,27 @@ class puml_state_lexer(RegexLexer):
              ),
              #transition definition
             (# TSOURCE
-             r'^(?:[\s]*)([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
-             # <<IGNORE>>
-             '[\s]*(\<\<.*\>\>)?[\s]*'\
-             # IGNORE, IGNORE, IGNORE (transition start -+)
-             '(#\w+)?[\s]*(x)?(-+)'\
-             # IGNORE [# formatting crap ]
-             '(?:\[('\
-                '(?:#\w+|dotted|dashed|bold|hidden)'\
-                '(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
-                 #IGNORE (arrow direction)
-                 '(left|right|up|down|le?|ri?|up?|do?)?'\
-                 #IGNORE (formatting)
-                 '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
-                 # IGNORE(transition end ->), IGNORE (o maker)
-                 '(-*)\>(o[\s]+)?(?:[\s]*)'\
-                 # TDEST
-                 '([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
+             r'^(?:[\s]*)([\w\.\_]+|[\w\.\_]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.\_]+)(?:==+))'\
              # <<IGNORE>>
              '(?:[\s]*)(\<\<.*\>\>)?(?:[\s]*)'\
+             # IGNORE, IGNORE, IGNORE (transition start -+)
+             '(#\w+)?(?:[\s]*)(x)?(-+)'\
+             # IGNORE [# formatting crap ]
+             '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
+             #IGNORE (arrow direction)
+             '(left|right|up|down|le?|ri?|up?|do?)?'\
+             #IGNORE (formatting)
+             '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
+                 # IGNORE(transition end ->), IGNORE (o maker)
+                 '(?:(-*\>)(o[\s]+)?[\s]*)?'\
+                 # TDEST
+                 '([\w\.\_]+|[\w\.\_]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.\_]+)(?:==+))'\
+             # <<IGNORE>>
+             '(?:[\s]*(\<\<.*\>\>)?[\s]*)'\
              # hash words IGNORE
-             '(#\w+)?(?:[\s]*)'\
+             '(?:(#\w+)?[\s]*)'\
              # TATTR
-             '(?::[\s]*([^"\n]+))?$',
+             '(?::\s*([^"\n]+))?',
                                  bygroups(TSOURCE,
                                           IGNORE,
                                           IGNORE, IGNORE, IGNORE,
@@ -158,7 +158,7 @@ class puml_state_lexer(RegexLexer):
                                         SSTART, embedded_state
                                )
             ),
-            (r'^(?:[\s]+)?(?:([\w\.]+)|["]([^"\n]+)["])'\
+            (r'^(?:[\s]+)?(?:([\w\.\_]+)|["]([^"\n]+)["])'\
              '(?:[\s]*:[\s]*)'\
              '(.*)(?:[\s]*)?$', bygroups(STATE, STATE, SATTR)
              ),
@@ -218,7 +218,8 @@ class puml_state_lexer(RegexLexer):
 
         'state': [
             include('root'),
-            (r'(?i)^end[\s]?state|\}$', SEND, '#pop'),
+            (r'(?i)^(?:[\s]*)end[\s]?state[\s]*', SEND),
+            (r'^\}$', SEND),
         ],
 
         'note': [
@@ -275,7 +276,7 @@ class puml_state_lexer(RegexLexer):
 
     }
 
-    def get_tokens_unprocessed(self, text, stack=('root',), debug=True, debug_regex=False):
+    def get_tokens_unprocessed(self, text, stack=('root',), debug=False, debug_regex=False):
         '''Catch-all for anything missed above'''
         pos = 0
         tokendefs = self._tokens
@@ -298,6 +299,7 @@ class puml_state_lexer(RegexLexer):
                         print stack
                         print m.re.pattern, '\t\nLength:', len(m.string)
                         print m.groups()
+                        print m.string
                         print "========================================="
 
                     if action is not None:
