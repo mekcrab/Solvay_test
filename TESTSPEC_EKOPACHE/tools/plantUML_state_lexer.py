@@ -12,9 +12,11 @@ from pygments.style import Style
 # fixme: define custom token types so the names make sense
 Token = _TokenType()
 STATE = Token.State  # state definition
-SALIAS = Token.StateAlias # state alias
-SATTR = Token.StateAttr # state attribute
-SNOTE = Token.StateNote # state notes
+SALIAS = Token.StateAlias  # state alias
+SATTR = Token.StateAttr  # state attribute
+SNOTE = Token.StateNote  # state notes
+SSTART = Token.EmbeddedStart  # start of superstate
+SEND = Token.EmbeddedEnd  # end of superstate
 
 TSOURCE = Token.SourceState # transition source
 TDEST = Token.DestState # transition destination
@@ -40,7 +42,7 @@ class puml_state_lexer(RegexLexer):
     def embedded_state(lexer, match, ctx):
         '''function provides for recursive lexing of embedded states'''
         print '***********Embedded state found: ******************'
-        for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state',)):
+        for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state', )):
             yield i,t,v
         print '******************End embedded*********************'
 
@@ -60,29 +62,30 @@ class puml_state_lexer(RegexLexer):
                 # STATE | "STATE"
                 '([\w\.]+)|["]([^"\n]+)["])'\
                 # skip spaces <<IGNORE>> skip spaces
-                '[\s]*(\<\<.*\>\>)?[\s]*'\
-                    # ([["IGNORE"]|[IGNORE]])
+                '(?:[\s]*)(\<\<.*\>\>)?(?:[\s]*)'\
+                    # ([["IGNORE"]|[IGNORE]]) <one group
                     '(\[\[(["][^"\n]+["]|[^{}\s\]\[]*)'\
                     # non-cap inner state defs {} - RECURSIVE REGEX
-                    '(?:[\s]*\{([^{}]+)\})?'\
-                    # non-cap  inner defs [[]] - more recursion
+                    '(?:[\s]*(\{)([^{}]+)\})?'\
+                    # non-cap  inner defs [[]] - more recursion, but IGNORE
                     '(?:[\s]*([^\]\[]+))?\]\])?'\
-                    # hash then words
-                    '[\s]*(#\w+[-\\|/]?\w+)?[\s]*'\
+                    # ignore hash then words
+                    '(?:[\s]*)(#\w+[-\\|/]?\w+)?(?:[\s]*)'\
                     # non-cap ((non-cap string elide or [text format])?
                     '(?:##(?:\[(dotted|dashed|bold)\])?'\
                         # words)
                         '(\w+)?)?'\
                     # non-cap state attribute
                     '[\s]*(?::[\s]*(.*))?$',
-                                    bygroups(SALIAS, STATE,
-                                             STATE,
-                                             IGNORE,
-                                             embedded_state,
-                                             embedded_state,
-                                             IGNORE,
-                                             IGNORE, IGNORE, IGNORE,
-                                             SATTR),),
+                            bygroups(STATE, SALIAS,
+                                     STATE, STATE,
+                                     IGNORE, IGNORE,
+                                     embedded_state,
+                                     IGNORE,
+                                     IGNORE, IGNORE, IGNORE,
+                                     SATTR)
+             ),
+             #transition definition
             (# TSOURCE
              r'^(?:[\s]*)([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
              # <<IGNORE>>
@@ -93,20 +96,20 @@ class puml_state_lexer(RegexLexer):
              '(?:\[('\
                 '(?:#\w+|dotted|dashed|bold|hidden)'\
                 '(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
-             #IGNORE (arrow direction)
-             '(left|right|up|down|le?|ri?|up?|do?)?'\
-             #IGNORE (formatting)
-             '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
-             # IGNORE(transition end ->), IGNORE (o maker)
-             '(-*)\>(o[\s]+)?[\s]*'\
-             # TDEST
-             '([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
+                 #IGNORE (arrow direction)
+                 '(left|right|up|down|le?|ri?|up?|do?)?'\
+                 #IGNORE (formatting)
+                 '(?:\[((?:#\w+|dotted|dashed|bold|hidden)(?:,#\w+|,dotted|,dashed|,bold|,hidden)*)\])?'\
+                 # IGNORE(transition end ->), IGNORE (o maker)
+                 '(-*)\>(o[\s]+)?(?:[\s]*)'\
+                 # TDEST
+                 '([\w\.]+|[\w\.]+\[H\]|\[\*\]|\[H\]|(?:==+)(?:[\w\.]+)(?:==+))'\
              # <<IGNORE>>
-             '[\s]*(\<\<.*\>\>)?[\s]*'\
+             '(?:[\s]*)(\<\<.*\>\>)?(?:[\s]*)'\
              # hash words IGNORE
              '(#\w+)?(?:[\s]*)'\
              # TATTR
-             '(?::[\s]*([^"\n]+))?(?:[\s]*)$',
+             '(?::[\s]*([^"\n]+))?$',
                                  bygroups(TSOURCE,
                                           IGNORE,
                                           IGNORE, IGNORE, IGNORE,
@@ -117,7 +120,8 @@ class puml_state_lexer(RegexLexer):
                                           TDEST,
                                           IGNORE,
                                           IGNORE,
-                                          TATTR),   ), #transition definition
+                                          TATTR)
+            ),
             (# no group
              r'^state[\s]+'\
              # SALIAS as "STATE" |
@@ -144,18 +148,20 @@ class puml_state_lexer(RegexLexer):
                 # IGNORE more formatting words?
                 '(\w+)?)?'\
              # non-cap, now in embedded state
-             '(?:[\s]*\{|[\s]+begin[\s]*)([^{}]+)(?:\}[\s]*)$',
+             '(?:[\s]*(\{|[\s]+begin)[\s]*)([^{}]+\})$',
                                bygroups(
                                         SALIAS, STATE,
                                         SALIAS, STATE,
                                         IGNORE,
                                         IGNORE,
                                         IGNORE, IGNORE,
-                                        embedded_state
-                               ), ),
-            (r'^(?:[\s]*)(?:([\w\.]+)|["]([^"\n]+)["])'\
+                                        SSTART, embedded_state
+                               )
+            ),
+            (r'^(?:[\s]+)?(?:([\w\.]+)|["]([^"\n]+)["])'\
              '(?:[\s]*:[\s]*)'\
-             '(.*)(?:[\s]*)$', bygroups(STATE, STATE, SATTR), ),
+             '(.*)(?:[\s]*)?$', bygroups(STATE, STATE, SATTR)
+             ),
             (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate (-- or ||)
             # START note
             (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
@@ -212,7 +218,7 @@ class puml_state_lexer(RegexLexer):
 
         'state': [
             include('root'),
-            (r'(?i)^(end[\s]?state|\})$', IGNORE, '#pop'),
+            (r'(?i)^end[\s]?state|\}$', SEND, '#pop'),
         ],
 
         'note': [
@@ -269,7 +275,7 @@ class puml_state_lexer(RegexLexer):
 
     }
 
-    def get_tokens_unprocessed(self, text, stack=('root',), debug=False, debug_regex=False):
+    def get_tokens_unprocessed(self, text, stack=('root',), debug=True, debug_regex=False):
         '''Catch-all for anything missed above'''
         pos = 0
         tokendefs = self._tokens
@@ -290,7 +296,8 @@ class puml_state_lexer(RegexLexer):
                     if debug: # debugging for regex matches
                         print "====================MATCH FOUND:========="
                         print stack
-                        print m.re.pattern, len(m.string)
+                        print m.re.pattern, '\t\nLength:', len(m.string)
+                        print m.groups()
                         print "========================================="
 
                     if action is not None:
@@ -362,7 +369,7 @@ if __name__ == "__main__":
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    with open('../../TESTSPEC_VPENG/PH_AL_CLN_WTR.puml') as ftest:
+    with open('../../TESTSPEC_VPENG/PH_AL_SMPL_CVAS.puml') as ftest:
         test_text = ftest.read().encode('utf-8')
 
     tkns = lex(test_text, selected_lexer)
