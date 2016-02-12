@@ -1,0 +1,61 @@
+@startuml
+
+[*] -up-> SetTimers
+
+SetTimers: (Set, //#UNIT_SUPPORT#/TMR3/TM_HOLD.CV, =, '^/R_SMPL_AA_DLY.CV')
+SetTimers: (Set, //#UNIT_SUPPORT#/TMR4/TM_HOLD.CV, =, '^/R_SMPL_SMCA_DLY.CV')
+
+SetTimers -up-> SetResult
+
+SetResult: (Set, '^/P_AA_RESULT.CV', =, ?)
+SetResult: (Set, '^/P_SMCA_RESULT.CV', =, ?)
+
+SetResult --> LargeAA: (Wait, '^/P_AA_RESULT.CV', >, '^/R_SMPL_AA_SPEC.CV')
+
+SetResult --> SmallAA: (Wait, '^/P_AA_RESULT.CV', <=, '^/R_SMPL_AA_SPEC.CV')
+
+state LargeAA {
+
+WaitRatioPrompt: (Set, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:?')
+WaitRatioPrompt --> AddSMCAPrompt: (Wait, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:NO')
+
+WaitRatioPrompt --> RunTimer: (Wait, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:YES')
+AddSMCAPrompt: (Set, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:YES')
+
+AddSMCAPrompt --> RunTimer
+RunTimer: (Set, '//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV', =, '_TIMER_HOLD:Run')
+RunTimer --> SetResult
+
+
+}
+
+state SmallAA {
+
+Check_SPEC --> [*]: (Wait, '^/P_SMCA_RESULT.CV', <=, '^/R_SMPL_SMCA_SPEC.CV')
+Check_SPEC --> SPEC25: (Wait, '^/P_SMCA_RESULT.CV', >, '^/R_SMPL_SMCA_SPEC.CV')
+
+SPEC25 --> SetResult: (Wait, '^/P_SMCA_RESULT.CV', <=, ( '^/R_SMPL_SMCA_SPEC.CV' + 25 ))
+
+SPEC25 --> AddCond: (Wait, '^/P_SMCA_RESULT.CV', >, ( '^/R_SMPL_SMCA_SPEC.CV' + 25 ))
+AddCond: (Set, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:?')
+
+AddCond --> RunTimer2: (Wait, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:YES')
+
+AddCond --> CheckPH:  (Wait, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:NO')
+
+CheckPH --> RunTimer2: (Wait, '//#RX_PH#/PV.CV', >=, '^/R_SMPL_PH_SPEC.CV')
+CheckPH --> ACKLowPH: (Wait, '//#RX_PH#/PV.CV', <, '^/R_SMPL_PH_SPEC.CV')
+ACKLowPH --> RunTimer2
+
+ACKLowPH: (Set, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:YES')
+
+RunTimer2: (Set, '//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV', =, '_TIMER_HOLD:Run')
+
+RunTimer2 --> SetResult
+
+
+}
+
+
+@enduml
+
