@@ -1,6 +1,6 @@
 __author__ = 'vpeng'
 
-#TODO: execute plantUML_state_lexer.py
+from TESTSPEC_EKOPACHE.tools import plantUML_state_lexer
 
 class Tool(object):
     def __init__(self,filename):
@@ -10,7 +10,7 @@ class Tool(object):
         self.search_result = []
 
     def search(self,word):
-        #To find str in the file and index the line number
+        #Find str in the file and index the line number
         enfile = enumerate(self.getfile.read().split("\n"))
         line_by_content = dict(list(enfile))
         content_by_line = dict(zip((line_by_content.values(),), (line_by_content.keys(),)))
@@ -71,13 +71,6 @@ class GetDict(Tool):
 
     def superstate(self):
         ''' SuperState List'''
-        #TODO: Verify that SuperState DO NOT have a StateAttr from latest lexer output, or improve this definition.
-        allstates_index = Tool.search(self,word = 'Token.State')
-
-        for item in allstates_index:
-            if 'Token.StateAttr' not in self.line_content[item+1]:
-                self.SuperState = Tool.gettoken(self,index = item) #SuperState List
-
-        return self.SuperState
+        pass
 
 
