@@ -48,11 +48,11 @@ class puml_state_lexer(RegexLexer):
             (r'(?i)^(left[\s]to[\s]right|top[\s]to[\s]bottom)[\s]+direction$', IGNORE),
             (r'^(?:[\s]*state[\s]+)'\
                  # STATE as "SALIAS" |
-                '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
+                '(?:([\w\.\_]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
                 # "STATE" as SALIAS |
-                '["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)|'\
+                '["]([^"\n]+)["][\s]+as[\s]+([\w\.\_]+)|'\
                 # STATE | "STATE"
-                '([\w\.]+)|["]([^"\n]+)["])'\
+                '([\w\.\_]+)|["]([^"\n]+)["])'\
                 # skip spaces <<IGNORE>> skip spaces
                 '(?:[\s]*)(\<\<.*\>\>)?(?:[\s]*)'\
                     # ([["IGNORE"]|[IGNORE]]) <one group
@@ -116,9 +116,9 @@ class puml_state_lexer(RegexLexer):
             (# no group
              r'^(?:[\s]*state[\s]+)'\
              # SALIAS as "STATE" |
-             '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
+             '(?:([\w\.\_]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
                 # ("SALIAS" as) STATE
-                 '(?:["]([^"\n]+?)["][\s]+as[\s]+)?([\w\.]+))'\
+                 '(?:["]([^"\n]+?)["][\s]+as[\s]+)?([\w\.\_]+))'\
              # skip spaces
              '(?:[\s]*)'\
              # <<IGNORE>>, skip spaces,
@@ -349,15 +349,21 @@ def preprocess_puml(file_path):
     :returns pre-processed text file
     """
     import TESTSPEC_EKOPACHE.tools.config as config
+    import subprocess, os
 
     plantUML_path = config.plantUML_jar
 
-    # generate plantUML diagram hash
+    # generate plantUML diagram hash, f is used as file-like obj for system call stdout
+    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -encodeurl ' + file_path,
+                              shell=True, stdout=subprocess.PIPE)
+    encoded_str = p.communicate()[0]
 
     # decompile text file from hash
-
+    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -decodeurl ' + encoded_str,
+                            shell=True, stdout=subprocess.PIPE)
     # return decompiled text
-    return
+    decoded_str = p.communicate()[0]
+    return decoded_str
 
 
 if __name__ == "__main__":
@@ -365,17 +371,19 @@ if __name__ == "__main__":
     from pygments import lex
     import glob
 
-
     # quick lexer test
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    test_dir = '../../TESTSPEC_VPENG/'
+    test_dir = '/home/erik/workspace/Solvay_test/TESTSPEC_EKOPACHE/'
 
     for test_file in glob.glob1(test_dir, '*.puml'):
         print 'File name ::::', test_file
-        with open(test_dir + test_file) as ftest:
-            test_text = ftest.read().encode('utf-8')
+
+        test_text = preprocess_puml(test_dir + test_file)
+
+        # with open(test_dir + test_file) as ftest:
+        #     test_text = ftest.read().encode('utf-8')
 
         tkns = lex(test_text, selected_lexer)
         with open('test_out.html', mode='w') as test_output:
