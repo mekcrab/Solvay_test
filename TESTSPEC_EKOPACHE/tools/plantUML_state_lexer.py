@@ -56,7 +56,7 @@ class puml_state_lexer(RegexLexer):
         'root': [
             (r'(?i)^(hide|show)?[\s]*footbox$', IGNORE),
             (r'(?i)^(left[\s]to[\s]right|top[\s]to[\s]bottom)[\s]+direction$', IGNORE),
-            (r'^(?:state[\s]+)'\
+            (r'^(?:[\s]*state[\s]+)'\
                  # STATE as "SALIAS" |
                 '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
                 # "STATE" as SALIAS |
@@ -81,11 +81,12 @@ class puml_state_lexer(RegexLexer):
                     '[\s]*(?::[\s]*(.*))?$',
                             bygroups(STATE, SALIAS,
                                      STATE, STATE,
-                                     IGNORE, IGNORE,
+                                     IGNORE,
+                                     IGNORE,
                                      embedded_state,
                                      IGNORE,
                                      IGNORE, IGNORE, IGNORE,
-                                     SATTR)
+                                     SATTR), 'state'
              ),
              #transition definition
             (# TSOURCE
@@ -123,7 +124,7 @@ class puml_state_lexer(RegexLexer):
                                           TATTR)
             ),
             (# no group
-             r'^state[\s]+'\
+             r'^(?:[\s]*state[\s]+)'\
              # SALIAS as "STATE" |
              '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
                 # ("SALIAS" as) STATE
@@ -148,7 +149,7 @@ class puml_state_lexer(RegexLexer):
                 # IGNORE more formatting words?
                 '(\w+)?)?'\
              # non-cap, now in embedded state
-             '(?:[\s]*(\{|[\s]+begin)[\s]*)([^{}]+\})$',
+             '(?:[\s]*(\{|[\s]+begin)[\s]*)([^\}]+\})$',
                                bygroups(
                                         SALIAS, STATE,
                                         SALIAS, STATE,
@@ -156,7 +157,7 @@ class puml_state_lexer(RegexLexer):
                                         IGNORE,
                                         IGNORE, IGNORE,
                                         SSTART, embedded_state
-                               )
+                               ), 'state'
             ),
             (r'^(?:[\s]+)?(?:([\w\.\_]+)|["]([^"\n]+)["])'\
              '(?:[\s]*:[\s]*)'\
@@ -164,14 +165,16 @@ class puml_state_lexer(RegexLexer):
              ),
             (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate (-- or ||)
             # START note
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
+            (r'^(?:[\s]*note[\s]+)(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$',
+                            bygroups(IGNORE, IGNORE, IGNORE),
+                            'note'),
             (r'(?i)^(hide|show)[\s]+empty[\s]+description$', IGNORE),
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
-            (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
+            (r'^[\s]*note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE, 'note'),
+            (r'^[\s]*note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE, 'note'),
             # START note
             (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             (r'(?i)^url[\s]*(?:of|for)?[\s]+([\w\.]+|["][^"\n]+["])[\s]+(?:is)?[\s]*(\[\[(["][^"\n]+["]|[^{}\s\]\[\n]*)(?:[\s]*\{([^{}\n]+)\})?(?:[\s]*([^\]\[\n]+))?\]\])$', IGNORE),
-            (r'^note[\s]+["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE),
+            (r'^note[\s]+["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # START note
             (r'^(note)[\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # blank lines
@@ -214,12 +217,14 @@ class puml_state_lexer(RegexLexer):
 
             # Consume strip tags
             (r'^(@startuml|@enduml)$', IGNORE),
+            # Consume whitespace
+            (r'^[\s]+', IGNORE),
         ],
 
         'state': [
             include('root'),
-            (r'(?i)^(?:[\s]*)end[\s]?state[\s]*', SEND),
-            (r'^\}$', SEND),
+            (r'(?i)^(?:[\s]*)end[\s]?state[\s]*', SEND, '#pop'),
+            (r'\}$', SEND, '#pop'),
         ],
 
         'note': [
@@ -299,7 +304,7 @@ class puml_state_lexer(RegexLexer):
                         print stack
                         print m.re.pattern, '\t\nLength:', len(m.string)
                         print m.groups()
-                        print m.string
+                        print m.string[pos:]
                         print "========================================="
 
                     if action is not None:
@@ -375,7 +380,7 @@ if __name__ == "__main__":
 
     test_dir = '../../TESTSPEC_VPENG/'
 
-    for test_file in glob.glob1(test_dir, '*.puml'):
+    for test_file in glob.glob1(test_dir, '*EM*.puml'):
         print 'File name ::::', test_file
         with open(test_dir + test_file) as ftest:
             test_text = ftest.read().encode('utf-8')
