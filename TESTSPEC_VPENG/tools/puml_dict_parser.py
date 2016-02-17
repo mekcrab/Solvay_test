@@ -1,38 +1,42 @@
 __author__ = 'vpeng'
 
-import TESTSPEC_EKOPACHE.tools.plantUML_state_lexer
+# Execute plantUML_state_lexer.py
+import os
+os.system('../../TESTSPEC_EKOPACHE/tools/plantUML_state_lexer.py')
 
-#TODO: filename = output of plantUML_state_lexer
+# filename = output of plantUML_state_lexer
+filename = '../../TESTSPEC_EKOPACHE/tools/test_out.html'
+file = open(filename, mode = "r")
 
 class Tool(object):
-    def __init__(self,filename):
-        self.getfile = open(filename, mode = "r")
+    def __init__(self):
+        self.getfile = file
         self.line_content = self.getfile.readlines()
-        self.line_index = [l for l in range(0,len(self.line_content)-1)]
+        self.line_index = [l for l in range(0,len(self.line_content))]
         self.search_result = []
 
-    def search(self,word):
+    def search(self, word):
         #Find str in the file and index the line number
         enfile = enumerate(self.getfile.read().split("\n"))
         line_by_content = dict(list(enfile))
         content_by_line = dict(zip((line_by_content.values(),), (line_by_content.keys(),)))
-        for i in range(0,len(self.line_content)-1):
+        for i in range(0, len(self.line_content)):
             if word in self.line_content[i]:
                 self.search_result.append(content_by_line[i])
                 return self.search_result
             else:
                 raise TypeError
 
-    def gettoken(self,index):
+    def gettoken(self, index):
         string = self.line_content[index]
-        splitted = string.split() #Split Alias and its token
+        splitted = string.split() #Split Alias (0) and its token (1)
         return splitted[1] #Return token
 
-    def dictlist(self,keyword,value):
+    def dictlist(self, keyword, value):
         '''To avoid keyword replacement in dictionary, we must use dictionary list '''
-        z = zip(keyword,value)
+        z = zip(keyword, value)
         dictlist = []
-        for n in range(0,len(value)):
+        for n in range(0, len(value)):
             dictlist.append(dict([z[n]]))
         return dictlist
 
@@ -53,10 +57,62 @@ class Tool(object):
                     new_dict[y] = [x[y]]
         return new_dict
 
+class GetList(Tool):
+    def __init__(self):
+        Tool.__init__(self)
 
-class GetDict(Tool):
-    def __init__(self,filename):
-        Tool.__init__(self,filename)
+    def Action(self):
+        action_index = Tool.search(self, word = 'Token.StateAttr')
+        for item in action_index:
+            self.Action = Tool.gettoken(self, index = item) # StateAttr List
+            self.AState = Tool.gettoken(self, index = item -1) #Action List
+
+        return self.Action
+
+    def AState(self):
+
+        return self.AState
+
+    def Transition(self):
+        transition_index = Tool.search(self, word = 'Token.TranAttr')
+
+        for item in transition_index:
+
+            self.Transition = Tool.gettoken(self, index = item) # TranAttr List
+            self.TranSource = Tool.gettoken(self, index = item - 2) # SourceState List
+            self.TranDest = Tool.gettoken(self,index = item - 1) # DestState List
+
+        return self.Transition
+
+    def TranSource(self):
+
+        return self.TranSource
+
+    def TranDest(self):
+
+        return self.TranDest
+
+    def DestState(self):
+        destination_index = Tool.search(self, word = 'Token.DestState')
+
+        for item in destination_index:
+            self.DestState = Tool.gettoken(self, index = item) # DestState List
+            self.SourceState = Tool.gettoken(self, index = item - 1) # SourceState List
+
+        return self.DestState
+
+    def SourceState(self):
+
+        return self.SourceState
+
+    def SuperState(self):
+
+        pass
+
+
+class GetDict(GetList):
+    def __init__(self):
+        GetList.__init__(self)
 
 
     def state_action(self):
@@ -64,37 +120,31 @@ class GetDict(Tool):
         State:Action Dictionary.
         One State can contain multiple Actions in a List
         '''
-        action_index = Tool.search(self, word = 'Token.StateAttr')
+        dictlist = Tool.dictlist(self, keyword = self.AState, value = self.Action)
 
-        for item in action_index:
-            self.Action = Tool.gettoken(self, index = item) # StateAttr List
-            self.State = Tool.gettoken(self,index = item-1) # State List
-
-        dictlist = Tool.dictlist(self, keyword = self.State, value = self.Action)
-
-        return Tool.wrapdict(self,DL = dictlist)
+        return Tool.wrapdict(self, DL = dictlist)
 
     def transition_states(self):
         '''Transition:States Dictionary.
         This Dictionary is able to index the Source and Destination of an identified transition
         States include (TranSource, TranDest)
+        Same Transition may contain multiple (TranSource, TranDest) in a List
         '''
-        transition_index = Tool.search(self, word = 'Token.TranAttr')
 
-        for item in transition_index:
+        self.TranSourceDest = zip((self.TranSource,), (self.TranDest,))
+        dictlist = Tool.dictlist(self, keyword = self.Transition, value = self.TranSourceDest)
 
-            self.Transition = Tool.gettoken(self,index = item) # TranAttr List
-            self.TranSource = Tool.gettoken(self, index = item - 2) # SourceState List
-            self.TranDest = Tool.gettoken(self,index = item - 1) # DestState List
+        return Tool.wrapdict(self, DL = dictlist)
 
-        self.SourceDest = zip((self.TranSource,),(self.TranDest,))
-        dictlist = Tool.dictlist(self, keyword = self.Transition, value = self.SourceDest)
+    def states_transition(self):
+        '''(TranSource, TranDest):Transition Dictionary'''
+        dictlist = Tool.dictlist(self, keyword = self.TranSourceDest, value = self.Transition)
 
-        return Tool.wrapdict(self,DL = dictlist)
+        return Tool.wrapdict(self, DL = dictlist)
 
     def source_transition(self):
         '''SourceState:Transition Dictionary.
-        Onr SourceState can have multiple Transitions in a List
+        One SourceState can have multiple Transitions in a List
         '''
         dictlist = Tool.dictlist(self, keyword = self.TranSource, value = self.Transition)
         return Tool.wrapdict(self, DL = dictlist)
@@ -104,18 +154,11 @@ class GetDict(Tool):
         SourceState:DestState Dictionary
         One Source can have multiple Destination in a List
         '''
-        destination_index = Tool.search(self,word = 'Token.DestState')
-
-        for item in destination_index:
-            self.DestState = Tool.gettoken(self,index = item) # DestState List
-            self.SourceState = Tool.gettoken(self,index = item - 1) # SourceState List
 
         dictlist = Tool.dictlist(self, keyword = self.SourceState, value = self.DestState)
 
         return Tool.wrapdict(self, DL = dictlist)
 
-    def superstate(self):
-        ''' SuperState List'''
-        pass
 
+file.close()
 
