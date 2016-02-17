@@ -39,16 +39,6 @@ class puml_style(Style):
 
 class puml_state_lexer(RegexLexer):
 
-    def embedded_state(lexer, match, ctx):
-        '''function provides for recursive lexing of embedded states'''
-        # print '****************Embedded state found: ******************'
-        # print match._text
-        for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state', )):
-            yield i,t,v
-        yield len(match._text), SEND, u''
-        # print '**************~~~~End embedded~~~~******************'
-
-
     # regex mode flags
     flags = re.MULTILINE
 
@@ -68,7 +58,7 @@ class puml_state_lexer(RegexLexer):
                     # ([["IGNORE"]|[IGNORE]]) <one group
                     '(\[\[(["][^"\n]+["]|[^{}\s\]\[]*)'\
                     # non-cap inner state defs {} - RECURSIVE REGEX
-                    '(?:[\s]*(\{)([^{}]+)\})?'\
+                    '(?:[\s]*(\{))?'\
                     # non-cap  inner defs [[]] - more recursion, but IGNORE
                     '(?:[\s]*([^\]\[]+))?\]\])?'\
                     # ignore hash then words
@@ -83,7 +73,7 @@ class puml_state_lexer(RegexLexer):
                                      STATE, STATE,
                                      IGNORE,
                                      IGNORE,
-                                     embedded_state,
+                                     SSTART,
                                      IGNORE,
                                      IGNORE, IGNORE, IGNORE,
                                      SATTR), 'state'
@@ -138,7 +128,7 @@ class puml_state_lexer(RegexLexer):
                 # trash inside brackets
                  '(?:["][^"]+["]|[^{}\s\]\[]*)'\
                  # skip spaces, {CALLBACK: embedded state} (want line returns)
-                 '(?:[\s]*\{[\s]*(?:[^{}]+)\})?'\
+                 '(?:[\s]*\{[\s]*(?:[^{]+)\})?'\
                  # more trash
                  '(?:[\s]*(?:[^\]\[]+))?'\
              '\]\])?'\
@@ -149,14 +139,14 @@ class puml_state_lexer(RegexLexer):
                 # IGNORE more formatting words?
                 '(\w+)?)?'\
              # non-cap, now in embedded state
-             '(?:[\s]*(\{|[\s]+begin)[\s]*)([^\}]+\})$',
+             '(?:[\s]*(\{|[\s]+begin)[\s]*)$',
                                bygroups(
                                         SALIAS, STATE,
                                         SALIAS, STATE,
                                         IGNORE,
                                         IGNORE,
                                         IGNORE, IGNORE,
-                                        SSTART, embedded_state
+                                        SSTART
                                ), 'state'
             ),
             (r'^(?:[\s]+)?(?:([\w\.\_]+)|["]([^"\n]+)["])'\
@@ -218,7 +208,9 @@ class puml_state_lexer(RegexLexer):
             # Consume strip tags
             (r'^(@startuml|@enduml)$', IGNORE),
             # Consume whitespace
-            (r'^[\s]+', IGNORE),
+            (r'^[\s]+$', IGNORE),
+            # prevent state reset by blank lines
+            (r'\n', IGNORE)
         ],
 
         'state': [
@@ -230,11 +222,11 @@ class puml_state_lexer(RegexLexer):
         'note': [
             include('root'),
             # END note
-            (r'(?i)^(end[%s]?note|\})$', IGNORE, '#pop'),
+            (r'(?i)^(end[\s]?note|\})$', IGNORE, '#pop'),
             # END note
-            (r'(?i)^end[%s]?note$', IGNORE, '#pop'),
+            (r'(?i)^end[\s]?note$', IGNORE, '#pop'),
             # END note
-            (r'(?i)^end[%s]?note$', IGNORE, '#pop'),
+            (r'(?i)^end[\s]?note$', IGNORE, '#pop'),
         ],
 
         'comment': [
@@ -278,7 +270,6 @@ class puml_state_lexer(RegexLexer):
             #END sprite
             (r'(?i)^end[%s]?sprite|\}$', IGNORE, '#pop'),
         ],
-
     }
 
     def get_tokens_unprocessed(self, text, stack=('root',), debug=False, debug_regex=False):
@@ -301,10 +292,10 @@ class puml_state_lexer(RegexLexer):
                 if m:
                     if debug: # debugging for regex matches
                         print "====================MATCH FOUND:========="
-                        print stack
-                        print m.re.pattern, '\t\nLength:', len(m.string)
+                        print statestack
+                        # print m.re.pattern, '\t\nLength:', len(m.string)-pos
                         print m.groups()
-                        print m.string[pos:]
+                        # print m.string[pos:]
                         print "========================================="
 
                     if action is not None:
@@ -337,6 +328,7 @@ class puml_state_lexer(RegexLexer):
                 try:
                     if text[pos] == '\n':
                         # at EOL, reset state to "root"
+                        print '---------------state reset-------------------'
                         statestack = ['root']
                         statetokens = tokendefs['root']
                         yield pos, Text, u'\n'
@@ -380,7 +372,7 @@ if __name__ == "__main__":
 
     test_dir = '../../TESTSPEC_VPENG/'
 
-    for test_file in glob.glob1(test_dir, '*EM*.puml'):
+    for test_file in glob.glob1(test_dir, '*.puml'):
         print 'File name ::::', test_file
         with open(test_dir + test_file) as ftest:
             test_text = ftest.read().encode('utf-8')
