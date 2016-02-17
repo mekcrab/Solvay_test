@@ -39,16 +39,6 @@ class puml_style(Style):
 
 class puml_state_lexer(RegexLexer):
 
-    def embedded_state(lexer, match, ctx):
-        '''function provides for recursive lexing of embedded states'''
-        # print '****************Embedded state found: ******************'
-        # print match._text
-        for i,t,v in lexer.get_tokens_unprocessed(match._text, stack=('state', )):
-            yield i,t,v
-        yield len(match._text), SEND, u''
-        # print '**************~~~~End embedded~~~~******************'
-
-
     # regex mode flags
     flags = re.MULTILINE
 
@@ -56,19 +46,19 @@ class puml_state_lexer(RegexLexer):
         'root': [
             (r'(?i)^(hide|show)?[\s]*footbox$', IGNORE),
             (r'(?i)^(left[\s]to[\s]right|top[\s]to[\s]bottom)[\s]+direction$', IGNORE),
-            (r'^(?:state[\s]+)'\
+            (r'^(?:[\s]*state[\s]+)'\
                  # STATE as "SALIAS" |
-                '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
+                '(?:([\w\.\_]+)[\s]+as[\s]+["]([^"\n]+)["]|'\
                 # "STATE" as SALIAS |
-                '["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)|'\
+                '["]([^"\n]+)["][\s]+as[\s]+([\w\.\_]+)|'\
                 # STATE | "STATE"
-                '([\w\.]+)|["]([^"\n]+)["])'\
+                '([\w\.\_]+)|["]([^"\n]+)["])'\
                 # skip spaces <<IGNORE>> skip spaces
                 '(?:[\s]*)(\<\<.*\>\>)?(?:[\s]*)'\
                     # ([["IGNORE"]|[IGNORE]]) <one group
                     '(\[\[(["][^"\n]+["]|[^{}\s\]\[]*)'\
                     # non-cap inner state defs {} - RECURSIVE REGEX
-                    '(?:[\s]*(\{)([^{}]+)\})?'\
+                    '(?:[\s]*(\{))?'\
                     # non-cap  inner defs [[]] - more recursion, but IGNORE
                     '(?:[\s]*([^\]\[]+))?\]\])?'\
                     # ignore hash then words
@@ -81,11 +71,12 @@ class puml_state_lexer(RegexLexer):
                     '[\s]*(?::[\s]*(.*))?$',
                             bygroups(STATE, SALIAS,
                                      STATE, STATE,
-                                     IGNORE, IGNORE,
-                                     embedded_state,
+                                     IGNORE,
+                                     IGNORE,
+                                     SSTART,
                                      IGNORE,
                                      IGNORE, IGNORE, IGNORE,
-                                     SATTR)
+                                     SATTR), 'state'
              ),
              #transition definition
             (# TSOURCE
@@ -123,11 +114,11 @@ class puml_state_lexer(RegexLexer):
                                           TATTR)
             ),
             (# no group
-             r'^state[\s]+'\
+             r'^(?:[\s]*state[\s]+)'\
              # SALIAS as "STATE" |
-             '(?:([\w\.]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
+             '(?:([\w\.\_]+)[\s]+as[\s]+["]([^"\n]+?)["]|'\
                 # ("SALIAS" as) STATE
-                 '(?:["]([^"\n]+?)["][\s]+as[\s]+)?([\w\.]+))'\
+                 '(?:["]([^"\n]+?)["][\s]+as[\s]+)?([\w\.\_]+))'\
              # skip spaces
              '(?:[\s]*)'\
              # <<IGNORE>>, skip spaces,
@@ -137,7 +128,7 @@ class puml_state_lexer(RegexLexer):
                 # trash inside brackets
                  '(?:["][^"]+["]|[^{}\s\]\[]*)'\
                  # skip spaces, {CALLBACK: embedded state} (want line returns)
-                 '(?:[\s]*\{[\s]*(?:[^{}]+)\})?'\
+                 '(?:[\s]*\{[\s]*(?:[^{]+)\})?'\
                  # more trash
                  '(?:[\s]*(?:[^\]\[]+))?'\
              '\]\])?'\
@@ -148,15 +139,15 @@ class puml_state_lexer(RegexLexer):
                 # IGNORE more formatting words?
                 '(\w+)?)?'\
              # non-cap, now in embedded state
-             '(?:[\s]*(\{|[\s]+begin)[\s]*)([^{}]+\})$',
+             '(?:[\s]*(\{|[\s]+begin)[\s]*)$',
                                bygroups(
                                         SALIAS, STATE,
                                         SALIAS, STATE,
                                         IGNORE,
                                         IGNORE,
                                         IGNORE, IGNORE,
-                                        SSTART, embedded_state
-                               )
+                                        SSTART
+                               ), 'state'
             ),
             (r'^(?:[\s]+)?(?:([\w\.\_]+)|["]([^"\n]+)["])'\
              '(?:[\s]*:[\s]*)'\
@@ -164,14 +155,16 @@ class puml_state_lexer(RegexLexer):
              ),
             (r'(?i)^(--+|\|\|+)$', IGNORE), # state delineation within superstate (-- or ||)
             # START note
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$', IGNORE, 'note'),
+            (r'^(?:[\s]*note[\s]+)(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*\{?$',
+                            bygroups(IGNORE, IGNORE, IGNORE),
+                            'note'),
             (r'(?i)^(hide|show)[\s]+empty[\s]+description$', IGNORE),
-            (r'^note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
-            (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE),
+            (r'^[\s]*note[\s]+(right|left|top|bottom)(?:[\s]+of[\s]+([\w\.]+|["][^"\n]+["])|)[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE, 'note'),
+            (r'^[\s]*note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?[\s]*:[\s]*(.*)$', IGNORE, 'note'),
             # START note
             (r'^note[\s]+(right|left|top|bottom)?[\s]*on[\s]+link[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             (r'(?i)^url[\s]*(?:of|for)?[\s]+([\w\.]+|["][^"\n]+["])[\s]+(?:is)?[\s]*(\[\[(["][^"\n]+["]|[^{}\s\]\[\n]*)(?:[\s]*\{([^{}\n]+)\})?(?:[\s]*([^\]\[\n]+))?\]\])$', IGNORE),
-            (r'^note[\s]+["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE),
+            (r'^note[\s]+["]([^"\n]+)["][\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # START note
             (r'^(note)[\s]+as[\s]+([\w\.]+)[\s]*(#\w+[-\\|/]?\w+)?$', IGNORE, 'note'),
             # blank lines
@@ -214,22 +207,26 @@ class puml_state_lexer(RegexLexer):
 
             # Consume strip tags
             (r'^(@startuml|@enduml)$', IGNORE),
+            # Consume whitespace
+            (r'^[\s]+$', IGNORE),
+            # prevent state reset by blank lines
+            (r'\n', IGNORE)
         ],
 
         'state': [
             include('root'),
-            (r'(?i)^(?:[\s]*)end[\s]?state[\s]*', SEND),
-            (r'^\}$', SEND),
+            (r'(?i)^(?:[\s]*)end[\s]?state[\s]*', SEND, '#pop'),
+            (r'\}$', SEND, '#pop'),
         ],
 
         'note': [
             include('root'),
             # END note
-            (r'(?i)^(end[%s]?note|\})$', IGNORE, '#pop'),
+            (r'(?i)^(end[\s]?note|\})$', IGNORE, '#pop'),
             # END note
-            (r'(?i)^end[%s]?note$', IGNORE, '#pop'),
+            (r'(?i)^end[\s]?note$', IGNORE, '#pop'),
             # END note
-            (r'(?i)^end[%s]?note$', IGNORE, '#pop'),
+            (r'(?i)^end[\s]?note$', IGNORE, '#pop'),
         ],
 
         'comment': [
@@ -273,7 +270,6 @@ class puml_state_lexer(RegexLexer):
             #END sprite
             (r'(?i)^end[%s]?sprite|\}$', IGNORE, '#pop'),
         ],
-
     }
 
     def get_tokens_unprocessed(self, text, stack=('root',), debug=False, debug_regex=False):
@@ -296,10 +292,10 @@ class puml_state_lexer(RegexLexer):
                 if m:
                     if debug: # debugging for regex matches
                         print "====================MATCH FOUND:========="
-                        print stack
-                        print m.re.pattern, '\t\nLength:', len(m.string)
+                        print statestack
+                        # print m.re.pattern, '\t\nLength:', len(m.string)-pos
                         print m.groups()
-                        print m.string
+                        # print m.string[pos:]
                         print "========================================="
 
                     if action is not None:
@@ -332,6 +328,7 @@ class puml_state_lexer(RegexLexer):
                 try:
                     if text[pos] == '\n':
                         # at EOL, reset state to "root"
+                        print '---------------state reset-------------------'
                         statestack = ['root']
                         statetokens = tokendefs['root']
                         yield pos, Text, u'\n'
@@ -352,15 +349,21 @@ def preprocess_puml(file_path):
     :returns pre-processed text file
     """
     import TESTSPEC_EKOPACHE.tools.config as config
+    import subprocess, os
 
     plantUML_path = config.plantUML_jar
 
-    # generate plantUML diagram hash
+    # generate plantUML diagram hash, f is used as file-like obj for system call stdout
+    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -encodeurl ' + file_path,
+                              shell=True, stdout=subprocess.PIPE)
+    encoded_str = p.communicate()[0]
 
     # decompile text file from hash
-
+    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -decodeurl ' + encoded_str,
+                            shell=True, stdout=subprocess.PIPE)
     # return decompiled text
-    return
+    decoded_str = p.communicate()[0]
+    return decoded_str
 
 
 if __name__ == "__main__":
@@ -368,17 +371,19 @@ if __name__ == "__main__":
     from pygments import lex
     import glob
 
-
     # quick lexer test
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    test_dir = '../../TESTSPEC_VPENG/'
+    test_dir = '/home/erik/workspace/Solvay_test/TESTSPEC_EKOPACHE/'
 
     for test_file in glob.glob1(test_dir, '*.puml'):
         print 'File name ::::', test_file
-        with open(test_dir + test_file) as ftest:
-            test_text = ftest.read().encode('utf-8')
+
+        test_text = preprocess_puml(test_dir + test_file)
+
+        # with open(test_dir + test_file) as ftest:
+        #     test_text = ftest.read().encode('utf-8')
 
         tkns = lex(test_text, selected_lexer)
         with open('test_out.html', mode='w') as test_output:
