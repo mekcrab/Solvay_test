@@ -27,6 +27,16 @@ def recur(in_state):
         for item in range(0,len(dest_state)):
             connection.append((in_state, dest_state[item]))
 
+            '''If in_state is a SuperState,
+            we run the childStates inside this superstate,
+            start with the start point of the childstate'''
+
+            #TODO: SuperState List in GetList module has to be developed.
+            if in_state in GetList().SuperState():
+                #TODO: SuperState:ChildStart Dictionary has to be developed in GetDict
+                recur(GetDict().superstate_childstart()[in_state])
+
+
             if connection[item] in GetDict().states_transition():
                 Transition = GetDict().states_transition()[connection[item]] # Get List of Transitions (if any)
                 for n in range(0, len(Transition)): # Add Transitions
@@ -50,26 +60,32 @@ def recur(in_state):
                             StateAlgo.State(state_id = GetDict().SuperState()[item]).deactivate()
 
 
-            #TODO: SuperState List in GetList module has to be developed.
-            if dest_state[item] in GetList().SuperState():
-                #TODO: SuperState:ChildStart Dictionary has to be developed in GetDict
-                recur(GetDict().superstate_childstart())
-
-
 '''Deactivate all at first'''
 StateAlgo.StateAlgorithm().deactivate_all()
 
 '''Activate '[*]' State'''
 StateAlgo.State(state_id = '[*]').activate()
+print '_____________Start Testing...____________'
 
 '''Recursion should start with checking all active states.
 It hits END if a destination state is ['*']
 '''
 AllSource = GetList().SourceState() #Get All Source State in a List
 
-for item in range(0,len(AllSource)):
-    if StateAlgo.State(state_id = AllSource[item]).is_active():
-        recur(AllSource[item])
+'''Need to check the status (active/not active) of all instances in a state list'''
+def check_active(state_list):
+    status = []
+    for item in range(0,len(state_list)):
+        status.append(StateAlgo.State(state_id = state_list[item]).is_active())
+        return status # Returns a list of True or False
+
+'''while any state in AllSource is active, keep running the recursion'''
+while True in check_active(AllSource):
+    for item in range(0,len(AllSource)):
+        if StateAlgo.State(state_id = AllSource[item]).is_active():
+            recur(AllSource[item])
+        check_active(AllSource)
 
 
+print '___________Test Complete___________'
 StateAlgo.StateAlgorithm().deactivate_all()
