@@ -1,12 +1,12 @@
 __author__ = 'vpeng'
 
 # Execute plantUML_state_lexer.py
-import os
-os.system('../../TESTSPEC_EKOPACHE/tools/plantUML_state_lexer.py')
+#import os
+#os.system('../../TESTSPEC_EKOPACHE/tools/plantUML_state_lexer.py')
 
 # filename = output of plantUML_state_lexer
-filename = '../../TESTSPEC_EKOPACHE/tools/test_out.html'
-file = open(filename, mode = "r")
+#filename = 'fake_PH_AL_SMPL_CVAS_test_out.txt'
+#file = open(filename, mode="r")
 
 class Tool(object):
     def __init__(self):
@@ -109,6 +109,9 @@ class GetList(Tool):
 
         return self.DestState
 
+    def AllStates(self):
+        return set(self.SourceState + self.DestState) # All States List discarding duplicates
+
     def SourceState(self):
 
         return self.SourceState
@@ -183,5 +186,30 @@ class GetDict(GetList):
         pass
 
 
-file.close()
+#file.close()
+
+
+if __name__ == "__main__":
+    from TESTSPEC_EKOPACHE.tools.plantUML_state_lexer import puml_state_lexer
+    from pygments import lex
+    from pprint import pprint as pp
+
+    test_file = 'PH_AL_CLN_STM.puml'
+
+    # opens test file for reading
+    with open(test_file) as ftest:
+        # saves text from file as python string
+        test_text = ftest.read().encode('utf-8')
+
+    # generator of (token, value) tuples
+    tkns = lex(test_text, puml_state_lexer())
+
+    # list of token_type, value pairs
+    list_out = [(x[0],x[1]) for x in tkns]
+
+    # get a string printout of this list:
+    str_out = pp(list_out)
+
+
+    print "..."
 
