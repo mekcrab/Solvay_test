@@ -34,7 +34,7 @@ class Tool(object):
 
     def dictlist(self, keyword, value):
         '''To avoid keyword replacement in dictionary, we must use dictionary list '''
-        z = zip(keyword, value)
+        z = zip((keyword,), (value,))
         dictlist = []
         for n in range(0, len(value)):
             dictlist.append(dict([z[n]]))
@@ -63,9 +63,11 @@ class GetList(Tool):
 
     def Action(self):
         action_index = Tool.search(self, word = 'Token.StateAttr')
+        self.Action = []
+        self.AState = []
         for item in action_index:
-            self.Action = Tool.gettoken(self, index = item) # StateAttr List
-            self.AState = Tool.gettoken(self, index = item -1) #Action List
+            self.Action.append(Tool.gettoken(self, index = item)) # StateAttr List
+            self.AState.append(Tool.gettoken(self, index = item -1)) #Action List
 
         return self.Action
 
@@ -76,11 +78,15 @@ class GetList(Tool):
     def Transition(self):
         transition_index = Tool.search(self, word = 'Token.TranAttr')
 
+        self.Transition = []
+        self.TranSource = []
+        self.TranDest = []
+
         for item in transition_index:
 
-            self.Transition = Tool.gettoken(self, index = item) # TranAttr List
-            self.TranSource = Tool.gettoken(self, index = item - 2) # SourceState List
-            self.TranDest = Tool.gettoken(self,index = item - 1) # DestState List
+            self.Transition.append(Tool.gettoken(self, index = item)) # TranAttr List
+            self.TranSource.append(Tool.gettoken(self, index = item - 2)) # SourceState List
+            self.TranDest.append(Tool.gettoken(self,index = item - 1)) # DestState List
 
         return self.Transition
 
@@ -94,10 +100,12 @@ class GetList(Tool):
 
     def DestState(self):
         destination_index = Tool.search(self, word = 'Token.DestState')
+        self.DestState = []
+        self.SourceState = []
 
         for item in destination_index:
-            self.DestState = Tool.gettoken(self, index = item) # DestState List
-            self.SourceState = Tool.gettoken(self, index = item - 1) # SourceState List
+            self.DestState.append(Tool.gettoken(self, index = item)) # DestState List
+            self.SourceState.append(Tool.gettoken(self, index = item - 1)) # SourceState List
 
         return self.DestState
 
