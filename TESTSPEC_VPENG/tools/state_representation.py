@@ -5,10 +5,10 @@ from TESTSPEC_EKOPACHE.tools import StateAlgo
 
 
 def recur(in_state):
-    '''after calling the recur function, these things should be down:
-    1. Actions (if any) in the in_state is complete
+    '''after calling the recur function, these things should be done:
+    1. Actions (if any) in the in_state are complete
     2. Transitions are checked
-    3. For those good transitions, the destination state is activated (except ['*'] as destination)
+    3. For those good transitions, the destination states are activated (except ['*'] as destination)
     4. If any transition is gotten through, which means destination state is activated, in_state should be deactivated)
     Therefore, we can keep running the recursion with: in_state = all active states.
     '''
@@ -40,6 +40,20 @@ def recur(in_state):
                                                                 check_permissive = True)
                     else:
                         StateAlgo.State(state_id = in_state).deactivate()
+
+                    '''If in_state is a superstate and transition of in_state complete,
+                    deactivate all childstates inside the in_state
+                    '''
+                    #TODO: SuperState:ChildState Dictionary has to be developed in GetDict.
+                    if in_state[item] in GetList().SuperState():
+                        for item in GetDict().superstate_child():
+                            StateAlgo.State(state_id = GetDict().SuperState()[item]).deactivate()
+
+
+            #TODO: SuperState List in GetList module has to be developed.
+            if dest_state[item] in GetList().SuperState():
+                #TODO: SuperState:ChildStart Dictionary has to be developed in GetDict
+                recur(GetDict().superstate_childstart())
 
 
 '''Deactivate all at first'''

@@ -159,6 +159,21 @@ class GetDict(GetList):
 
         return Tool.wrapdict(self, DL = dictlist)
 
+    def superstate_childstart(self):
+        '''
+        SuperState:ChildStart Dictionary
+        Childstart is the Start State inside the SuperState
+        '''
+
+        pass
+
+    def superstate_child(self):
+        '''SuperState:ChildState Dictionary
+        ChildState is a List that contains all States inside the superstate
+        '''
+
+        pass
+
 
 file.close()
 
