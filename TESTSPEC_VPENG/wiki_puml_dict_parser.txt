@@ -1,0 +1,54 @@
+...assume we have a test_out.txt file...(i.e.fake_PH_AL_SMPLE_CVAS_test_out.txt)
+
+>>> Tool.search(word = 'Token.SourceState') 
+# the enfile parameter inside this definition "labels" the line number in the txt file
+# returns a list of the line numbers that include the word
+[9, 13, 16,..............] 
+
+
+
+
+>>> Tool.gettoken(index = 9) # index is the line number picked from Tool.search above
+#splitted parameter include two instances: 'Token.SourceState' and [*] on line#9
+#this function returns splitted[1] which is:
+[*]
+
+
+
+>>>Tool.dictlist(keyword = fake_keyword,value = fake_value)
+# keyword and value parameters are lists:
+# fake_keyword = ['A','B','C','B','A']
+# fake_value = [1,2,3,4,5]
+# this function returns:
+[{'A',1},{'B',2},{'C':3},{'B',4},{'A',5}]
+
+
+
+
+>>>Tool.wrapdict(DL = Tool.dictlist(keyword = fake_keyword,value = fake_value))
+{'A':[1,5],
+ 'B':[2,4],
+ 'C':[3]}
+
+
+
+>>>GetList().AState()
+#returns all of the states that have StateAttr below, in this case:
+['SetResult', 'VerifyRatioPrompt', 'AddSMCAPrompt',.............]
+
+
+>>>GetDict().source_destination()
+#returns a Source:Destination Dictionary, Source is the keyword and Destination is a List of DestState
+# in this case
+{'[*]': ['SetResult'],
+ 'SetResult': ['LargeAA', 'SmallAA'],
+ ......
+	}
+
+
+>>>GetDict().state_action()
+#returns a State:Action Dictionary, Action should be a List as well
+#but it's better to make the instances inside the List to be tuple.
+{'SetResult' : [('^/P_AA_RESULT.CV'; '^/P_SMCA_RESULT.CV')]
+ ........
+	}

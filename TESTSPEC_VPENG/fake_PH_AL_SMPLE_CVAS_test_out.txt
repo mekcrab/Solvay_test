@@ -1,0 +1,85 @@
+C:\Python27\python.exe C:/Users/vpeng/Documents/GitHub/Solvay_test/TESTSPEC_EKOPACHE/tools/plantUML_state_lexer.py
+['root']
+***********Embedded state found: ******************
+['state']
+******************End embedded*********************
+***********Embedded state found: ******************
+['state']
+******************End embedded*********************
+['root']
+Token.SourceState 	[*]
+Token.DestState 	SetResult
+Token.State 	SetResult
+Token.StateAttr 	'^/P_AA_RESULT.CV'; '^/P_SMCA_RESULT.CV'
+Token.SourceState 	SetResult
+Token.DestState 	LargeAA
+Token.TransAttr 	'^/P_AA_RESULT.CV' > '^/R_SMPL_AA_SPEC.CV';
+Token.SourceState 	SetResult
+Token.DestState 	SmallAA
+Token.TransAttr 	'^/P_AA_RESULT.CV' <= '^/R_SMPL_AA_SPEC.CV'; .    
+
+Token.State 	LargeAA
+***********Embedded state found: ******************
+['state']
+Token.State 	VerifyRatioPrompt
+Token.StateAttr 	Set OAR Input Yes/No
+Token.SourceState 	VerifyRatioPrompt
+Token.DestState 	AddSMCAPrompt
+Token.TransAttr 	( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:NO' )
+Token.SourceState 	VerifyRatioPrompt
+Token.DestState 	RunTimer
+Token.TransAttr 	( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:YES' )
+Token.State 	AddSMCAPrompt
+Token.StateAttr 	Set Yes to Prompt
+Token.SourceState 	AddSMCAPrompt
+Token.DestState 	RunTimer
+Token.State 	RunTimer
+Token.StateAttr 	'//#UNIT_SUPPORT#/TMR3/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+Token.SourceState 	RunTimer
+Token.DestState 	SetResult
+******************End embedded*********************
+Token.State 	SmallAA
+***********Embedded state found: ******************
+['state']
+Token.State 	Check_SPEC
+Token.StateAttr 	'^/R_SMPL_SMCA_SPEC.CV'
+Token.SourceState 	Check_SPEC
+Token.DestState 	[*]
+Token.TransAttr 	'^/P_SMCA_RESULT.CV' <= '^/R_SMPL_SMCA_SPEC.CV';
+Token.SourceState 	Check_SPEC
+Token.DestState 	SPEC25
+Token.TransAttr 	'^/P_SMCA_RESULT.CV' > '^/R_SMPL_SMCA_SPEC.CV';
+Token.SourceState 	SPEC25
+Token.DestState 	SetResult
+Token.TransAttr 	'^/P_SMCA_RESULT.CV' <=  ( '^/R_SMPL_SMCA_SPEC.CV' + 25 );
+Token.SourceState 	SPEC25
+Token.DestState 	AddCond
+Token.TransAttr 	'^/P_SMCA_RESULT.CV' >  ( '^/R_SMPL_SMCA_SPEC.CV' + 25 );
+Token.State 	AddCond
+Token.StateAttr 	Set OAR Input Yes/No
+Token.SourceState 	AddCond
+Token.DestState 	RunTimer2
+Token.TransAttr 	( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:YES' )
+Token.SourceState 	AddCond
+Token.DestState 	CheckPH
+Token.TransAttr 	( '^/FAIL_MONITOR/OAR/INPUT.CV' = '_YES_NO:NO' )
+Token.State 	CheckPH
+Token.StateAttr 	'^/R_SMPL_PH_SPEC.CV'
+Token.SourceState 	CheckPH
+Token.DestState 	RunTimer2
+Token.TransAttr 	'//#RX_PH#/PV.CV' >= '^/R_SMPL_PH_SPEC.CV';
+Token.SourceState 	CheckPH
+Token.DestState 	ACKLowPH
+Token.TransAttr 	'//#RX_PH#/PV.CV'  < '^/R_SMPL_PH_SPEC.CV';
+Token.SourceState 	ACKLowPH
+Token.DestState 	RunTimer2
+Token.State 	ACKLowPH
+Token.StateAttr 	Set Yes to Prompt
+Token.State 	RunTimer2
+Token.StateAttr 	'//#UNIT_SUPPORT#/TMR4/TM_HOLD.CV' := '_TIMER_HOLD:Run';
+Token.SourceState 	RunTimer2
+Token.DestState 	SetResult
+******************End embedded*********************
+=================Testing complete==================
+
+Process finished with exit code 0
