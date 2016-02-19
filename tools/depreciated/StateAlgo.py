@@ -13,7 +13,7 @@ __author__ = 'erik.kopache'
 
 from networkx.classes.digraph import DiGraph
 
-import ScannedAlgo
+import tools.depreciated.ScannedAlgo
 
 
 class Condition(object):
@@ -33,7 +33,7 @@ class Condition(object):
         raise NotImplementedError
 
 
-class Action(ScannedAlgo.ScannedAlgorithm):
+class Action(tools.depreciated.ScannedAlgo.ScannedAlgorithm):
     '''
     Actions are single-scan data manipulations executed either:
     (1) On a change of state
@@ -41,7 +41,7 @@ class Action(ScannedAlgo.ScannedAlgorithm):
     '''
 
     def __init__(self, *args, **kwargs):
-        ScannedAlgo.ScannedAlgorithm.__init__(self, args, kwargs)
+        tools.depreciated.ScannedAlgo.ScannedAlgorithm.__init__(self, args, kwargs)
         self.complete = False
 
     def evaluate(self):
