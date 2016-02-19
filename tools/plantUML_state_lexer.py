@@ -348,7 +348,7 @@ def preprocess_puml(file_path):
     :param file_path: path to plantUML file for pre-processing
     :returns pre-processed text file
     """
-    import tools.config as config
+    import config
     import subprocess
 
     plantUML_path = config.plantUML_jar
@@ -367,20 +367,21 @@ def preprocess_puml(file_path):
 
 
 if __name__ == "__main__":
+    import config
     from pygments.formatters import HtmlFormatter
     from pygments import lex
-    import glob
+    import glob, os
 
     # quick lexer test
     selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    test_dir = '/home/erik/workspace/Solvay_test/TESTSPEC_EKOPACHE/'
+    test_dir = os.path.join(config.specs_path, 'vpeng')
 
     for test_file in glob.glob1(test_dir, '*.puml'):
         print 'File name ::::', test_file
 
-        test_text = preprocess_puml(test_dir + test_file)
+        test_text = preprocess_puml(os.path.join(test_dir, test_file))
 
         # with open(test_dir + test_file) as ftest:
         #     test_text = ftest.read().encode('utf-8')
