@@ -5,7 +5,7 @@ __author__ = 'ekopache'
 
 import re
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Text, Error, _TokenType, STANDARD_TYPES
+from pygments.token import Text, Error, _TokenType
 from pygments.style import Style
 
 # token definitions
@@ -348,8 +348,8 @@ def preprocess_puml(file_path):
     :param file_path: path to plantUML file for pre-processing
     :returns pre-processed text file
     """
-    import TESTSPEC_EKOPACHE.tools.config as config
-    import subprocess, os
+    import tools.config as config
+    import subprocess
 
     plantUML_path = config.plantUML_jar
 

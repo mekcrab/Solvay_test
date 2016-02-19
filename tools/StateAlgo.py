@@ -11,8 +11,9 @@ Examples:
 
 __author__ = 'erik.kopache'
 
-import ScannedAlgo
 from networkx.classes.digraph import DiGraph
+
+import ScannedAlgo
 
 
 class Condition(object):

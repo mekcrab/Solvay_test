@@ -1,7 +1,7 @@
 __author__ = 'vpeng'
 
 from puml_dict_parser import GetDict, GetList
-from TESTSPEC_EKOPACHE.tools import StateAlgo
+from tools import StateAlgo
 
 
 def recur(in_state):

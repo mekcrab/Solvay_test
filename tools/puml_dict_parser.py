@@ -190,7 +190,7 @@ class GetDict(GetList):
 
 
 if __name__ == "__main__":
-    from TESTSPEC_EKOPACHE.tools.plantUML_state_lexer import puml_state_lexer
+    from tools.plantUML_state_lexer import puml_state_lexer
     from pygments import lex
     from pprint import pprint as pp
 
