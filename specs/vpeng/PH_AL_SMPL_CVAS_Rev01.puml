@@ -15,7 +15,6 @@ SetResult --> LargeAA: (Wait, '^/P_AA_RESULT.CV', >, '^/R_SMPL_AA_SPEC.CV')
 SetResult --> SmallAA: (Wait, '^/P_AA_RESULT.CV', <=, '^/R_SMPL_AA_SPEC.CV')
 
 state LargeAA {
-
 WaitRatioPrompt: (Set, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:?')
 WaitRatioPrompt --> AddSMCAPrompt: (Wait, '^/FAIL_MONITOR/OAR/INPUT.CV', =, '_YES_NO:NO')
 
