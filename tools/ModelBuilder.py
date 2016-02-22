@@ -49,7 +49,7 @@ class ModelBuilder(object):
             self.q.append(token_tup)
 
             if actions_pending > 1:
-                if self.t q[0][0] in self.action_tokens:
+                if self.q[0][0] in self.action_tokens:
                     # execute function defined
                     self.action_tokens[self.q[0][0]]()
                     actions_pending -= 1
@@ -147,6 +147,6 @@ if __name__ == "__main__":
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
-    print diagram
+    print diagram.nodes(), diagram.edges()
 
     print "=================== Testing Complete ==================="
