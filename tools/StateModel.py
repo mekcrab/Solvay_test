@@ -7,20 +7,63 @@ Model will be used as an output from plantUML lexer/parser combination.
 Model will also be used an input for test generation.
 '''
 
-class StateDiagram(object):
+from networkx import DiGraph
+
+class StateDiagram(DiGraph):
     '''
-    Data representation of plantUML state diagram.
+    Representation of plantUML state diagram.
+    Relationships mapped as directed graph, attributes held as graph nodes.
     '''
 
-    def __init__(self):
-        self.states = list() #list of all states in the diagram
-        self.top_states = list() # list of all the top-level states
+    def __init__(self, *args, **kwargs):
 
 
+        self.states = list()  # list of all states in the diagram
+        self.top_states = list()  # list of all the top-level states
+        self.state_names = {}  # map of states by name to graph node
+
+        # Initialize parent class
+        DiGraph.__init__(self)
+
+    def get_state(self, state_id):
+        if isinstance(state_id, State):
+            return state_id
+        else:  # string name of state passed as arg
+            state_name = state_id
+
+        if state_name in self.state_names:
+            return self.state_names[state_name]
+        else:
+            print "No state named", state_name, "in diagram."
+            raise NameError
+
+    def check_state_exists(self, state_id):
+        if isinstance(state_id, str) and state_id in self.state_names:
+            return True
+        elif self.has_node(state_id):  # state_id reference is a state object
+            return True
+        else:
+            return False
+
+    def add_state(self, state_name, parent_state=None, attrs=None):
+        if self.check_state_exist(state_name):
+            new_state = self.get_state(state_name)
+        else:
+            new_state = self.add_node(State(state_name, parent_state, attributes=attrs))
+
+        if attrs:
+            new_state.add_attribute()
+
+    def add_state_attr(self, state_id, attribute):
+        state = self.get_state(state_id)
+        state.add_attribute(attribute)
+
+    def add_transition(self, source, dest, attributes=None):
+        self.add_edge(self.get_state(source), self.get_state(dest))
 
 class State(object):
 
-    def __init__(self, name):
+    def __init__(self, name, parent_state=None, **kwargs):
         '''
         Constructor
         :param name: unique name of this state within the diagram <string>
@@ -28,7 +71,7 @@ class State(object):
         '''
 
         self.name = name
-        self.attrs = list()
+        self.attrs = kwargs.pop('attributes', default=list())
         self.substates = list()
         self.num_substates = 0
         self.active = False
@@ -70,15 +113,20 @@ class State(object):
             self.destination.append(destination)
 
 class Transition(object):
-    def __init__(self):
+    def __init__(self, source, dest, attrs=None):
         '''
         Constructor
         :return: new Transition with source and destination
         '''
-
         self.attrs = list() #List of transition attributes
         self.TranSource = list() # list of states
-        self.TranDest = list() # list of states with transitions originating in this state
+        self.TranDest = dest # list of states with transitions originating in this state
+
+        # extend lists of sources, destinations and attributes
+        self.add_source(source)
+        self.add_destination(dest)
+        if attrs:
+            [self.add_attribute(attr) for attr in attrs]
 
     def add_attribute(self, attribute):
         self.attrs.append(attribute)
@@ -89,7 +137,7 @@ class Transition(object):
         else:
             self.TranSource.append(TranSource)
 
-    def add_destination(self,TranDest):
+    def add_destination(self, TranDest):
         if not isinstance(TranDest, State):
             raise TypeError
         else:

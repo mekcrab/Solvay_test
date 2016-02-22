@@ -7,6 +7,7 @@ import re
 from pygments.lexer import RegexLexer, bygroups, include
 from pygments.token import Text, Error, _TokenType
 from pygments.style import Style
+from pygments import lex
 
 # token definitions
 # fixme: define custom token types so the names make sense
@@ -278,7 +279,6 @@ class puml_state_lexer(RegexLexer):
         tokendefs = self._tokens
         statestack = list(stack)
         statetokens = tokendefs[statestack[-1]]
-        print statestack
         #print debugging if defined
         if debug_regex:
             for rexmatch, action, new_state in statetokens:
@@ -366,6 +366,12 @@ def preprocess_puml(file_path):
     return decoded_str
 
 
+def get_tokens_from_file(file_path):
+    '''Returns token generator from lexer output'''
+    test_text = preprocess_puml(file_path)
+    return lex(test_text, puml_state_lexer())
+
+
 if __name__ == "__main__":
     import config
     from pygments.formatters import HtmlFormatter
@@ -378,7 +384,7 @@ if __name__ == "__main__":
 
     test_dir = os.path.join(config.specs_path, 'vpeng')
 
-    for test_file in glob.glob1(test_dir, '*.puml'):
+    for test_file in glob.glob1(test_dir, '*CVAS*.puml'):
         print 'File name ::::', test_file
 
         test_text = preprocess_puml(os.path.join(test_dir, test_file))
