@@ -17,7 +17,6 @@ class StateDiagram(DiGraph):
 
     def __init__(self, *args, **kwargs):
 
-
         self.states = list()  # list of all states in the diagram
         self.top_states = list()  # list of all the top-level states
         self.state_names = {}  # map of states by name to graph node
@@ -34,8 +33,8 @@ class StateDiagram(DiGraph):
         if state_name in self.state_names:
             return self.state_names[state_name]
         else:
-            print "No state named", state_name, "in diagram."
-            raise NameError
+            print "Adding state named", state_name, "to diagram."
+            self.add_state(state_name)
 
     def check_state_exists(self, state_id):
         if isinstance(state_id, str) and state_id in self.state_names:
@@ -46,11 +45,12 @@ class StateDiagram(DiGraph):
             return False
 
     def add_state(self, state_name, parent_state=None, attrs=None):
-        if self.check_state_exist(state_name):
+        if self.check_state_exists(state_name):
             new_state = self.get_state(state_name)
         else:
-            new_state = self.add_node(State(state_name, parent_state, attributes=attrs))
-
+            new_state = State(state_name, parent_state, attributes=attrs)
+            self.add_node(new_state)
+            self.state_names[state_name] = new_state
         if attrs:
             new_state.add_attribute()
 
@@ -59,6 +59,9 @@ class StateDiagram(DiGraph):
         state.add_attribute(attribute)
 
     def add_transition(self, source, dest, attributes=None):
+        for state in [source, dest]:
+            if not self.check_state_exists(state):
+                self.add_state(state)
         self.add_edge(self.get_state(source), self.get_state(dest))
 
 class State(object):
@@ -71,7 +74,7 @@ class State(object):
         '''
 
         self.name = name
-        self.attrs = kwargs.pop('attributes', default=list())
+        self.attrs = list()
         self.substates = list()
         self.num_substates = 0
         self.active = False

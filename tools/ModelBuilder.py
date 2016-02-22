@@ -7,7 +7,7 @@ pairs. These pairs will generally be the product of a pygments lexer.
 __author__ = 'erik'
 # imports for base model
 import pygments.token as Token
-import Queue
+import collections
 # imports for StateModelBuilder
 import StateModel
 from plantUML_state_lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
@@ -27,7 +27,7 @@ class ModelBuilder(object):
         self.model_class = model_class
         self.model = self.model_class()
 
-        self.q = Queue.deque  # holds tokens,val pairs drawn from the token generator
+        self.q = collections.deque()  # holds tokens,val pairs drawn from the token generator
         # note: deque chosen over list because it's (1) thread-safe, (2) faster in size changes
 
     def parse(self, token_stream):
@@ -44,23 +44,26 @@ class ModelBuilder(object):
             if token in self.__class__.ignored_tokens:
                 continue
             elif token in self.__class__.action_tokens:
-                self.q.append(token_tup)
                 actions_pending += 1
-            else:
-                self.q.append(token_tup)
+
+            self.q.append(token_tup)
 
             if actions_pending > 1:
-                if self.q[-1][0] in self.action_tokens:
+                if self.t q[0][0] in self.action_tokens:
                     # execute function defined
-                    self.action_tokens[self.q[-1][0]]()
+                    self.action_tokens[self.q[0][0]]()
+                    actions_pending -= 1
                 else:
-                    print "Non actionable token found", self.q[-1][0], "\t", self.q[-1][1]
-                    print "POSSIBLE BUG - Removing offending value from deque and continuing anyhow..."
+                    continue
 
         # finish processing any remaining actionable tokens
         # once the stream has dried up
         while actions_pending > 0:
-            self.action_tokens[self.q[-1][0]]()
+            if self.q[0][0] in self.action_tokens:
+                self.action_tokens[self.q[0][0]]()
+                actions_pending -= 1
+            else:
+                print "Non actionable token", self.q.popleft(), "found at end of deque."
 
         # deliver populated model
         return self.model
@@ -78,13 +81,16 @@ class StateModelBuilder(ModelBuilder):
 
         ModelBuilder.__init__(self, StateModel.StateDiagram)
 
-        StateModelBuilder.action_tokens.update(
-            STATE=self.assign_state,
-            SALIAS=self.lookup_state,
-            SSTART=self.start_superstate,
-            SEND=self.end_superstate,
-            TSOURCE=self.assign_trans,
-        )
+        # dictionary constructor - list of key,value pairs
+        update_dict = dict( [
+            (STATE, self.assign_state),
+            (SALIAS, self.lookup_state),
+            (SSTART, self.start_superstate),
+            (SEND, self.end_superstate),
+            (TSOURCE, self.assign_trans)
+            ] )
+
+        StateModelBuilder.action_tokens.update(update_dict)
 
         self.superstate_stack = ['root']  # stack of nested superstates
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
@@ -93,37 +99,38 @@ class StateModelBuilder(ModelBuilder):
 
     def lookup_state(self):
         '''Will be implemented later'''
-        self.q.pop[-1]
+        raise NotImplementedError
 
     def assign_state(self):
         '''All state names are unique and required for assignment.
         Will not double-add states to self.diagram.'''
-        state_name = self.q.pop()[1]
+        state_name = self.q.popleft()[1]
         self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
 
-        if self.q[-1][0] is SATTR:
-            self.add_state_attr(state_name, self.q.pop()[1])
+        if self.q[0][0] == SATTR:
+            self.add_state_attr(state_name, self.q.popleft()[1])
 
     def add_state_attr(self, state_name, attribute_value):
-        self.diagram.add_state_attribute(state_name, attribute_value)
+        self.diagram.add_state_attr(state_name, attribute_value)
 
     def start_superstate(self):
-        superstate_name = self.q.pop()[1]
-        self.assign_state(superstate_name)
+        superstate_name = self.q.popleft()[1]
+        self.diagram.add_state(superstate_name)
         self.superstate_stack.append(superstate_name)
 
     def end_superstate(self):
-        superstate_name = self.q.pop()[1]
-        self.superstate_stack.pop(superstate_name)
+        self.q.popleft()[1]  # consume delimiter "}"
+        self.superstate_stack.pop(-1)
 
     def assign_trans(self):
-        source = self.q.pop()[1]
-        if self.q[-1][0] is TDEST:
-            dest = self.q.pop()[1]
+        source = self.q.popleft()[1]
+        dest = 'Not Found'
+        if self.q[0][0] == TDEST:
+            dest = self.q.popleft()[1]
         else:
             print "Transition source", source, "found without corresponding destination"
-        if self.q[-1][0] is TATTR:
-            transition_attribute = self.q.pop()[1]
+        if self.q[0][0] == TATTR:
+            transition_attribute = self.q.popleft()[1]
             self.diagram.add_transition(source, dest, transition_attribute)
         else:
             self.diagram.add_transition(source, dest)
@@ -141,3 +148,5 @@ if __name__ == "__main__":
     diagram = builder.parse(tkns)
 
     print diagram
+
+    print "=================== Testing Complete ==================="
