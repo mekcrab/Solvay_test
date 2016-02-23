@@ -27,11 +27,10 @@ class Action:
         self.state_attr = state_attr
         tokens = split_attr(state_attr)
         self.PV = OPC_Connect().client.read(tokens[0])
-        if tokens[2].isdigit():
         self.SP = float(tokens[2]) # must be a number now
         self.complete = False
 
-    def verify(self):
+    def iscomplete(self):
         if self.PV == self.SP:
             self.complete = True
         return self.complete
@@ -74,16 +73,16 @@ def runsub(parent):
         sub = StateDiagram().get_state(state_id = substates[x])
         subsource = sub.__dict__['source']
         if subsource == []:
-            recur(substates[x])
+            recur(substates[x], diagram)
         else:
             continue
 
 #Start
-in_state = '[*]'
-State(name = in_state).activate()
+#in_state = '[*]'
+#State(name = in_state).activate()
 
-def recur(in_state):
-    get_state = StateDiagram().get_state(state_id = in_state)
+def recur(in_state, diagram):
+    get_state = diagram.get_state(state_id = in_state)
 
     state_dict = get_state.__dict__
     destination = state_dict['destination']
@@ -93,9 +92,20 @@ def recur(in_state):
     if state_dict['substate_num'] > 0:
         runsub(in_state)
     elif state_dict['substate_num'] == 0:
-        Action(state_attr = state_attr).execute() # execute state attribute
+        are_complete = list()
+        for action in state_attr:
+            Action(state_attr = action).execute() # execute state attribute
 
-    #TODO: Verify Action Complete
+            if Action(state_attr = action).iscomplete() == True:
+                are_complete.append(True)
+            else:
+                are_complete.append(False)
+
+            if False not in are_complete:
+                print "Test on State %r Pass" %(in_state)
+            else:
+                print "Test on State %r Fail" %(in_state)
+
 
     for dest_state in destination:
 
@@ -113,6 +123,22 @@ def recur(in_state):
             State(name = in_state).deactivate()
             if destination != '[*]':
                 State(name = destination).activate()
-                recur(destination)
+                recur(destination, diagram)
 
 
+if __name__ == "__main__":
+    from ModelBuilder import StateModelBuilder
+    import config, os
+    from plantUML_state_lexer import get_tokens_from_file
+
+    input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
+
+    tkns = get_tokens_from_file(input_path)
+
+    builder = StateModelBuilder()
+    diagram = builder.parse(tkns)
+
+    recur(in_state = "[*]", diagram = diagram)
+
+
+    print "=================== Testing Complete ==================="
