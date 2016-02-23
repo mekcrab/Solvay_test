@@ -366,9 +366,13 @@ def preprocess_puml(file_path):
     return decoded_str
 
 
-def get_tokens_from_file(file_path):
+def get_tokens_from_file(file_path, preprocess=False):
     '''Returns token generator from lexer output'''
-    test_text = preprocess_puml(file_path)
+    if preprocess:
+        test_text = preprocess_puml(file_path)
+    else:
+        with open(file_path) as f:
+            test_text = f.read()
     return lex(test_text, puml_state_lexer())
 
 
