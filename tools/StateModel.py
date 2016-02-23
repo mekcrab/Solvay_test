@@ -6,7 +6,7 @@ Model will be used as an output from plantUML lexer/parser combination.
 
 Model will also be used an input for test generation.
 '''
-
+from time import time
 from networkx import DiGraph
 
 class StateDiagram(DiGraph):
@@ -152,6 +152,7 @@ class Attribute_Base(object):
         self.attrs = list()
         self.keys = list()
         self.complete = False
+        self.data = list()  # list of timeseries data
 
     def add_attribute(self,attribute):
         if not isinstance(attribute, Attribute_Base):
@@ -163,6 +164,12 @@ class Attribute_Base(object):
         #TODO: How do we evaluate if an attribute complete?
         return self.complete
 
+    def save_value(self, value):
+        '''Adds a timestamp, value tuple to this attribute's self.data
+        for later retrieval and analysis
+        :param: value - any serializable object (ex. float, string, "condition object", tuples ...)
+        '''
+        self.data.append( (time.time, value))
 
 class State_Attr(Attribute_Base):
     def __init__(self):
