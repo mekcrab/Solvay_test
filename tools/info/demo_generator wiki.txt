@@ -1,0 +1,61 @@
+class OPC_Connect - a copy from opc_connect.py, nothing change
+
+
+split_attr(attribute): 
+# the input attribute should be a state attribute which is value of n.__dict__['attrs'], or a transition attribute
+# where n is gotten from diagram.get_state() when executing ModelBuilder.
+# this definition splits attribute with ","
+#i.e.
+>>> attribute = "('^/P_SMCA_RESULT.CV', =, 20)"
+>>> split_attr(attribute)
+["'^/P_SMCA_RESULT.CV'", ' =', ' 20']
+
+
+
+Action(state_attr = attribute).iscomplete():
+# The class split attribute to PV ('^/P_SMCA_RESULT.CV') and SP (20)
+# It reads value of ('^/P_SMCA_RESULT.CV') with OPC_Connect.client.read(PV)
+# if OPC_Connect.client.read(PV) == SP, then it returns True 
+# else returns False
+
+
+Action(state_attr = attribute).execute():
+# write SP value in OPC: OPC_Connect.client.writ(PV,SP)
+
+
+
+TranAttr(tran_attr = attribute).verify():
+# The class split attribute to PV ('^/P_SMCA_RESULT.CV'), condition (=) and target (20)
+# if PV reached the target condition, return True.
+# else, return False
+
+
+
+runsub(parent, diagram):
+# input parent is the parent state, and input diagram should be the same as the input of recur function
+# get a list of get_state.__dict__['substates'] in the parent state within the diagram
+# then, find the start point of substate by checking which .__dict__['source'] of substate is []
+# start recur function with recur(startpoint, diagram)
+
+
+
+recur(in_state, diagram):
+# input diagram should be the output diagram from ModelBuilder
+# in_state is the state name where is supposed to start the recur function from
+# with get_state.__dict__, get it's destination list and state_attr list by calling keyword ['destination'], ['attr']
+# also, check substate number with .__dict__['substate_num']
+# if substate_num > 0, run substate with runsub function
+# if substate_num = 0, execute state attribute as action (if any). 
+
+# if there are mutiple state attribute, actions will execute individually in a for loop.
+# if all actions in the state are complete, it will print "Test on State (statename) Pass" as test result.
+# if there is any action in the state failed complete, it will print "Test on State (statename) Fail" as test result.
+
+
+# it will get transition attribute by using diagram.get_edge_data(statename, destination)
+# if there are item in get_edge_data
+# use the same logic as action above, if no False on TranAttr().verify(), it pass to the destination
+# if destination is not '[*]' or [], 
+# it will keep recursion with the destination as a input: recur(destination, diagram)
+# if destination is '[*]'
+# it will print "Test Complete" as test result

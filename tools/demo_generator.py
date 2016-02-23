@@ -3,6 +3,7 @@ __author__ = 'vpeng'
 from StateModel import StateDiagram, State, Transition
 import OpenOPC
 
+
 class OPC_Connect:
 
     def __init__(self):
@@ -15,6 +16,12 @@ class OPC_Connect:
         opc_client.connect(svr_name)
         return opc_client
 
+    def read(self, PV):
+        print self.client.read(PV)
+
+    def write(self, PV, SP):
+        print self.client.write((PV, SP))
+
 
 def split_attr(attribute):
     attribute = attribute.strip("()")
@@ -26,24 +33,23 @@ class Action:
     def __init__(self, state_attr):
         self.state_attr = state_attr
         tokens = split_attr(state_attr)
-        self.PV = OPC_Connect().client.read(tokens[0])
+        self.PV = tokens[0]
         self.SP = float(tokens[2]) # must be a number now
         self.complete = False
 
     def iscomplete(self):
-        if self.PV == self.SP:
+        if (self.execute() == 'Success') == True:
             self.complete = True
         return self.complete
 
-
     def execute(self):
-        OPC_Connect().client.write((self.PV, self.SP))
+        return OPC_Connect().write(PV = self.PV, SP = self.SP)
 
 class TranAttr:
     def __init__(self, tran_attr):
         self.tran_attr = tran_attr
         tokens = split_attr(tran_attr)
-        self.PV = OPC_Connect().client.read(tokens[0])
+        self.PV = OPC_Connect().read(PV = tokens[0])
         self.condition = tokens[1]
         self.target = float(tokens[2]) # must be a number now
         self.reached = False
@@ -67,15 +73,15 @@ class TranAttr:
         return self.reached
 
 
-def runsub(parent):
-    get_state = StateDiagram().get_state(state_id = parent)
+def runsub(parent, diagram):
+    get_state = diagram.get_state(state_id = parent)
     state_dict = get_state.__dict__
     substates = state_dict['substates']
-    for x in range(0,len(substates)):
-        sub = StateDiagram().get_state(state_id = substates[x])
+    for substate in substates:
+        sub = diagram.get_state(state_id = substate)
         subsource = sub.__dict__['source']
         if subsource == []:
-            recur(substates[x], diagram)
+            recur(substate, diagram)
         else:
             continue
 
@@ -86,14 +92,13 @@ def runsub(parent):
 def recur(in_state, diagram):
     get_state = diagram.get_state(state_id = in_state)
 
-    state_dict = get_state.__dict__
-    destination = state_dict['destination']
-    state_attr = state_dict['attrs']
+    destination = get_state.destination
+    state_attr = get_state.attrs
 
     ''' Run substate (if any) or execute action'''
-    if state_dict['substate_num'] > 0:
-        runsub(in_state)
-    elif state_dict['substate_num'] == 0:
+    if int(get_state.num_substates) > 0:
+        runsub(in_state, diagram)
+    elif int(get_state.num_substates) == 0:
         are_complete = list()
         for action in state_attr:
             Action(state_attr = action).execute() # execute state attribute
@@ -103,16 +108,17 @@ def recur(in_state, diagram):
             else:
                 are_complete.append(False)
 
-            if False not in are_complete:
-                print "Test on State %r Pass" %(in_state)
-            else:
-                print "Test on State %r Fail" %(in_state)
+        if False not in are_complete:
+            print "Test on State %r Pass" %(in_state)
+            #transit(in_state, destination)
+        else:
+            print "Test on State %r Fail" %(in_state)
 
-
+#def transit(in_state, destination)
     for dest_state in destination:
 
         '''Transition Attribute'''
-        tran_attr = StateDiagram().get_edge_data(u = in_state, v = dest_state)
+        tran_attr = diagram.get_edge_data(u = in_state, v = dest_state)
 
         reached = list()
         for item in tran_attr:
@@ -123,9 +129,11 @@ def recur(in_state, diagram):
 
         if False not in reached:
             State(name = in_state).deactivate()
-            if destination != '[*]':
+            if destination != '[*]' or []:
                 State(name = destination).activate()
                 recur(destination, diagram)
+            elif destination == '[*]':
+                print "===========Test Complete=========="
 
 
 if __name__ == "__main__":
@@ -143,4 +151,4 @@ if __name__ == "__main__":
     recur(in_state = "[*]", diagram = diagram)
 
 
-    print "=================== Testing Complete ==================="
+

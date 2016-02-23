@@ -148,7 +148,7 @@ class Transition(object):
 
 
 class Attribute_Base(object):
-    def __init__(self):
+    def __init__(self, *args):
         self.attrs = list()
         self.keys = list()
         self.complete = False
@@ -172,13 +172,13 @@ class Attribute_Base(object):
         self.data.append( (time.time, value))
 
 class State_Attr(Attribute_Base):
-    def __init__(self):
-        Attribute_Base.__init__(self)
+    def __init__(self, state_name):
+        Attribute_Base.__init__(self, state_name)
 
 
 class Trans_Attr(Attribute_Base):
-    def __init__(self):
-        Attribute_Base.__init__(self)
+    def __init__(self, source, dest):
+        Attribute_Base.__init__(self, source, dest)
 
 
 
