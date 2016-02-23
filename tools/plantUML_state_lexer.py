@@ -351,24 +351,27 @@ def preprocess_puml(file_path):
     import config
     import subprocess
 
-    plantUML_path = config.plantUML_jar
-
     # generate plantUML diagram hash, f is used as file-like obj for system call stdout
-    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -encodeurl ' + file_path,
+    p = subprocess.Popen(config.java_path + ' -jar ' + config.plantUML_jar + ' -encodeurl ' + file_path,
                               shell=True, stdout=subprocess.PIPE)
     encoded_str = p.communicate()[0]
 
     # decompile text file from hash
-    p = subprocess.Popen('/usr/bin/java -jar ' + plantUML_path + ' -decodeurl ' + encoded_str,
+    p = subprocess.Popen(config.java_path + ' -jar ' + config.plantUML_jar + ' -decodeurl ' + encoded_str,
                             shell=True, stdout=subprocess.PIPE)
     # return decompiled text
     decoded_str = p.communicate()[0]
     return decoded_str
 
 
-def get_tokens_from_file(file_path):
+def get_tokens_from_file(file_path, preprocess = False):
     '''Returns token generator from lexer output'''
-    test_text = preprocess_puml(file_path)
+    if preprocess:
+        test_text = preprocess_puml(file_path)
+    else:
+        with open(file_path) as f:
+            test_text = f.read()
+
     return lex(test_text, puml_state_lexer())
 
 
@@ -377,6 +380,9 @@ if __name__ == "__main__":
     from pygments.formatters import HtmlFormatter
     from pygments import lex
     import glob, os
+    from config import sys_utils
+
+    sys_utils.set_pp_on()
 
     # quick lexer test
     selected_lexer = puml_state_lexer()
