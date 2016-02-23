@@ -49,15 +49,17 @@ class TranAttr:
         self.reached = False
 
     def verify(self):
-        if self.condition == '=' and self.PV == self.target:
+        if '=' in self.condition and ('>' or '<' or '!') not in self.condition and self.PV == self.target:
             self.reached = True
-        elif self.condition == '>' and self.PV > self.target:
+        elif '>' in self.condition and '=' not in self.condition and self.PV > self.target:
             self.reached = True
-        elif self.condition == ('>=' or '> =') and self.PV >= self.target:
+        elif '=' and '>' in self.condition and self.PV >= self.target:
             self.reached = True
-        elif self.condition == ('<=' or '< =') and self.PV <= self.target:
+        elif '=' and '<' in self.condition and self.PV <= self.target:
             self.reached = True
-        elif self.condition == '<' and self.PV < self.target:
+        elif '<' in self.condition and '=' not in self.condition and self.PV < self.target:
+            self.reached = True
+        elif '!' in self.condition and self.PV != self.target:
             self.reached = True
         else:
             raise TypeError
