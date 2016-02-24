@@ -1,5 +1,7 @@
 __author__ = 'vpeng'
 
+from StateModel import StateDiagram, State, Transition, State_Attr, Trans_Attr
+import ModelBuilder
 from puml_dict_parser import GetDict, GetList
 from tools.depreciated import StateAlgo
 
@@ -13,13 +15,11 @@ def recur(in_state):
     Therefore, we can keep running the recursion with: in_state = all active states.
     '''
 
-    StateAlgo.StateAlgorithm().add_state(state_object = in_state) # Add in_state
-    Action = []
+    StateDiagram().add_state(state_name = in_state) # Add in_state
 
-    if in_state in GetList().AState:
-        Action = GetDict().state_action()[in_state] #Get List of Actions (if any)
+    Action = State(name = in_state).attrs # Get State Attribute
 
-    evaluate_action = StateAlgo.STBase(args = Action).evaluate_actions() # Add Action in state and check if action complete
+    evaluate_action = State_Attr(state_name = in_state).evaluate() # Add Action in state and check if action complete
     dest_state = GetDict().source_destination()[in_state] # Get List of Destination from in_state
 
     if evaluate_action == True:
@@ -32,16 +32,18 @@ def recur(in_state):
             start with the start point of the childstate'''
 
             #TODO: SuperState List in GetList module has to be developed.
-            if in_state in GetList().SuperState():
+            if State(name = in_state).num_substates > 0:
                 #TODO: SuperState:ChildStart Dictionary has to be developed in GetDict
-                recur(GetDict().superstate_childstart()[in_state])
+                start_superstate = ModelBuilder.StateModelBuilder(state_id = in_state).start_superstate()
+                recur(start_superstate)
 
 
             if connection[item] in GetDict().states_transition():
                 Transition = GetDict().states_transition()[connection[item]] # Get List of Transitions (if any)
                 for n in range(0, len(Transition)): # Add Transitions
-                    StateAlgo.StateAlgorithm().add_trasition(transition = Transition[n],
-                                                            current_state = in_state, next_state = dest_state[item])
+                    #StateAlgo.StateAlgorithm().add_trasition(transition = Transition[n],
+                    #                                       current_state = in_state, next_state = dest_state[item])
+
 
                 if StateAlgo.StateAlgorithm().evaluate_transitions():
                     '''Deactivate in_state; activate dest_state (except ['*'])'''

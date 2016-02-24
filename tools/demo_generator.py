@@ -75,11 +75,10 @@ class TranAttr:
 
 def runsub(parent, diagram):
     get_state = diagram.get_state(state_id = parent)
-    state_dict = get_state.__dict__
-    substates = state_dict['substates']
+    substates = get_state.substates
     for substate in substates:
         sub = diagram.get_state(state_id = substate)
-        subsource = sub.__dict__['source']
+        subsource = sub.source
         if subsource == []:
             recur(substate, diagram)
         else:
@@ -110,11 +109,11 @@ def recur(in_state, diagram):
 
         if False not in are_complete:
             print "Test on State %r Pass" %(in_state)
-            #transit(in_state, destination)
+            transit(in_state, destination)
         else:
             print "Test on State %r Fail" %(in_state)
 
-#def transit(in_state, destination)
+def transit(in_state, destination):
     for dest_state in destination:
 
         '''Transition Attribute'''
@@ -128,11 +127,11 @@ def recur(in_state, diagram):
                 reached.append(False)
 
         if False not in reached:
-            State(name = in_state).deactivate()
-            if destination != '[*]' or []:
-                State(name = destination).activate()
-                recur(destination, diagram)
-            elif destination == '[*]':
+            #State(name = in_state).deactivate()
+            if dest_state != '[*]' or []:
+                #State(name = dest_state).activate()
+                recur(dest_state, diagram)
+            elif dest_state == '[*]':
                 print "===========Test Complete=========="
 
 

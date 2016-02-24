@@ -20,9 +20,10 @@ tests_path = os.path.join(tools_path, '..', 'tests_out')
 java_path = 'java'
 
 # path to plantUML pre-compiled jar file
-plantUML_jar = os.path.join('/','home', 'erik', '.PyCharm40',
-                            'config', 'plugins', 'plantuml4idea',
-                            'lib', 'plantuml.jar')
+plantUML_jar = 'C:\\Users\\vpeng\\.PyCharm40\\config\\plugins\\plantuml4idea\\lib\\plantuml.jar'
+#plantUML_jar = os.path.join('/','home', 'erik', '.PyCharm40',
+#                            'config', 'plugins', 'plantuml4idea',
+#                            'lib', 'plantuml.jar')
 
 class sys_utils:
 
