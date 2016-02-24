@@ -123,22 +123,32 @@ class StateModelBuilder(ModelBuilder):
         self.superstate_stack.pop(-1)
 
     def assign_trans(self):
+        '''Assigns a transition to the diagram and State.source, State.destination values'''
         source = self.q.popleft()[1]
+        # pull destination from token stream
         dest = 'Not Found'
         if self.q[0][0] == TDEST:
             dest = self.q.popleft()[1]
         else:
-            print "Transition source", source, "found without corresponding destination"
+            print "!ERROR: Transition source", source, "found without corresponding destination"
+            raise AttributeError
+        # add transition to graph
         if self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
             self.diagram.add_transition(source, dest, transition_attribute)
         else:
             self.diagram.add_transition(source, dest)
 
+        # link required source/destination properties of the states
+        self.diagram.get_state(source).destination = dest
+        self.diagram.get_state(dest).source = source
+
 
 if __name__ == "__main__":
     import config, os
     from plantUML_state_lexer import get_tokens_from_file
+
+    config.sys_utils.set_pp_on()
 
     input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
 
@@ -147,6 +157,7 @@ if __name__ == "__main__":
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
-    print diagram.nodes(), diagram.edges()
+    print "Parsed", len(diagram.nodes()), "states"
+    print "Parsed", len(diagram.edges()), "transitions"
 
     print "=================== Testing Complete ==================="
