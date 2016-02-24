@@ -53,7 +53,7 @@ class StateDiagram(DiGraph):
         return trans_list
 
     def check_state_exists(self, state_id):
-        if isinstance(state_id, str) and state_id in self.state_names:
+        if isinstance(state_id, str) or isinstance(state_id, unicode) and state_id in self.state_names:
             return True
         elif self.has_node(state_id):  # state_id reference is a state object
             return True
@@ -61,14 +61,18 @@ class StateDiagram(DiGraph):
             return False
 
     def add_state(self, state_name, parent_state=None, attrs=None):
+
         if self.check_state_exists(state_name):
             new_state = self.get_state(state_name)
         else:
             new_state = State(state_name, parent_state, attributes=attrs)
             self.add_node(new_state)
             self.state_names[state_name] = new_state
+        print state_name, "exist:", self.check_state_exists(state_name)
+
         if attrs:
             new_state.add_attribute()
+
 
     def add_state_attr(self, state_id, attribute):
         state = self.get_state(state_id)
@@ -128,16 +132,16 @@ class State(object):
         return self.active
 
     def add_source(self, source):
-        if not isinstance(source, State):
-            raise TypeError
-        else:
-            self.source.append(source)
+        #if not isinstance(source, State):
+          #  raise TypeError
+       # else:
+        self.source.append(source)
 
     def add_destination(self, destination):
-        if not isinstance(destination, State):
-            raise TypeError
-        else:
-            self.destination.append(destination)
+        #if not isinstance(destination, State):
+         #   raise TypeError
+        #else:
+        self.destination.append(destination)
 
 class Transition(object):
     def __init__(self, source, dest, attrs=None):

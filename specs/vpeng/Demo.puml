@@ -6,15 +6,15 @@ SetMode: ('CV-4280/MODE.TARGET', =, 48)
 SetMode: ('CV-4267/MODE.TARGET', =, 48)
 
 SetMode --> ValvePosition
-ValvePosition: ('CV-4280/SP_D.CV', =, 1);
+ValvePosition: ('CV-4280/SP_D.CV', =, 1)
 ValvePosition: ('CV-4267/SP_D.CV', =, 0)
 
 ValvePosition --> StartCharge
-StartCharge: ('FIC-4267/MODE.TARGET', =, 144);
-StartCharge: ('FIC-4267/OUTP_D.CV', =, 0);
+StartCharge: ('FIC-4267/MODE.TARGET', =, 144)
+StartCharge: ('FIC-4267/OUTP_D.CV', =, 0)
 
 
-StartCharge --> [*]
+StartCharge --> END
 
 
 @enduml
