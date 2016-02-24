@@ -135,7 +135,7 @@ class StateModelBuilder(ModelBuilder):
         # add transition to graph
         if self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
-            self.diagram.add_transition(source, dest, transition_attribute)
+            self.diagram.add_transition(source, dest, attributes=transition_attribute)
         else:
             self.diagram.add_transition(source, dest)
 
