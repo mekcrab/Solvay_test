@@ -73,7 +73,7 @@ class NamedDiscrete(DiscreteAttribute):
 
 class DiscreteCondition(DiscreteAttribute):
     def evaluate(self):
-    '''Evaluates if discrete condition is true'''
+        '''Evaluates if discrete condition is true'''
         pass
 
 
@@ -126,7 +126,7 @@ class Mode_Attribute(NamedDiscrete):
     '''
     # integer mapping of mode values
     mode_int_dict = {
-        'OOS' : 0
+        'OOS' : 0,
         'AUTO' : 2,
         'CAS' : 4,
         #etc...
