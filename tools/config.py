@@ -4,7 +4,7 @@ Module contains configuration definitions for plantUML tools
 
 __author__ = "erik"
 
-import os
+import os, sys
 import pprint
 
 # current path of tools folder
@@ -29,8 +29,8 @@ class sys_utils:
 
     '''Aggregated system utilities for convenience'''
 
-    default_stdout = os.sys.stdout
-    default_displayhook = os.sys.displayhook
+    default_stdout = sys.stdout
+    default_displayhook = sys.__displayhook__
 
     @staticmethod
     def pp_hook(value):
@@ -40,11 +40,11 @@ class sys_utils:
     @staticmethod
     def set_pp_on():
         '''Sets pretty printing as default terminal displayhook'''
-        setattr(os.sys, 'displayhook', sys_utils.pp_hook)
+        setattr(sys, 'displayhook', sys_utils.pp_hook)
 
     @staticmethod
     def set_pp_off():
         '''Reverts to default terminal displayhook'''
-        setattr(os.sys, 'displayhook', sys_utils.default_displayhook)
+        setattr(sys, 'displayhook', sys_utils.default_displayhook)
 
 
