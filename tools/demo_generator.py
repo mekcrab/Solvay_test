@@ -17,12 +17,9 @@ class OPC_Connect(object):
         return opc_client
 
     def read(self, PV):
-        print PV
         print self.client.read(str(PV))
 
     def write(self, PV, SP):
-        print PV
-        print SP
         print self.client.write((str(PV), float(SP)))
 
 
@@ -41,21 +38,28 @@ class Action():
         self.PV = tokens[0]
         self.SP = tokens[2] # must be a number now
         self.complete = False
-
-    def iscomplete(self):
-        if (self.execute() == 'Success') == True:
-            self.complete = True
-        return self.complete
+        print "Setting", self.PV, "to", self.SP
 
     def execute(self):
-        return self.connection.write(PV = self.PV, SP = self.SP)
+        w = self.connection.write(PV = self.PV, SP = self.SP)
+
+    def iscomplete(self):
+        #TODO: Debug...
+        readtup = self.connection.read(self.PV)
+        print "=======", readtup
+        readvalue = list(readtup)[0]
+        if readvalue == float(self.SP):
+            self.complete = True
+        return self.complete
 
 class TranAttr():
     def __init__(self, tran_attr, connection):
         self.tran_attr = tran_attr
         tokens = split_attr(tran_attr)
         self.connection = connection
-        self.PV = self.connection.read(PV = tokens[0])
+        readtup = self.connection.read(PV = tokens[0])
+        self.PV = list(readtup)[0]
+        #self.PV = self.connection.read(PV = tokens[0])
         self.condition = tokens[1]
         self.target = float(tokens[2]) # must be a number now
         self.reached = False
@@ -96,6 +100,7 @@ def runsub(parent, diagram):
 
 def recur(in_state, diagram, connection):
     get_state = diagram.get_state(state_id = in_state)
+    print "Testing State:::", get_state.name
     #connection = OPC_Connect()
     destination = get_state.destination
     state_attr = get_state.attrs
@@ -109,16 +114,21 @@ def recur(in_state, diagram, connection):
             a = Action(action, connection)
             a.execute() # execute state attribute
 
+            #TODO: Debug Action().iscomplete()
+
+            '''
             if a.iscomplete():
                 are_complete.append(True)
             else:
                 are_complete.append(False)
+            '''
 
         if False not in are_complete:
-            print "Test on State %r Pass" %(get_state.name)
+            #print "Test on State %r Pass" %(get_state.name)
             transit(in_state, destination, connection)
         else:
             print "Test on State %r Fail" %(get_state.name)
+
 
 def transit(in_state, destination, connection):
 
@@ -137,11 +147,13 @@ def transit(in_state, destination, connection):
                 reached.append(False)
 
         if False not in reached:
+            get_dest = diagram.get_state(state_id = dest_state)
+            dest_name = get_dest.name
             #State(name = in_state).deactivate()
-            if dest_state != 'END' or []:
+            if get_dest.name != 'END' or []:
                 #State(name = dest_state).activate()
                 recur(dest_state, diagram, connection)
-            elif dest_state == 'END':
+            elif get_dest.name == 'END':
                 print "===========Test Complete=========="
 
 
@@ -159,7 +171,7 @@ if __name__ == "__main__":
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
+    print "===========Test Start=========="
+
     recur(in_state = "[*]", diagram = diagram, connection = connection)
-
-
 
