@@ -133,15 +133,18 @@ class StateModelBuilder(ModelBuilder):
             print "!ERROR: Transition source", source, "found without corresponding destination"
             raise AttributeError
         # add transition to graph
-        if self.q[0][0] == TATTR:
+        if len(self.q) > 0 and self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
             self.diagram.add_transition(source, dest, attributes=transition_attribute)
         else:
             self.diagram.add_transition(source, dest)
 
         # link required source/destination properties of the states
-        self.diagram.get_state(source).destination = dest
-        self.diagram.get_state(dest).source = source
+        source = self.diagram.get_state(source)
+        dest = self.diagram.get_state(dest)
+        source.add_destination(dest)
+        dest.add_source(source)
+
 
 
 if __name__ == "__main__":

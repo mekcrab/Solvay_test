@@ -7,31 +7,40 @@ from serverside.OPCclient import OPC_Connect
 def split_attr(attribute):
     attribute = attribute.strip("()")
     splitted = attribute.split(",")
+    splitted[0] = splitted[0].strip("'")
     return splitted
 
 
-class Action:
-    def __init__(self, state_attr):
+class Action():
+    def __init__(self, state_attr, connection):
         self.state_attr = state_attr
         tokens = split_attr(state_attr)
+        self.connection = connection
         self.PV = tokens[0]
-        self.SP = float(tokens[2]) # must be a number now
+        self.SP = tokens[2] # must be a number now
         self.complete = False
+        print "Setting", self.PV, "to", self.SP
+
+    def execute(self):
+        w = self.connection.write(PV = self.PV, SP = self.SP)
 
     def iscomplete(self):
-        if (self.execute() == 'Success') == True:
+        #TODO: Debug...
+        readtup = self.connection.read(self.PV)
+        print "=======", readtup
+        readvalue = list(readtup)[0]
+        if readvalue == float(self.SP):
             self.complete = True
         return self.complete
 
-    def execute(self):
-        return OPC_Connect().write(PV = self.PV, SP = self.SP)
-
-
-class TranAttr:
-    def __init__(self, tran_attr):
+class TranAttr():
+    def __init__(self, tran_attr, connection):
         self.tran_attr = tran_attr
         tokens = split_attr(tran_attr)
-        self.PV = OPC_Connect().read(PV = tokens[0])
+        self.connection = connection
+        readtup = self.connection.read(PV = tokens[0])
+        self.PV = list(readtup)[0]
+        #self.PV = self.connection.read(PV = tokens[0])
         self.condition = tokens[1]
         self.target = float(tokens[2]) # must be a number now
         self.reached = False
@@ -57,13 +66,12 @@ class TranAttr:
 
 def runsub(parent, diagram):
     get_state = diagram.get_state(state_id = parent)
-    state_dict = get_state.__dict__
-    substates = state_dict['substates']
+    substates = get_state.substates
     for substate in substates:
         sub = diagram.get_state(state_id = substate)
-        subsource = sub.__dict__['source']
+        subsource = sub.source
         if subsource == []:
-            recur(substate, diagram)
+            recur(substate, diagram, connection)
         else:
             continue
 
@@ -71,10 +79,10 @@ def runsub(parent, diagram):
 #in_state = '[*]'
 #State(name = in_state).activate()
 
-
-def recur(in_state, diagram):
+def recur(in_state, diagram, connection):
     get_state = diagram.get_state(state_id = in_state)
-
+    print "Testing State:::", get_state.name
+    #connection = OPC_Connect()
     destination = get_state.destination
     state_attr = get_state.attrs
 
@@ -84,54 +92,68 @@ def recur(in_state, diagram):
     elif int(get_state.num_substates) == 0:
         are_complete = list()
         for action in state_attr:
-            Action(state_attr = action).execute() # execute state attribute
+            a = Action(action, connection)
+            a.execute() # execute state attribute
 
-            if Action(state_attr = action).iscomplete() == True:
+            #TODO: Debug Action().iscomplete()
+
+            '''
+            if a.iscomplete():
                 are_complete.append(True)
             else:
                 are_complete.append(False)
+            '''
 
         if False not in are_complete:
-            print "Test on State %r Pass" %(in_state)
-            #transit(in_state, destination)
+            #print "Test on State %r Pass" %(get_state.name)
+            transit(in_state, destination, connection)
         else:
-            print "Test on State %r Fail" %(in_state)
+            print "Test on State %r Fail" %(get_state.name)
 
-#def transit(in_state, destination)
+
+def transit(in_state, destination, connection):
+
     for dest_state in destination:
 
         '''Transition Attribute'''
-        tran_attr = diagram.get_edge_data(u = in_state, v = dest_state)
+        tran_attr = diagram.get_transitions(source=in_state, dest=dest_state)
 
         reached = list()
+
         for item in tran_attr:
-            if TranAttr(tran_attr = item).verify() == True:
+
+            if TranAttr(item, connection).verify():
                 reached.append(True)
             else:
                 reached.append(False)
 
         if False not in reached:
-            State(name = in_state).deactivate()
-            if destination != '[*]' or []:
-                State(name = destination).activate()
-                recur(destination, diagram)
-            elif destination == '[*]':
+            get_dest = diagram.get_state(state_id = dest_state)
+            dest_name = get_dest.name
+            #State(name = in_state).deactivate()
+            if get_dest.name != 'END' or []:
+                #State(name = dest_state).activate()
+                recur(dest_state, diagram, connection)
+            elif get_dest.name == 'END':
                 print "===========Test Complete=========="
 
 
 if __name__ == "__main__":
     from ModelBuilder import StateModelBuilder
-    import config, os
     from PlantUML_Lexer import get_tokens_from_file
+    import config, os, time
+    connection = OPC_Connect()
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
+    time.sleep(2)
+
+    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo.puml')
 
     tkns = get_tokens_from_file(input_path)
 
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
-    recur(in_state = "[*]", diagram = diagram)
+    print "===========Test Start=========="
 
-
+    recur(in_state = "[*]", diagram = diagram, connection = connection)
 
