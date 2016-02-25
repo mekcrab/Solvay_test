@@ -1,0 +1,61 @@
+@startuml
+scale 350 width
+
+!define openvlv(x) 'x##/REQ_SP.CV' := 'x##/OPEN.CV'
+!define closevlv(x) 'x##/REQ_SP.CV' := 'x##/CLOSE.CV'
+!define setmode(x,m) 'x##/MODE.TARGET' := m
+!define setcontrol(x,sp) 'x##/SP.CV' := sp
+
+!define val(x) 'x##/PV.CV'
+
+!define n2 CV-1821
+!define n2control PIC-1809
+!define vent CV-1944
+!define vcontrol PIC-1809B
+
+!define var(x) @x@
+
+[*] --> Increase
+[*] --> Decrease
+[*] --> Vent
+[*] --> Vac
+[*] --> Flow
+
+state Increase {
+    Increase: openvlv(n2)
+    Increase: closevlv(vent)
+}
+Increase --> [*]
+
+state Decrease {
+
+    Decrease: 'CV-1821/MODE.TARGET' := 48
+    Decrease: 'CV-VENT/MODE.TARGET' := 48
+
+   state SetValves{
+   SetValves: closevlv(n2)
+   SetValves: openvlv(vent)
+   }
+   SetValves --> Vac
+}
+Decrease --> [*] : [Pressure is less than before]
+
+state Vent {
+}
+Vent --> [*]
+
+state Vac {
+}
+Vac --> [*]
+
+state Flow {
+    Flow: closevlv(n2)
+    Flow: closevlv(vent)
+    Flow: setmode(vcontrol, AUTO)
+    Flow: setcontrol(vcontrol, 4)
+    Flow: setmode(n2control, AUTO)
+    Flow: setcontrol(n2control, 6)
+}
+Flow --> [*] : val(n2control) > 0
+
+@enduml

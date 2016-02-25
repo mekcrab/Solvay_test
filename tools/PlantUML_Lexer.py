@@ -363,7 +363,6 @@ def preprocess_puml(file_path):
     decoded_str = p.communicate()[0]
     return decoded_str
 
-
 def get_tokens_from_file(file_path, preprocess = False):
     '''Returns token generator from lexer output'''
     if preprocess:
@@ -371,7 +370,6 @@ def get_tokens_from_file(file_path, preprocess = False):
     else:
         with open(file_path) as f:
             test_text = f.read()
-
     return lex(test_text, puml_state_lexer())
 
 
@@ -408,6 +406,5 @@ if __name__ == "__main__":
                 print tkn, '\t', val
 
     print "=================Testing complete=================="
-
 
 

@@ -1,8 +1,8 @@
 __author__ = 'vpeng'
 
-# Execute plantUML_state_lexer.py
+# Execute PlantUML_Lexer.py
 #import os
-#os.system('../../TESTSPEC_EKOPACHE/tools/plantUML_state_lexer.py')
+#os.system('../../TESTSPEC_EKOPACHE/tools/PlantUML_Lexer.py')
 
 # filename = output of plantUML_state_lexer
 #filename = 'fake_PH_AL_SMPL_CVAS_test_out.txt'
@@ -190,7 +190,7 @@ class GetDict(GetList):
 
 
 if __name__ == "__main__":
-    from tools.plantUML_state_lexer import puml_state_lexer
+    from tools.PlantUML_Lexer import puml_state_lexer
     from pygments import lex
     from pprint import pprint as pp
 

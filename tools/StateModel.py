@@ -23,7 +23,7 @@ class StateDiagram(DiGraph):
         self.transitions = list() # dictionary of all transitions in the diagram
 
         # Initialize parent class
-        DiGraph.__init__(self)
+        DiGraph.__init__(self, *args, **kwargs)
 
     def get_state(self, state_id):
         if isinstance(state_id, State):
@@ -34,8 +34,8 @@ class StateDiagram(DiGraph):
         if state_name in self.state_names:
             return self.state_names[state_name]
         else:
-            print "Adding state named", state_name, "to diagram."
-            self.add_state(state_name)
+            print "No state named ", state_name, "exists in diagram"
+            raise NameError
 
     def get_transitions(self, source=None, dest=None):
         '''returns transitions in the diagram
@@ -49,7 +49,6 @@ class StateDiagram(DiGraph):
         if dest: # conjunctive filter by destination
             dest = self.get_state(dest)
             trans_list = [x for x in trans_list if x.dest == dest]
-
         return trans_list
 
     def check_state_exists(self, state_id):
@@ -61,36 +60,54 @@ class StateDiagram(DiGraph):
             return False
 
     def add_state(self, state_name, parent_state=None, attrs=None):
+        '''
+        Adds a new state to the diagram. Will add substate as appropriate if parent_state
+        is defined.
+        '''
 
         if self.check_state_exists(state_name):
             new_state = self.get_state(state_name)
         else:
             new_state = State(state_name, parent_state, attributes=attrs)
-            self.add_node(new_state)
             self.state_names[state_name] = new_state
-        print state_name, "exist:", self.check_state_exists(state_name)
+            # Add substate to parent if in diagram
+            if parent_state:
+                self.get_state(parent_state).add_substate(new_state)
+            else:
+                self.add_node(new_state)
 
         if attrs:
-            new_state.add_attribute()
-
+            new_state.add_attribute(attrs)
 
     def add_state_attr(self, state_id, attribute):
         state = self.get_state(state_id)
         state.add_attribute(attribute)
 
-    def add_transition(self, source, dest, attributes=None):
+    def add_transition(self, source, dest, parent_state=None, attributes=None):
         for state in [source, dest]:
             if not self.check_state_exists(state):
                 self.add_state(state)
-        # make new transition object
-        new_transition = Transition(self.get_state(source), self.get_state(dest))
+
+        # get references to state object as required
+        source = self.get_state(source); dest = self.get_state(dest)
+
+        # make new transition object and add to diagram.transitions
+        new_transition = Transition(source, dest)
+        self.transitions.append(new_transition)
+
         # fixme: make into Attribute_Base instance
         if attributes:
             new_transition.add_attribute(attributes)
-        # add transition to diagram.transitions
-        self.transitions.append(new_transition)
+
         # add transition to graph representation
-        self.add_edge(self.get_state(source), self.get_state(dest), attr_dict={'trans':new_transition})
+        if parent_state:
+            self.get_state(parent_state).substates.add_edge(source, dest, attr_dict={'trans':new_transition})
+        else:
+            self.add_edge(source, dest, attr_dict={'trans':new_transition})
+        # link require source/destination properties of the states
+        source.add_destination(dest)
+        dest.add_source(source)
+
 
 class State(object):
 
@@ -103,11 +120,13 @@ class State(object):
 
         self.name = name
         self.attrs = list()
-        self.substates = list()
+        self.substates = StateDiagram()
         self.num_substates = 0
         self.active = False
         self.source = list()
         self.destination = list()
+
+        self.parent = parent_state
 
     def add_attribute(self, attribute):
         self.attrs.append(attribute)
@@ -116,7 +135,7 @@ class State(object):
         if not isinstance(substate, State):
             raise TypeError
         else:
-            self.substates.append(substate)
+            self.substates.add_node(substate)
             self.num_substates += 1
 
     def get_substate_names(self):
@@ -132,16 +151,16 @@ class State(object):
         return self.active
 
     def add_source(self, source):
-        #if not isinstance(source, State):
-          #  raise TypeError
-       # else:
-        self.source.append(source)
+        if not isinstance(source, State):
+           raise TypeError
+        else:
+            self.source.append(source)
 
     def add_destination(self, destination):
-        #if not isinstance(destination, State):
-         #   raise TypeError
-        #else:
-        self.destination.append(destination)
+        if not isinstance(destination, State):
+           raise TypeError
+        else:
+            self.destination.append(destination)
 
 class Transition(object):
     def __init__(self, source, dest, attrs=None):
@@ -173,41 +192,4 @@ class Transition(object):
             raise TypeError
         else:
             self.dest.append(TranDest)
-
-
-class Attribute_Base(object):
-    def __init__(self, *args):
-        self.attrs = list()
-        self.keys = list()
-        self.complete = False
-        self.data = list()  # list of timeseries data
-
-    def add_attribute(self,attribute):
-        if not isinstance(attribute, Attribute_Base):
-            raise TypeError
-        else:
-            self.attrs.append(attribute)
-
-    def evaluate(self):
-        #TODO: How do we evaluate if an attribute complete?
-        return self.complete
-
-    def save_value(self, value):
-        '''Adds a timestamp, value tuple to this attribute's self.data
-        for later retrieval and analysis
-        :param: value - any serializable object (ex. float, string, "condition object", tuples ...)
-        '''
-        self.data.append( (time.time, value))
-
-class State_Attr(Attribute_Base):
-    def __init__(self, state_name):
-        Attribute_Base.__init__(self, state_name)
-
-
-class Trans_Attr(Attribute_Base):
-    def __init__(self, source, dest):
-        Attribute_Base.__init__(self, source, dest)
-
-
-
 

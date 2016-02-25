@@ -10,7 +10,7 @@ import pygments.token as Token
 import collections
 # imports for StateModelBuilder
 import StateModel
-from plantUML_state_lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
+from PlantUML_Lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
 
 
 ##ToDo: fix debugging statements to actual debug log
@@ -38,6 +38,7 @@ class ModelBuilder(object):
         actions_pending = 0
 
         for token_tup in token_stream:
+            # filter out ignored_tokens defined at the class level
             # if token not part of actionable items, merely add it to the queue
             # otherwise take action on first actionable item in queue
             token = token_tup[0]
@@ -85,17 +86,15 @@ class StateModelBuilder(ModelBuilder):
         update_dict = dict( [
             (STATE, self.assign_state),
             (SALIAS, self.lookup_state),
-            (SSTART, self.start_superstate),
             (SEND, self.end_superstate),
             (TSOURCE, self.assign_trans)
             ] )
 
         StateModelBuilder.action_tokens.update(update_dict)
 
-        self.superstate_stack = ['root']  # stack of nested superstates
+        self.superstate_stack = [None]  # stack of nested superstates
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
         self.diagram = self.model  # bind model instance to new name for code clarity
-
 
     def lookup_state(self):
         '''Will be implemented later'''
@@ -105,7 +104,10 @@ class StateModelBuilder(ModelBuilder):
         '''All state names are unique and required for assignment.
         Will not double-add states to self.diagram.'''
         state_name = self.q.popleft()[1]
-        self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
+        if self.q[0][0] == SSTART:
+            self.start_superstate(state_name)
+        else:
+            self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
 
         if self.q[0][0] == SATTR:
             self.add_state_attr(state_name, self.q.popleft()[1])
@@ -113,10 +115,10 @@ class StateModelBuilder(ModelBuilder):
     def add_state_attr(self, state_name, attribute_value):
         self.diagram.add_state_attr(state_name, attribute_value)
 
-    def start_superstate(self):
-        superstate_name = self.q.popleft()[1]
-        self.diagram.add_state(superstate_name)
-        self.superstate_stack.append(superstate_name)
+    def start_superstate(self, state_name):
+        self.q.popleft()[1]  # consume delimiter "{"
+        self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
+        self.superstate_stack.append(state_name)
 
     def end_superstate(self):
         self.q.popleft()[1]  # consume delimiter "}"
@@ -135,25 +137,18 @@ class StateModelBuilder(ModelBuilder):
         # add transition to graph
         if len(self.q) > 0 and self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
-            self.diagram.add_transition(source, dest, attributes=transition_attribute)
+            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1], attributes=transition_attribute)
         else:
-            self.diagram.add_transition(source, dest)
-
-        # link required source/destination properties of the states
-        source = self.diagram.get_state(source)
-        dest = self.diagram.get_state(dest)
-        source.add_destination(dest)
-        dest.add_source(source)
-
+            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
 
 
 if __name__ == "__main__":
     import config, os
-    from plantUML_state_lexer import get_tokens_from_file
+    from PlantUML_Lexer import get_tokens_from_file
 
     config.sys_utils.set_pp_on()
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo.puml')
+    input_path = os.path.join(config.specs_path, 'ekopache', 'R2_PRESSURE_SIM.puml')
 
     tkns = get_tokens_from_file(input_path)
 

@@ -41,6 +41,7 @@ def recur(in_state):
             if connection[item] in GetDict().states_transition():
                 Transition = GetDict().states_transition()[connection[item]] # Get List of Transitions (if any)
                 for n in range(0, len(Transition)): # Add Transitions
+                    pass
                     #StateAlgo.StateAlgorithm().add_trasition(transition = Transition[n],
                     #                                       current_state = in_state, next_state = dest_state[item])
 
