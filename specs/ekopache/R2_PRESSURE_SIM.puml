@@ -30,13 +30,13 @@ Increase --> [*]
 state Decrease {
 
     Decrease: 'CV-1821/MODE.TARGET' := 48
-    Decrease: 'CV-VENT/MODE.TARGET' := 48
+    Decrease: 'CV-1944/MODE.TARGET' := 48
 
    state SetValves{
-   SetValves: closevlv(n2)
-   SetValves: openvlv(vent)
+       SetValves: closevlv(n2)
+       SetValves: openvlv(vent)
    }
-   SetValves --> Vac
+   SetValves --> Vac : Stuff
 }
 Decrease --> [*] : [Pressure is less than before]
 

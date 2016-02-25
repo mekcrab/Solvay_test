@@ -137,7 +137,8 @@ class StateModelBuilder(ModelBuilder):
         # add transition to graph
         if len(self.q) > 0 and self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
-            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1], attributes=transition_attribute)
+            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1],
+                                        attributes=transition_attribute)
         else:
             self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
 
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
-    print "Parsed", len(diagram.nodes()), "states"
-    print "Parsed", len(diagram.edges()), "transitions"
+    print "Parsed", len(diagram.state_names.values()), "states"
+    print "Parsed", len(diagram.get_transitions()), "transitions"
 
     print "=================== Testing Complete ==================="
