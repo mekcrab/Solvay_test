@@ -71,8 +71,7 @@ class StateDiagram(DiGraph):
         print state_name, "exist:", self.check_state_exists(state_name)
 
         if attrs:
-            new_state.add_attribute()
-
+            new_state.add_attribute(attrs)
 
     def add_state_attr(self, state_id, attribute):
         state = self.get_state(state_id)

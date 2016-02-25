@@ -124,17 +124,17 @@ class ModeAttribute(NamedDiscrete):
     '''
     Unique class of attribute for evaluation of DeltaV modes
     '''
-    # integer mapping of mode values
-    mode_int_dict = {
-        'OOS' : 0,
-        'AUTO' : 2,
-        'CAS' : 4,
-        #etc...
-    }
+    # integer mapping of mode values to MODE.TARGET
+    # --> used for writes by default
+    target_int_dict = {'LO':4, 'MAN':8, 'AUTO' : 16, 'CAS' : 48, 'ROUT':144, 'RCAS':80}
+
+    # integer mapping MODE.ACTUAL (not sure why these are different...)
+    # --> used for reads by default
+    actual_int_dict = \
+        {'LO' : 4, 'MAN' : 8, 'AUTO' : 16, 'CAS' : 32, 'ROUT':128, 'RCAS':64}
 
     def __init__(self):
-        NamedDiscrete.__init__(self, ModeAttribute.mode_int_dict)
-
+        NamedDiscrete.__init__(self, ModeAttribute.target_int_dict)
 
 class StatusAttribute(NamedDiscrete):
     '''

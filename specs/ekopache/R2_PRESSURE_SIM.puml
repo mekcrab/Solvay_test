@@ -28,8 +28,10 @@ state Increase {
 Increase --> [*]
 
 state Decrease {
-   Decrease: closevlv(n2)
-   Decrease: openvlv(vent)
+   state SetValves{
+   SetValves: closevlv(n2)
+   SetValves: openvlv(vent)
+   }
 }
 Decrease --> [*] : [Pressure is less than before]
 

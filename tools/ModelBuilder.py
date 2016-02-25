@@ -38,6 +38,7 @@ class ModelBuilder(object):
         actions_pending = 0
 
         for token_tup in token_stream:
+            # filter out ignored_tokens defined at the class level
             # if token not part of actionable items, merely add it to the queue
             # otherwise take action on first actionable item in queue
             token = token_tup[0]
@@ -85,7 +86,6 @@ class StateModelBuilder(ModelBuilder):
         update_dict = dict( [
             (STATE, self.assign_state),
             (SALIAS, self.lookup_state),
-            (SSTART, self.start_superstate),
             (SEND, self.end_superstate),
             (TSOURCE, self.assign_trans)
             ] )
@@ -96,7 +96,6 @@ class StateModelBuilder(ModelBuilder):
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
         self.diagram = self.model  # bind model instance to new name for code clarity
 
-
     def lookup_state(self):
         '''Will be implemented later'''
         raise NotImplementedError
@@ -105,7 +104,10 @@ class StateModelBuilder(ModelBuilder):
         '''All state names are unique and required for assignment.
         Will not double-add states to self.diagram.'''
         state_name = self.q.popleft()[1]
-        self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
+        if self.q[0][0] == SSTART:
+            self.start_superstate(state_name)
+        else:
+            self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
 
         if self.q[0][0] == SATTR:
             self.add_state_attr(state_name, self.q.popleft()[1])
@@ -113,10 +115,10 @@ class StateModelBuilder(ModelBuilder):
     def add_state_attr(self, state_name, attribute_value):
         self.diagram.add_state_attr(state_name, attribute_value)
 
-    def start_superstate(self):
-        superstate_name = self.q.popleft()[1]
-        self.diagram.add_state(superstate_name)
-        self.superstate_stack.append(superstate_name)
+    def start_superstate(self, state_name):
+        self.q.popleft()[1]  # consume delimiter "{"
+        self.diagram.add_state(state_name)
+        self.superstate_stack.append(state_name)
 
     def end_superstate(self):
         self.q.popleft()[1]  # consume delimiter "}"
@@ -144,7 +146,6 @@ class StateModelBuilder(ModelBuilder):
         dest = self.diagram.get_state(dest)
         source.add_destination(dest)
         dest.add_source(source)
-
 
 
 if __name__ == "__main__":
