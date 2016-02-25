@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     config.sys_utils.set_pp_on()
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
+    input_path = os.path.join(config.specs_path, 'ekopache', 'R2_PRESSURE_SIM.puml')
 
     tkns = get_tokens_from_file(input_path)
 

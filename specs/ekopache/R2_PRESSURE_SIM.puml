@@ -25,19 +25,21 @@ state Increase {
     Increase: openvlv(n2)
     Increase: closevlv(vent)
 }
+Increase --> [*]
 
 state Decrease {
    Decrease: closevlv(n2)
    Decrease: openvlv(vent)
 }
 Decrease --> [*] : [Pressure is less than before]
-Decrease --> [*] : Something else
 
 state Vent {
 }
+Vent --> [*]
 
 state Vac {
 }
+Vac --> [*]
 
 state Flow {
     Flow: closevlv(n2)
