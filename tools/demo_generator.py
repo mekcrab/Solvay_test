@@ -17,10 +17,14 @@ class OPC_Connect(object):
         return opc_client
 
     def read(self, PV):
-        print self.client.read(str(PV))
+        readvalue = self.client.read(str(PV))
+        #print readvalue
+        return readvalue
 
     def write(self, PV, SP):
-        print self.client.write((str(PV), float(SP)))
+        writevalue = self.client.write((str(PV), float(SP)))
+        print writevalue
+        return writevalue
 
 
 def split_attr(attribute):
@@ -35,20 +39,20 @@ class Action():
         self.state_attr = state_attr
         tokens = split_attr(state_attr)
         self.connection = connection
-        self.PV = tokens[0]
-        self.SP = tokens[2] # must be a number now
+        self.param = tokens[0]
+        self.value = tokens[2] # must be a number now
         self.complete = False
-        print "Setting", self.PV, "to", self.SP
+        print "Setting", self.param, "value to", self.value, "..."
 
     def execute(self):
-        w = self.connection.write(PV = self.PV, SP = self.SP)
+        return self.connection.write(PV = self.param, SP = self.value)
 
     def iscomplete(self):
-        #TODO: Debug...
-        readtup = self.connection.read(self.PV)
-        print "=======", readtup
+        #FIXME: confirm actions: MODE.TARGET to MODE.ACTUAL, SP to PV
+
+        readtup = self.connection.read(self.param)
         readvalue = list(readtup)[0]
-        if readvalue == float(self.SP):
+        if readvalue == float(self.value):
             self.complete = True
         return self.complete
 
@@ -59,7 +63,6 @@ class TranAttr():
         self.connection = connection
         readtup = self.connection.read(PV = tokens[0])
         self.PV = list(readtup)[0]
-        #self.PV = self.connection.read(PV = tokens[0])
         self.condition = tokens[1]
         self.target = float(tokens[2]) # must be a number now
         self.reached = False
@@ -94,48 +97,59 @@ def runsub(parent, diagram):
         else:
             continue
 
+
+
 #Start
 #in_state = '[*]'
 #State(name = in_state).activate()
 
 def recur(in_state, diagram, connection):
-    get_state = diagram.get_state(state_id = in_state)
-    print "Testing State:::", get_state.name
-    #connection = OPC_Connect()
-    destination = get_state.destination
-    state_attr = get_state.attrs
+    get_in = diagram.get_state(state_id = in_state)
+    in_name = get_in.name
+    print "________Testing State::: %r ________" %(in_name)
 
+    destination = get_in.destination  # List of Object
+    state_attr = get_in.attrs
+    print "substates number:", get_in.num_substates
+
+    #FIXME: substate_num and substates objects empty in StateModel
     ''' Run substate (if any) or execute action'''
-    if int(get_state.num_substates) > 0:
+    if int(get_in.num_substates) > 0:
+
         runsub(in_state, diagram)
-    elif int(get_state.num_substates) == 0:
+    elif int(get_in.num_substates) == 0:
         are_complete = list()
         for action in state_attr:
             a = Action(action, connection)
             a.execute() # execute state attribute
 
-            #TODO: Debug Action().iscomplete()
-
-            '''
             if a.iscomplete():
                 are_complete.append(True)
             else:
                 are_complete.append(False)
-            '''
+
 
         if False not in are_complete:
-            #print "Test on State %r Pass" %(get_state.name)
+            print "... Test on State %r PASS. \n" %(get_in.name)
             transit(in_state, destination, connection)
         else:
-            print "Test on State %r Fail" %(get_state.name)
+            print "... Test on State %r FAIL. \n" %(get_in.name)
 
 
 def transit(in_state, destination, connection):
+    get_in = diagram.get_state(state_id = in_state)
+    in_name = get_in.name
+
+    print "Transiting..."
 
     for dest_state in destination:
+        get_dest = diagram.get_state(state_id = dest_state)
+        dest_name = get_dest.name
 
         '''Transition Attribute'''
-        tran_attr = diagram.get_transitions(source=in_state, dest=dest_state)
+        tran_attr = diagram.get_transitions(source=in_name, dest=dest_name)
+        #FIXME: Transition Attribute always empty, check StateModel.py
+        #print "in_state:", in_name, ", dest_state:", dest_name, "have transition:", tran_attr
 
         reached = list()
 
@@ -147,13 +161,12 @@ def transit(in_state, destination, connection):
                 reached.append(False)
 
         if False not in reached:
-            get_dest = diagram.get_state(state_id = dest_state)
-            dest_name = get_dest.name
+
             #State(name = in_state).deactivate()
-            if get_dest.name != 'END' or []:
+            if dest_name != 'END' or []:
                 #State(name = dest_state).activate()
                 recur(dest_state, diagram, connection)
-            elif get_dest.name == 'END':
+            elif dest_name == 'END':
                 print "===========Test Complete=========="
 
 
@@ -164,7 +177,7 @@ if __name__ == "__main__":
     connection = OPC_Connect()
     time.sleep(3)
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo.puml')
+    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_0.0.puml')
 
     tkns = get_tokens_from_file(input_path)
 
