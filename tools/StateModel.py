@@ -7,7 +7,7 @@ Model will be used as an output from plantUML lexer/parser combination.
 Model will also be used an input for test generation.
 '''
 from time import time
-from networkx import DiGraph
+from networkx import DiGraph, get_edge_attributes
 
 class StateDiagram(DiGraph):
     '''
@@ -43,12 +43,12 @@ class StateDiagram(DiGraph):
             :return: list of transitions matching filter criteria
         '''
         trans_list = self.transitions
-        if source: # filter by source
+        if source:  # filter by source
             source = self.get_state(source)
-            trans_list = [x for x in trans_list if x.source == source]
-        if dest: # conjunctive filter by destination
+            trans_list = [x for x in trans_list if source in x.source]
+        if dest:  # conjunctive filter by destination
             dest = self.get_state(dest)
-            trans_list = [x for x in trans_list if x.dest == dest]
+            trans_list = [x for x in trans_list if dest in x.dest]
         return trans_list
 
     def check_state_exists(self, state_id):
