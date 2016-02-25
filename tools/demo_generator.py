@@ -1,26 +1,7 @@
 __author__ = 'vpeng'
 
 from StateModel import StateDiagram, State, Transition
-import OpenOPC
-
-
-class OPC_Connect:
-
-    def __init__(self):
-        self.client = self.connect_local('OPC.DeltaV.1')
-
-
-    def connect_local(self, svr_name):
-
-        opc_client = OpenOPC.open_client('localhost')
-        opc_client.connect(svr_name)
-        return opc_client
-
-    def read(self, PV):
-        print self.client.read(PV)
-
-    def write(self, PV, SP):
-        print self.client.write((PV, SP))
+from serverside.OPCclient import OPC_Connect
 
 
 def split_attr(attribute):
@@ -44,6 +25,7 @@ class Action:
 
     def execute(self):
         return OPC_Connect().write(PV = self.PV, SP = self.SP)
+
 
 class TranAttr:
     def __init__(self, tran_attr):
@@ -88,6 +70,7 @@ def runsub(parent, diagram):
 #Start
 #in_state = '[*]'
 #State(name = in_state).activate()
+
 
 def recur(in_state, diagram):
     get_state = diagram.get_state(state_id = in_state)
@@ -139,7 +122,7 @@ def recur(in_state, diagram):
 if __name__ == "__main__":
     from ModelBuilder import StateModelBuilder
     import config, os
-    from plantUML_state_lexer import get_tokens_from_file
+    from PlantUML_Lexer import get_tokens_from_file
 
     input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
 

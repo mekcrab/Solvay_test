@@ -4,7 +4,6 @@ Module contains class definitions for various types of attibutes encountered dur
 '''
 
 __author__ = 'ekoapche'
-
 import time
 
 
@@ -26,12 +25,6 @@ class Attribute_Base(object):
             raise TypeError
         else:
             self.attrs.append(attribute)
-
-    def evaluate(self):
-        #TODO: How do we evaluate if an attribute complete? (EFK comment: subclass and override evaluate there
-        '''set value of self.complete here'''
-        pass
-        return self.complete
 
     def save_value(self, value):
         '''Adds a timestamp, value tuple to this attribute's self.data
@@ -58,12 +51,19 @@ class Attribute_Base(object):
     def set_write_hook(self, writehook):
         self.writehook = writehook
 
+    def evaluate(self):
+        #TODO: How do we evaluate if an attribute complete? (EFK comment: subclass and override evaluate there
+        '''set value of self.complete here'''
+        return self.complete
+
+
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
         Examples:   NamedSets, Binary/Boolean, Bitmask'''
 
     def evaluate(self):
         pass
+
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
@@ -120,7 +120,7 @@ class AnalogCondition(AnalogAttribute):
         return AnalogAttribute.evaluate(self)
 
 
-class Mode_Attribute(NamedDiscrete):
+class ModeAttribute(NamedDiscrete):
     '''
     Unique class of attribute for evaluation of DeltaV modes
     '''
@@ -133,10 +133,10 @@ class Mode_Attribute(NamedDiscrete):
     }
 
     def __init__(self):
-        NamedDiscrete.__init__(self, Mode_Attribute.mode_int_dict)
+        NamedDiscrete.__init__(self, ModeAttribute.mode_int_dict)
 
 
-class Status_Attribute(NamedDiscrete):
+class StatusAttribute(NamedDiscrete):
     '''
     Unique class of attribute for evaluation of OPC status
     '''
@@ -148,4 +148,4 @@ class Status_Attribute(NamedDiscrete):
     }
 
     def __init__(self):
-        NamedDiscrete.__init__(self, int_dict=Status_Attribute.status_int_dict)
+       NamedDiscrete.__init__(self, int_dict=StatusAttribute.status_int_dict)

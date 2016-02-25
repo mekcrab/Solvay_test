@@ -10,7 +10,7 @@ import pygments.token as Token
 import collections
 # imports for StateModelBuilder
 import StateModel
-from plantUML_state_lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
+from PlantUML_Lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
 
 
 ##ToDo: fix debugging statements to actual debug log
@@ -146,7 +146,7 @@ class StateModelBuilder(ModelBuilder):
 
 if __name__ == "__main__":
     import config, os
-    from plantUML_state_lexer import get_tokens_from_file
+    from PlantUML_Lexer import get_tokens_from_file
 
     config.sys_utils.set_pp_on()
 
