@@ -92,7 +92,7 @@ class StateModelBuilder(ModelBuilder):
 
         StateModelBuilder.action_tokens.update(update_dict)
 
-        self.superstate_stack = ['root']  # stack of nested superstates
+        self.superstate_stack = [None]  # stack of nested superstates
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
         self.diagram = self.model  # bind model instance to new name for code clarity
 
@@ -117,7 +117,7 @@ class StateModelBuilder(ModelBuilder):
 
     def start_superstate(self, state_name):
         self.q.popleft()[1]  # consume delimiter "{"
-        self.diagram.add_state(state_name)
+        self.diagram.add_state(state_name, parent_state=self.superstate_stack[-1])
         self.superstate_stack.append(state_name)
 
     def end_superstate(self):
@@ -137,15 +137,9 @@ class StateModelBuilder(ModelBuilder):
         # add transition to graph
         if len(self.q) > 0 and self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
-            self.diagram.add_transition(source, dest, attributes=transition_attribute)
+            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1], attributes=transition_attribute)
         else:
-            self.diagram.add_transition(source, dest)
-
-        # link required source/destination properties of the states
-        source = self.diagram.get_state(source)
-        dest = self.diagram.get_state(dest)
-        source.add_destination(dest)
-        dest.add_source(source)
+            self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
 
 
 if __name__ == "__main__":
