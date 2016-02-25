@@ -1,26 +1,7 @@
 __author__ = 'vpeng'
 
 from StateModel import StateDiagram, State, Transition
-import OpenOPC
-
-
-class OPC_Connect:
-
-    def __init__(self):
-        self.client = self.connect_local('OPC.DeltaV.1')
-
-
-    def connect_local(self, svr_name):
-
-        opc_client = OpenOPC.open_client('localhost')
-        opc_client.connect(svr_name)
-        return opc_client
-
-    def read(self, PV):
-        print self.client.read(PV)
-
-    def write(self, PV, SP):
-        print self.client.write((PV, SP))
+from serverside.OPCclient import OPC_Connect
 
 
 def split_attr(attribute):
@@ -38,13 +19,13 @@ class Action:
         self.complete = False
 
     def iscomplete(self):
-        if OPC_Connect().read(PV = self.PV) == self.SP:
+        if (self.execute() == 'Success') == True:
             self.complete = True
         return self.complete
 
-
     def execute(self):
-        OPC_Connect().write(PV = self.PV, SP = self.SP)
+        return OPC_Connect().write(PV = self.PV, SP = self.SP)
+
 
 class TranAttr:
     def __init__(self, tran_attr):
@@ -90,17 +71,17 @@ def runsub(parent, diagram):
 #in_state = '[*]'
 #State(name = in_state).activate()
 
+
 def recur(in_state, diagram):
     get_state = diagram.get_state(state_id = in_state)
 
-    state_dict = get_state.__dict__
-    destination = state_dict['destination']
-    state_attr = state_dict['attrs']
+    destination = get_state.destination
+    state_attr = get_state.attrs
 
     ''' Run substate (if any) or execute action'''
-    if state_dict['substate_num'] > 0:
+    if int(get_state.num_substates) > 0:
         runsub(in_state, diagram)
-    elif state_dict['substate_num'] == 0:
+    elif int(get_state.num_substates) == 0:
         are_complete = list()
         for action in state_attr:
             Action(state_attr = action).execute() # execute state attribute
@@ -112,10 +93,11 @@ def recur(in_state, diagram):
 
         if False not in are_complete:
             print "Test on State %r Pass" %(in_state)
+            #transit(in_state, destination)
         else:
             print "Test on State %r Fail" %(in_state)
 
-
+#def transit(in_state, destination)
     for dest_state in destination:
 
         '''Transition Attribute'''
@@ -140,7 +122,7 @@ def recur(in_state, diagram):
 if __name__ == "__main__":
     from ModelBuilder import StateModelBuilder
     import config, os
-    from plantUML_state_lexer import get_tokens_from_file
+    from PlantUML_Lexer import get_tokens_from_file
 
     input_path = os.path.join(config.specs_path, 'vpeng', 'PH_AL_SMPL_CVAS.puml')
 
@@ -152,4 +134,4 @@ if __name__ == "__main__":
     recur(in_state = "[*]", diagram = diagram)
 
 
-    print "=================== Testing Complete ==================="
+

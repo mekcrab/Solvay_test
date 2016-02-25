@@ -1,6 +1,6 @@
 __author__ = 'vpeng'
 
-from puml_dict_parser import GetDict, GetList
+from tools.depreciated.puml_dict_parser import GetDict, GetList
 from tools.depreciated import StateAlgo
 
 
