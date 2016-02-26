@@ -13,6 +13,7 @@ try:
 except ImportError:
     print "No OpenOPC package found, revert to dummy client"
 
+import time
 
 class OPCconnect(object):
     '''
@@ -27,10 +28,10 @@ class OPCconnect(object):
         return opc_client
 
     def read(self, PV):
-        print self.client.read(PV)
+        print self.client.read(str(PV))
 
     def write(self, PV, SP):
-        print self.client.write((PV, SP))
+        print self.client.write((str(PV), float(SP)))
 
 
 class OPCdummy(object):
@@ -43,8 +44,10 @@ class OPCdummy(object):
     def connect_local(self, srv_name, host='dummy'):
         return 'Dummy client connection'
 
-    def read(self, PV):
+    def read(self, PV, dummy_val=-99):
         print "Dummy write: ", PV
+        return (dummy_val, 'Dummy', time.ctime(time.time()))
+
 
     def write(self, PV, SP):
         print "Dummy write: PV", PV, '\t', 'SP', SP

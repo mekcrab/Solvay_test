@@ -1,30 +1,7 @@
 __author__ = 'vpeng'
 
 from StateModel import StateDiagram, State, Transition
-import OpenOPC
-
-
-class OPC_Connect(object):
-
-    def __init__(self):
-        self.client = self.connect_local('OPC.DeltaV.1')
-
-
-    def connect_local(self, svr_name):
-
-        opc_client = OpenOPC.open_client('localhost')
-        opc_client.connect(svr_name)
-        return opc_client
-
-    def read(self, PV):
-        readvalue = self.client.read(str(PV))
-        #print readvalue
-        return readvalue
-
-    def write(self, PV, SP):
-        writevalue = self.client.write((str(PV), float(SP)))
-        print writevalue
-        return writevalue
+from serverside.OPCclient import OPC_Connect
 
 
 def split_attr(attribute):
