@@ -29,6 +29,7 @@ class OPCconnect(object):
 
     def read(self, PV):
         print self.client.read(str(PV))
+        return self.client.read(str(PV))
 
     def write(self, PV, SP):
         print self.client.write((str(PV), float(SP)))
