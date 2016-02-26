@@ -6,8 +6,8 @@ Model will be used as an output from plantUML lexer/parser combination.
 
 Model will also be used an input for test generation.
 '''
-from time import time
-from networkx import DiGraph, get_edge_attributes
+
+from networkx import DiGraph
 
 class StateDiagram(DiGraph):
     '''
@@ -18,7 +18,7 @@ class StateDiagram(DiGraph):
     def __init__(self, *args, **kwargs):
 
         self.states = list()  # list of all states in the diagram
-        self.top_states = list()  # list of all the top-level states
+        self.top_level = list()  # list of all the top-level states
         self.state_names = {}  # map of states by name to graph node
         self.transitions = list() # dictionary of all transitions in the diagram
 
@@ -75,6 +75,7 @@ class StateDiagram(DiGraph):
                 self.get_state(parent_state).add_substate(new_state)
             else:
                 self.add_node(new_state)
+                self.top_level.append(new_state)
 
         if attrs:
             new_state.add_attribute(attrs)
@@ -108,6 +109,29 @@ class StateDiagram(DiGraph):
         source.add_destination(dest)
         dest.add_source(source)
 
+    def flatten_graph(self):
+        '''
+        Flattens recursive structure of State.substates to a single graph by eliminating all superstates
+        :return: directed graph of flattened structure
+        '''
+        flat_graph = self.subgraph(self.top_level)  # retains only nodes and edges in top-level graph - not a copy!!
+        for state in flat_graph.nodes():
+            # check for subgraph
+            if state.num_substates > 0:
+                # recursively flatten subgraphs
+                subgraph = state.substates.flatten_graph()
+                # connect starting edges to superstate.source, ending edges to superstate.destination
+                for sub_state in subgraph:
+                    if sub_state.is_start_state():
+                        [flat_graph.add_edge(src, sub_state) for src in state.source]
+                    if sub_state.is_end_state():
+                        [flat_graph.add_edge(sub_state, dest) for dest in state.dest]
+                # add resulting subgraph to newly flattened graph
+                flat_graph.add_edges_from(subgraph.edges())
+                # remove superstate
+                flat_graph.remove_node(state)
+        return flat_graph
+
 
 class State(object):
 
@@ -140,6 +164,32 @@ class State(object):
 
     def get_substate_names(self):
         return [x.name for x in self.substates]
+
+    def is_start_state(self, global_scope=False):
+        '''
+        Returns True if this state is a starting state in graph level scope.
+        Set argument global_scope = True to determine starting condition in the full diagram scope
+        :param global_scope: local scope if False (default)
+        :return: True if starting state
+        '''
+        local_start = len(self.start) == 0
+        if global_scope and self.parent:
+            return local_start or self.parent.is_start_state(gloabl_scope=True)
+        else:
+            return local_start
+
+    def is_end_state(self, global_scope=False):
+        '''
+        Returns True if this state is an ending state in the local graph level scope.
+        Set argument global_scope = True to determine starting condition in the full diagram scope
+        :param global_scope: local scope if False (default)
+        :return: True if ending state
+        '''
+        local_end = len(self.destination) == 0
+        if global_scope and self.parent:
+            return local_end or self.parent.is_end_state(global_scope=True)
+        else:
+            return local_end
 
     def activate(self):
         self.active = True
