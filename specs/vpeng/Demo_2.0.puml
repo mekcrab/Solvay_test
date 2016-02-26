@@ -1,0 +1,32 @@
+
+@startuml
+
+[*] --> SetMode
+SetMode: ('CV-2151/MODE.TARGET', =, 16)
+SetMode: ('HS-4092/MODE.TARGET', =, 16)
+
+SetMode --> ValvePosition: ('HS-4092/MODE.TARGET', =, 16)
+
+ValvePosition: ('CV-2151/REQ_SP.CV', =, 0)
+
+ValvePosition: ('HS-4092/SP_D.CV', =, 1)
+
+ValvePosition --> StartCharge
+
+StartCharge --> TryIt
+
+state StartCharge{
+FIC_Mode --> FIC_Position
+FIC_Position --> SUBEND
+
+FIC_Position: ('FIC-2160/REQ_OUTP.CV', =, 0)
+FIC_Mode: ('FIC-2160/MODE.TARGET', =, 144)
+
+}
+
+
+TryIt --> END
+
+
+@enduml
+
