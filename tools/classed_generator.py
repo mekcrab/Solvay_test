@@ -58,7 +58,7 @@ class TranAttr():
         elif '!' in self.condition and self.PV != self.target:
             self.reached = True
         else:
-            print "Transition of %r FAIL" %(self.tran_attr)
+            print "Transition of %r RESISTED" %(self.tran_attr)
 
         return self.reached
 
@@ -67,16 +67,17 @@ class execute():
     def __init__(self, diagram, connection):
         self.diagram = diagram
         self.connection = connection
+        self.sparent = []
 
     def runsub(self, parent):
-        self.parent = parent
         get_parent = diagram.get_state(state_id = parent)
+        self.sparent = get_parent.name
         self.parentdest = get_parent.destination
         substates = get_parent.substates
         for substate in substates:
             sub = diagram.get_state(state_id = substate)
             subsource = sub.source
-            subdest = sub.destination
+            #subdest = sub.destination
             if subsource == []: # This substate = Start
                 #State(name = substate).activate()
                 #print "\nActivating state %r: %r" %(substate.name, substate.active)
@@ -117,15 +118,24 @@ class execute():
 
 
     def transit(self, source, destination):
+
         get_source = diagram.get_state(state_id = source)
         source_name = get_source.name
 
         #TODO: Need to add 'parent' property in StateModel: in_state.parent != None
-        if destination == []: # End of Substates
-            print "*Test for substate(s) in state: %r complete" %(self.parent.name)
-            self.transit(self.parent,self.parentdest)
+        if destination == [] and self.sparent != []: # End of Substates
+            s = self.sparent
+            self.sparent = []
+            print "*Test for substate(s) in state: %r complete" %(self.sparent)
+            self.transit(s, self.parentdest)
+
+        elif destination == [] and self.sparent == []: # Top Level End
+            print "==============Test STUCKED=============="
+
         else:
             print "Transiting......"
+
+            passed_dest = list()
 
             for dest_state in destination:
                 get_dest = diagram.get_state(state_id = dest_state)
@@ -134,9 +144,10 @@ class execute():
                 '''Transition Attribute'''
                 tran_list = diagram.get_transitions(source=source_name, dest=dest_name) # List of transition attrs
 
-                reached = list()
-                for tran_attr in tran_list:
-                    tran_attr = tran_attr.attrs
+                for x in range(0, len(tran_list)):
+
+                    tran_attr = tran_list[0].attrs
+                    reached = list()
                     #print "in_state:", source_name, ", dest_state:", dest_name, "have transition:", tran_attr
 
                     for item in tran_attr:
@@ -148,16 +159,20 @@ class execute():
                             reached.append(False)
 
                     if False not in reached:
+                        passed_dest.append(dest_name)
 
-                        #State(name = get_source).deactivate()
-                        #print "\nState %r deactivated: %r" %(source_name, not get_source.active)
-                        if dest_name != 'END':
-                            #State(name = get_dest).activate()
-                            #print "Activating state %r: %r\n" %(dest_name, get_dest.active)
-                            self.recur(dest_state)
 
-                        elif dest_name == 'END':
-                            print "===========Test Complete=========="
+            for dest in passed_dest:
+                ##State(name = get_source).deactivate()
+                ##print "\nState %r deactivated: %r" %(source_name, not get_source.active)
+                if dest == 'END':
+                    print "====================Test Complete================="
+
+                if dest != 'END':
+                    ##State(name = get_dest).activate()
+                    ##print "Activating state %r: %r\n" %(dest_name, get_dest.active)
+                    self.recur(dest)
+
 
 
 if __name__ == "__main__":
@@ -176,7 +191,7 @@ if __name__ == "__main__":
 
     print "===========Test Start=========="
 
-    exe = execute(diagram = diagram, connection = connection)
+    exe = execute(diagram = diagram.flatten_graph, connection = connection)
 
     exe.recur(in_state = "[*]")
 
