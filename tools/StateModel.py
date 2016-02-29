@@ -85,6 +85,10 @@ class StateDiagram(DiGraph):
         state.add_attribute(attribute)
 
     def add_transition(self, source, dest, parent_state=None, attributes=None):
+        # make start and ending states [*] unique
+        if source in ['[*]', u'[*]']: source = u'START'
+        if dest in ['[*]', u'[*]']: dest = u'END'
+
         for state in [source, dest]:
             if not self.check_state_exists(state):
                 self.add_state(state)
@@ -109,6 +113,20 @@ class StateDiagram(DiGraph):
         source.add_destination(dest)
         dest.add_source(source)
 
+    def get_start_states(self):
+        start_states = list()
+        for state in self.top_level:
+            if state.is_start_state():
+                start_states.append(state)
+        return start_states
+
+    def get_end_states(self):
+        end_states = list()
+        for state in self.top_level:
+            if state.is_end_state():
+                end_states.append(state)
+        return end_states
+
     def flatten_graph(self):
         '''
         Flattens recursive structure of State.substates to a single graph by eliminating all superstates
@@ -121,11 +139,11 @@ class StateDiagram(DiGraph):
                 # recursively flatten subgraphs
                 subgraph = state.substates.flatten_graph()
                 # connect starting edges to superstate.source, ending edges to superstate.destination
-                for sub_state in subgraph:
+                for sub_state in subgraph.nodes():
                     if sub_state.is_start_state():
                         [flat_graph.add_edge(src, sub_state) for src in state.source]
                     if sub_state.is_end_state():
-                        [flat_graph.add_edge(sub_state, dest) for dest in state.dest]
+                        [flat_graph.add_edge(sub_state, dest) for dest in state.destination]
                 # add resulting subgraph to newly flattened graph
                 flat_graph.add_edges_from(subgraph.edges())
                 # remove superstate
@@ -160,6 +178,7 @@ class State(object):
             raise TypeError
         else:
             self.substates.add_node(substate)
+            self.substates.top_level.append(substate)
             self.num_substates += 1
 
     def get_substate_names(self):
@@ -172,7 +191,7 @@ class State(object):
         :param global_scope: local scope if False (default)
         :return: True if starting state
         '''
-        local_start = len(self.start) == 0
+        local_start = len(self.source) == 0
         if global_scope and self.parent:
             return local_start or self.parent.is_start_state(gloabl_scope=True)
         else:

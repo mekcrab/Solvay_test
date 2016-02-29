@@ -128,7 +128,6 @@ class StateModelBuilder(ModelBuilder):
         '''Assigns a transition to the diagram and State.source, State.destination values'''
         source = self.q.popleft()[1]
         # pull destination from token stream
-        dest = 'Not Found'
         if self.q[0][0] == TDEST:
             dest = self.q.popleft()[1]
         else:
@@ -141,6 +140,24 @@ class StateModelBuilder(ModelBuilder):
                                         attributes=transition_attribute)
         else:
             self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
+
+def build_state_diagram(fpath):
+    '''
+    Returns a state diagram lexed from the given plantUML model
+    :param fpath: path to state diagram *.puml file
+    :return: StateModel.StateDiagram
+    '''
+    from PlantUML_Lexer import get_tokens_from_file
+
+    tkns = get_tokens_from_file(fpath)
+    builder = StateModelBuilder()
+    diagram = builder.parse(tkns)
+
+    print "Parsed", len(diagram.state_names.values()), "states"
+    print "Parsed", len(diagram.get_transitions()), "transitions"
+    print "New diagram parsed from ", fpath
+
+    return diagram
 
 
 if __name__ == "__main__":

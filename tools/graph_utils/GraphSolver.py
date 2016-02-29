@@ -13,14 +13,14 @@ class GraphSolver(object):
         if isinstance(original_graph, nx.DiGraph):
             self.graph = original_graph
         else:
-            print "Must pass directed graph instance as first argument"
+            print "ERROR: Must pass directed graph instance as first argument"
             raise TypeError
 
-    def set_graph(self, graph):
-        if not isinstance(graph, nx.Digraph):
+    def set_graph(self, new_graph):
+        if not isinstance(new_graph, nx.DiGraph):
             raise TypeError
         else:
-            self.graph = graph
+            self.graph = new_graph
 
     def generate_paths(self, start_node, end_node):
         '''method returns a list of all simple paths
@@ -28,7 +28,7 @@ class GraphSolver(object):
         if start_node in self.graph and end_node in self.graph:
             return list(nx.all_simple_paths(self.graph, start_node, end_node))
         else:
-            print "Specified nodes: start", start_node, "end, ", end_node, "not found in graph"
+            print "ERROR: Specified nodes: start", start_node.name, "end, ", end_node.name, "not found in graph."
             raise NameError
 
     def calculate_complexity(self):
@@ -48,5 +48,11 @@ class GraphSolver(object):
         '''
         return self.graph.number_of_edges() - self.graph.number_of_nodes() + \
                                                 nx.number_weakly_connected_components(self.graph)
+
+
+if __name__ == "__main__":
+
+    # add testing here
+    pass
 
 

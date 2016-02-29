@@ -36,15 +36,22 @@ state Decrease {
        SetValves: closevlv(n2)
        SetValves: openvlv(vent)
    }
-   SetValves --> Vac : Stuff
 }
 Decrease --> [*] : [Pressure is less than before]
 
 state Vent {
+    Vent: n2control/MODE.TARGET := 4
+    Vent: n2control/SP.CV := 0
+    Vent: vcontrol/MODE.TARGET := 16
+    Vent: vcontrol/SP.CV := 100
 }
 Vent --> [*]
 
 state Vac {
+    Vac: n2control/MODE.TARGET := 8
+    Vac: n2control/SP.CV := 50
+    Vac: vcontrol/MODE.TARGET := 4
+    Vac: vcontrol/SP.CV := 0
 }
 Vac --> [*]
 
