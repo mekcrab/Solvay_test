@@ -1,0 +1,83 @@
+The classed_generator is demostratable for following functions:
+1. Execute single or multiple actions as state attribute(s).
+2. Verify *single* transition attribute.
+3. Recognize branches and valid destinations with verified transition attributes. 
+4. Execute substates inside a superstate that has NO state attribute by recognizing the startpoint and endpoint of substates.
+5. Recognize startpoint and 'END' of top level states. 
+6. For the states that is not 'END' but have no destination, it is recognized as "Stucked" states.
+
+
+----------------------------------------------------------------------------------------------------------------------
+split_attr(attribute): 
+# the input attribute should be a state attribute which is value of n.__dict__['attrs'], or a transition attribute
+# where n is gotten from diagram.get_state() when executing ModelBuilder.
+# this definition splits attribute with ","
+#i.e.
+>>> attribute = "('^/P_SMCA_RESULT.CV', =, 20)"
+>>> split_attr(attribute)
+["'^/P_SMCA_RESULT.CV'", ' =', ' 20']
+
+
+
+Action(state_attr = attribute).execute():
+# write SP value in OPC: OPC_Connect.client.write(PV,SP)
+
+Action(state_attr = attribute).iscomplete():
+# The class split attribute to PV ('^/P_SMCA_RESULT.CV') and SP (20)
+# It reads value of ('^/P_SMCA_RESULT.CV') with OPC_Connect.client.read(PV)
+# if OPC_Connect.client.read(PV) == SP, then it returns True 
+# else returns False
+###### However, this function must be repaired: 
+###### if Action.execute() is writing MODE.TARGET, then Action.iscomplete has to confirm MODE.ACTUAL
+
+
+
+TranAttr(tran_attr = attribute).verify():
+# The class split attribute to PV ('^/P_SMCA_RESULT.CV'), condition (=) and target (20)
+# if PV reached the target condition, return True.
+# else, return False
+
+
+
+class Execute(diagram, connection):
+# parameter: self.sparent - meaning the parent of a substate, initial set should be []
+# input diagram should be the output diagram from ModelBuilder
+
+runsub(parent):
+# input parent is the parent state, and input diagram should be the same as the input of recur function
+# set self.sparent = parent name
+# then, find the start point of substate by checking which source of substate is []
+# start recur function with recur(the startpoint)
+
+
+recur(in_state):
+# in_state is the state name where is supposed to start the recur function from
+# get destination, state_attr and substates of in_state and substate_num = len(substates)
+# if substate_num > 0, run substate with runsub function
+# if substate_num = 0, execute state attribute as action (if any). 
+
+# if there are mutiple state attribute, actions will execute individually in a for loop.
+# if all actions in the state are complete, it will print "Test on State (statename) Pass" as test result and transit.
+# if there is any action in the state failed complete, it will print "Test on State (statename) Fail" as test result.
+
+
+transit(source, destination):
+# the input source is usually the input of recur function (in_state), 
+# and destination should be the destination of the in_state
+# If destination is [] and the parent of source (in_state) is not [],
+# (meaning this source is inside a superstate and the desdination is the end,)
+# it will end the runsub function inside the superstate and make a transit from the superstate to its destination
+
+# If the destination is [] and the parent of source is [] too, (meaning this source and destination is in the top level),
+# the Execute() will get stucked in that source state.
+
+# else(normally):
+# Because destination is a list, so each item inside the destination list can form a transition with the source:
+# it will get transition attribute by using diagram.get_transitions(source = source_name, dest = dest_name)
+# if there is a list if transition attribute(s)
+# use the same logic as action above, if no False on TranAttr().verify(), it is valid to pass to the destination
+# for all the valid destinations:
+# if destination is not 'END'
+# it will keep recursion with the destination as a input: recur(destination)
+# if destination is 'END'
+# it will print "Test Complete" as test result

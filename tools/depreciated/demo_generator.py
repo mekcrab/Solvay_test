@@ -1,6 +1,6 @@
 __author__ = 'vpeng'
 
-from StateModel import StateDiagram, State, Transition
+from tools.StateModel import StateDiagram, State, Transition
 import OpenOPC
 
 
@@ -174,13 +174,13 @@ def transit(in_state, destination, connection):
 
 
 if __name__ == "__main__":
-    from ModelBuilder import StateModelBuilder
-    import config, os, time
-    from PlantUML_Lexer import get_tokens_from_file
+    from tools.ModelBuilder import StateModelBuilder
+    import tools.config, os, time
+    from tools.PlantUML_Lexer import get_tokens_from_file
     connection = OPC_Connect()
     time.sleep(3)
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_1.0.puml')
+    input_path = os.path.join(tools.config.specs_path, 'vpeng', 'Demo_1.0.puml')
 
     tkns = get_tokens_from_file(input_path)
 

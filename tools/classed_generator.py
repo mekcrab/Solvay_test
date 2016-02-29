@@ -63,7 +63,7 @@ class TranAttr():
         return self.reached
 
 
-class execute():
+class Execute():
     def __init__(self, diagram, connection):
         self.diagram = diagram
         self.connection = connection
@@ -122,11 +122,10 @@ class execute():
         get_source = diagram.get_state(state_id = source)
         source_name = get_source.name
 
-        #TODO: Need to add 'parent' property in StateModel: in_state.parent != None
         if destination == [] and self.sparent != []: # End of Substates
             s = self.sparent
             self.sparent = []
-            print "*Test for substate(s) in state: %r complete" %(self.sparent)
+            print "*Test for substate(s) in state: %r complete" %(s)
             self.transit(s, self.parentdest)
 
         elif destination == [] and self.sparent == []: # Top Level End
@@ -182,7 +181,7 @@ if __name__ == "__main__":
     connection = OPC_Connect()
     time.sleep(1)
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_2.0.puml')
+    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_3.0.puml')
 
     tkns = get_tokens_from_file(input_path)
 
@@ -191,7 +190,7 @@ if __name__ == "__main__":
 
     print "===========Test Start=========="
 
-    exe = execute(diagram = diagram.flatten_graph, connection = connection)
+    exe = Execute(diagram = diagram.flatten_graph, connection = connection)
 
     exe.recur(in_state = "[*]")
 
