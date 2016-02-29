@@ -31,7 +31,7 @@ class Attribute_Base(object):
         for later retrieval and analysis
         :param: value - any serializable object (ex. float, string, "condition object", tuples ...)
         '''
-        self.data.append( (time.time, value))
+        self.data.append((time.time, value))
 
     def read(self):
         '''Stub for reading a value for this attribute
@@ -54,7 +54,11 @@ class Attribute_Base(object):
     def evaluate(self):
         #TODO: How do we evaluate if an attribute complete? (EFK comment: subclass and override evaluate there
         '''set value of self.complete here'''
-        return self.complete
+        raise NotImplementedError
+
+    def set_complete(self):
+        '''Sets the self.complete parameter to be True or False depending on results of self.evaluate'''
+        raise NotImplementedError
 
 
 class DiscreteAttribute(Attribute_Base):
