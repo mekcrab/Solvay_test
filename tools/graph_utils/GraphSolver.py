@@ -50,6 +50,13 @@ class GraphSolver(object):
                                                 nx.number_weakly_connected_components(self.graph)
 
 
+    def draw_graph(self):
+        '''Draws the solver's current graph via pygraphviz using neato layout'''
+
+        A = nx.nx_agraph.to_agraph(self.graph)
+        A.layout()
+        A.draw("solver_graph.svg")
+
 if __name__ == "__main__":
 
     # add testing here

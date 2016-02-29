@@ -106,6 +106,7 @@ class TestCaseGenerator(object):
        Prints the generates paths for self.diagram
        :return:
        '''
+       print "Total test cases: " + str(len(self.test_cases.values()))
        for case in self.test_cases.values():
             print [state.name for state in case.path]
 
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     config.sys_utils.set_pp_on()
 
     # specify file path to model
-    file_path = os.path.join(config.specs_path, 'ekopache', 'R2_PRESSURE_SIM.puml')
+    file_path = os.path.join(config.specs_path, 'vpeng', 'Demo_3.0.puml')
     # build StateDiagram instance
     diagram = ModelBuilder.build_state_diagram(file_path)
 
@@ -129,6 +130,7 @@ if __name__ == "__main__":
     # verify paths manually (for now)
     print "Possible diagram paths: "
     test_gen.print_test_cases()
+    test_gen.solver.draw_graph()
 
     print "===============Testing Complete=================="
 
