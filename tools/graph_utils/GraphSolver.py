@@ -51,9 +51,9 @@ class GraphSolver(object):
 
 
     def draw_graph(self, output='solver_graph.svg'):
-        '''Draws the solver's current graph via pygraphviz using neato layout'''
+        '''Draws the solver's current graph via pygraphviz using dot layout'''
         A = nx.nx_agraph.to_agraph(self.graph)
-        A.layout()
+        A.layout(prog='dot')
         A.draw(output)
 
 if __name__ == "__main__":

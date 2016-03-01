@@ -110,6 +110,11 @@ class TestCaseGenerator(object):
        for case in self.test_cases.values():
             print [state.name for state in case.path]
 
+    def draw_solved_graph(self, output_file='solver_graph.svg'):
+        flat_graph = self.diagram.flatten_graph()
+        labeled_graph = flat_graph.get_labeled_graph()
+        self.solver.set_graph(labeled_graph)
+        self.solver.draw_graph(output=output_file)
 
 if __name__ == "__main__":
     import os
@@ -130,7 +135,8 @@ if __name__ == "__main__":
     # verify paths manually (for now)
     print "Possible diagram paths: "
     test_gen.print_test_cases()
-    test_gen.solver.draw_graph()
 
+    # generate drawing of flattened graph - will work on getting better syntax
+    test_gen.draw_solved_graph()
     print "===============Testing Complete=================="
 

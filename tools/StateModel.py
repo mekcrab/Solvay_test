@@ -37,6 +37,12 @@ class StateDiagram(DiGraph):
             print "No state named ", state_name, "exists in diagram"
             raise NameError
 
+    def print_nodes(self):
+        '''prints nodes with friendly names'''
+        node_names = [x.name for x in self.nodes()]
+        print node_names
+        return node_names
+
     def get_transitions(self, source=None, dest=None):
         '''returns transitions in the diagram
             optionally filtered by source, destination states
@@ -50,6 +56,12 @@ class StateDiagram(DiGraph):
             dest = self.get_state(dest)
             trans_list = [x for x in trans_list if dest in x.dest]
         return trans_list
+
+    def print_edges(self):
+        '''prints edges with friendly names'''
+        edge_names = [(x.name, y.name) for x,y in self.edges()]
+        print edge_names
+        return edge_names
 
     def check_state_exists(self, state_id):
         if isinstance(state_id, str) or isinstance(state_id, unicode) and state_id in self.state_names:
@@ -149,6 +161,15 @@ class StateDiagram(DiGraph):
                 # remove superstate
                 flat_graph.remove_node(state)
         return flat_graph
+
+    def get_labeled_graph(self):
+        '''returns a graph with nodes identified by state names'''
+        labeled_graph = self.subgraph([])  # new subgraph with no nodes
+        for state in self.nodes():
+            labeled_graph.add_node(state.name)
+        for source, destination in self.edges():
+            labeled_graph.add_edge(source.name, destination.name)
+        return labeled_graph
 
 
 class State(object):
