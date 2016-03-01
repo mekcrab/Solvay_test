@@ -27,12 +27,17 @@ class Attribute_Base(object):
         return self.OPC_path()
 
     def __add__(self, other):
-        '''Logical OR of attributes - disjunction of attribute.complete parameters'''
+        '''Logical OR of attributes - disjunction of attribute.complete parameters
+           Note: True or None returns True'''
         return self.complete or other.complete
 
     def __mul__(self, other):
-        '''Logical AND of attributes - conjunction of attribute.complete parameters'''
+        '''Logical AND of attributes - conjunction of attribute.complete parameters.
+            Note "True and None" returns None'''
         return self.complete and other.complete
+
+    # TODO: decide if __enter__ and __exit__ methods are appropriate for running self.evaluate in a
+    # TODO:     with xxx as yyy: context - perhaps used to set readhook/writehook or add to OPC tag group?
 
     def set_attr_path(self, attribute_path):
         '''Adds an attribute to the base tag. '''

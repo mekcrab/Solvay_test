@@ -91,7 +91,7 @@ class StateDiagram(DiGraph):
 
         for state in [source, dest]:
             if not self.check_state_exists(state):
-                self.add_state(state)
+                self.add_state(state, parent_state=parent_state)
 
         # get references to state object as required
         source = self.get_state(source); dest = self.get_state(dest)
