@@ -9,6 +9,12 @@ from graph_utils import GraphSolver
 import StateModel
 import time
 
+import config
+from Utilities.Logger import LogTools
+dlog = LogTools('TestSolver.log', 'TestSolver')
+dlog.rootlog.warning('Module initialized')
+
+
 class TestCase(object):
     '''Single path through a specified state model which can be verified as Pass/Fail'''
     def __init__(self, *args, **kwargs):
@@ -46,10 +52,11 @@ class TestCaseGenerator(object):
     Generates a series of TestCase instances from a given StateDiagram instance
     '''
     def __init__(self, statediagram, *args, **kwargs):
+        self.logger = dlog.MakeChild('TestCaseGenerator', str(self))
         if isinstance(statediagram, StateModel.StateDiagram):
             self.diagram = statediagram
         else:
-            print "Must pass instance of StateModel for diagram generation"
+            self.logger.error("Must pass instance of StateModel for diagram generation")
             raise TypeError
 
         self.solver = kwargs.pop('test_solver', GraphSolver.GraphSolver(self.diagram))
@@ -111,6 +118,7 @@ class TestCaseGenerator(object):
             print [state.name for state in case.path]
 
     def draw_solved_graph(self, output_file='solver_graph.svg'):
+        '''Draws the output of flattened graph via pygraphviz'''
         flat_graph = self.diagram.flatten_graph()
         labeled_graph = flat_graph.get_labeled_graph()
         self.solver.set_graph(labeled_graph)

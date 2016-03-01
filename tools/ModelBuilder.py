@@ -12,8 +12,11 @@ import collections
 import StateModel
 from PlantUML_Lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
 
+from Utilities.Logger import LogTools
+dlog = LogTools('ModelBuilder.log', 'ModelBuilder')
+dlog.rootlog.warning('Module initialized')
 
-##ToDo: fix debugging statements to actual debug log
+
 
 class ModelBuilder(object):
 
@@ -64,7 +67,7 @@ class ModelBuilder(object):
                 self.action_tokens[self.q[0][0]]()
                 actions_pending -= 1
             else:
-                print "Non actionable token", self.q.popleft(), "found at end of deque."
+                dlog.rootlog.error("Non actionable token " + self.q.popleft() + " found at end of deque.")
 
         # deliver populated model
         return self.model
@@ -131,7 +134,7 @@ class StateModelBuilder(ModelBuilder):
         if self.q[0][0] == TDEST:
             dest = self.q.popleft()[1]
         else:
-            print "!ERROR: Transition source", source, "found without corresponding destination"
+            dlog.rootlog.error("!ERROR: Transition source " + str(source) + " found without corresponding destination")
             raise AttributeError
         # add transition to graph
         if len(self.q) > 0 and self.q[0][0] == TATTR:
@@ -153,9 +156,9 @@ def build_state_diagram(fpath):
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
-    print "Parsed", len(diagram.state_names.values()), "states"
-    print "Parsed", len(diagram.get_transitions()), "transitions"
-    print "New diagram parsed from ", fpath
+    dlog.rootlog.info("New diagram parsed from ", fpath)
+    dlog.rootlog.info("Parsed " + str(len(diagram.state_names.values())) + "states")
+    dlog.rootlog.info("Parsed " + str(len(diagram.get_transitions())) + "transitions")
 
     return diagram
 
