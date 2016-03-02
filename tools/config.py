@@ -16,6 +16,10 @@ specs_path = os.path.join(tools_path, '..', 'specs')
 # test output folder
 tests_path = os.path.join(tools_path, '..', 'tests_out')
 
+# logging folder
+log_path = os.path.join(tools_path, 'Logs')
+log_level = 'debug'
+
 # path to java JRE
 java_path = 'java'
 

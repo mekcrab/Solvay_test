@@ -8,6 +8,12 @@ Model will also be used an input for test generation.
 '''
 
 from networkx import DiGraph
+import config
+
+from Utilities.Logger import LogTools
+dlog = LogTools('StateModel.log', 'StateModel')
+dlog.rootlog.warning('Module initialized')
+
 
 class StateDiagram(DiGraph):
     '''
@@ -22,6 +28,10 @@ class StateDiagram(DiGraph):
         self.state_names = {}  # map of states by name to graph node
         self.transitions = list() # dictionary of all transitions in the diagram
 
+        self.id = kwargs.pop('id', 'diagram instance')
+
+        self.logger = dlog.MakeChild('StateDiagram', self.id)
+
         # Initialize parent class
         DiGraph.__init__(self, *args, **kwargs)
 
@@ -34,7 +44,7 @@ class StateDiagram(DiGraph):
         if state_name in self.state_names:
             return self.state_names[state_name]
         else:
-            print "No state named ", state_name, "exists in diagram"
+            self.logger.error("No state named " + state_name + "exists in diagram")
             raise NameError
 
     def print_nodes(self):
