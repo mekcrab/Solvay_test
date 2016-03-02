@@ -32,7 +32,11 @@ class OPCconnect(object):
         return self.client.read(str(PV))
 
     def write(self, PV, SP):
-        print self.client.write((str(PV), float(SP)))
+        if type(SP) in [str, unicode]:
+            SP = str(SP)
+        else:
+            SP = float(SP)
+        print self.client.write((str(PV), SP))
 
 
 class OPCdummy(object):
