@@ -39,10 +39,10 @@ class Attribute_Base(object):
     # TODO: decide if __enter__ and __exit__ methods are appropriate for running self.evaluate in a
     # TODO:     with xxx as yyy: context - perhaps used to set readhook/writehook or add to OPC tag group?
 
-    def set_attr_path(self, attribute_path):
-        '''Adds an attribute to the base tag. '''
-        # todo: evaluate if this is a valid attribute based on self.tag
-        self.attr_path = attribute_path
+   # def set_attr_path(self, attribute_path):
+   #     '''Adds an attribute to the base tag. '''
+   #     # todo: evaluate if this is a valid attribute based on self.tag
+   #     self.attr_path = attribute_path
 
     def save_value(self):
         '''Adds a timestamp, value tuple to this attribute's self.data
@@ -168,16 +168,17 @@ class ModeAttribute(NamedDiscrete):
     actual_int_dict = \
         {'LO' : 4, 'MAN' : 8, 'AUTO' : 16, 'CAS' : 32, 'ROUT':128, 'RCAS':64}
 
-    def __init__(self, tag, attr_path=''):
+
+    def __init__(self, tag, attr_path='/MODE'):
         NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
 
-    def write(self, val):
+    def setmode(self, val):
         '''Writes are directed to MODE.TARGET'''
         if type(val) in [str, unicode]:
             val = ModeAttribute.target_int_dict[val]
         Attribute_Base.write(val, param='TARGET')
 
-    def read(self):
+    def checkmode(self):
         '''Reads are directed to MODE.ACTUAL'''
         Attribute_Base.read(self, param='ACTUAL')
 
@@ -228,6 +229,10 @@ class PositionAttribute(AnalogCondition):
     '''
     Unique class of attribute for Valve/Pump position
     '''
+
+    mode_act_dict = {'AUTO' : 'SP_D', 'CAS' : 'REQ_SP', 'ROUT':'REQ_OUTP', 'RCAS':'REQ_SP'}
+
+    mode_confim_dict = {'AUTO' : 'PV_D', 'CAS' : 'PV_D', 'ROUT':'OUTP', 'RCAS':'PV_D'}
 
     def __init__(self, tag):
         AnalogCondition.__init__(self, tag, target_value = self.target, operator='=', value_tolerance = 0.01, attr_path='')
