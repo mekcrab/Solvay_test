@@ -8,7 +8,6 @@ Model will also be used an input for test generation.
 '''
 
 from networkx import DiGraph
-import config
 
 from Utilities.Logger import LogTools
 dlog = LogTools('StateModel.log', 'StateModel')
