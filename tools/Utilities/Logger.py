@@ -62,7 +62,9 @@ class LogTools(object):
             self.rootlog.addHandler(self.shandler)
             self.rootlog.propagate = 0
 
-    def MakeChild(self, name=__name__, level_name='debug'):
+    def MakeChild(self, name=__name__, level_name=None):
+        if not level_name:
+            level_name = self.handler.level
         childlog = self.rootlog.getChild(name)
         childlog.setLevel(logLevel(level_name))
         return childlog

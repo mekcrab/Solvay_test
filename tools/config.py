@@ -8,7 +8,7 @@ import os, sys
 import pprint
 
 # current path of tools folder
-tools_path = os.getcwd()
+tools_path = os.path.dirname(__file__)
 
 # specifications folder
 specs_path = os.path.join(tools_path, '..', 'specs')
@@ -24,10 +24,10 @@ log_level = 'debug'
 java_path = 'java'
 
 # path to plantUML pre-compiled jar file
-plantUML_jar = 'C:\\Users\\vpeng\\.PyCharm40\\config\\plugins\\plantuml4idea\\lib\\plantuml.jar'
-#plantUML_jar = os.path.join('/','home', 'erik', '.PyCharm40',
-#                            'config', 'plugins', 'plantuml4idea',
-#                            'lib', 'plantuml.jar')
+# plantUML_jar = 'C:\\Users\\vpeng\\.PyCharm40\\config\\plugins\\plantuml4idea\\lib\\plantuml.jar'
+plantUML_jar = os.path.join('/','home', 'erik', '.PyCharm40',
+                            'config', 'plugins', 'plantuml4idea',
+                            'lib', 'plantuml.jar')
 
 class sys_utils:
 

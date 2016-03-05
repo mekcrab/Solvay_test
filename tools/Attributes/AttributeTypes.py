@@ -40,6 +40,8 @@ class Attribute_Base(object):
 
         self.attr_path = kwargs.pop('attr_path', '')  # attribute path from tag designation, defaults to empty string
 
+        self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
+
         self.complete = None  # value of attribute evaluation - set in self.evaluate method.
                               # Nonetype means not yet evaluated
 
@@ -127,6 +129,7 @@ class NamedDiscrete(DiscreteAttribute):
 
     def evaluate(self):
         raise NotImplementedError
+
 
 class DiscreteCondition(DiscreteAttribute):
 
@@ -274,7 +277,6 @@ class StatusAttribute(NamedDiscrete):
        NamedDiscrete.__init__(self, tag, int_dict=StatusAttribute.status_int_dict, attr_path=attr_path)
 
 
-
 class PromptAttribute(NamedDiscrete):
     '''
     Unique class of attribute for OAR prompts
@@ -287,7 +289,7 @@ class PromptAttribute(NamedDiscrete):
     }
 
     def __init__(self, attr_path =''):
-        NamedDiscrete.__init__(self, tag = '^/FAIL_MONITOR/OAR', int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+        NamedDiscrete.__init__(self, tag='^/FAIL_MONITOR/OAR', int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
 
     def write(self, input):
         '''write input (YES/NO/OK/FP/INT) to  '^/FAIL_MONITOR/OAR/INPUT'''
@@ -299,6 +301,7 @@ class PromptAttribute(NamedDiscrete):
         '''
         pass
 
+
 class InicationAttribute(AnalogCondition):
     '''
     Unique class of attribute for PV indication.
@@ -306,7 +309,7 @@ class InicationAttribute(AnalogCondition):
     '''
 
     def __init__(self, tag):
-        AnalogCondition.__init__(self, tag, target_value = self.target, operator='=', value_tolerance = 0.01, attr_path='')
+        AnalogCondition.__init__(self, tag, target_value=self.target, operator='=', value_tolerance=0.01, attr_path='')
 
 
     def read(self):
@@ -335,7 +338,7 @@ class OtherAttribute(AnalogCondition):
     class for all other kind of attribute
     '''
     def __init__(self, tag):
-        AnalogCondition.__init__(self, tag, target_value = self.target, operator='=', value_tolerance = 0.01, attr_path='')
+        AnalogCondition.__init__(self, tag, target_value=self.target, operator='=', value_tolerance=0.01, attr_path='')
 
     def read(self):
         pass
