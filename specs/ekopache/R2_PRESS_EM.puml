@@ -1,13 +1,86 @@
 @startuml
 scale 350 width
 
+state START_VACUUM {
+
+    state startset as "START_VACUUM Setup" {
+        startset : Close decanter vent valve
+        startset : Close scrubber vent control valve in Manual at 0%
+        startset : Close vacuum bypass valve
+    }
+
+        startset--> StartVac : Wait unit valve interlocks reset
+
+    state StartVac {
+        StartPump : Start the condensate diaphragm pump
+        StartSteam : Open steam valve to jets
+
+        StartPump --> StartSteam : Wait 30 (TP001) seconds
+        StartSteam --> [*] : Wait 30 (TP002) seconds
+    }
+}
 
 
+state STOP_VACUUM {
+    state stopset as "STOP_VACUUM Setup" {
+        stopset : Close vacuum bypass valve
+        stopset : Close the vacuum control valve in Manual at 0%
+    }
+
+    stopset --> CloseJets : Wait 20 (TP003) seconds
+
+    CloseJets : Close steam valve to jets
+
+    CloseJets --> StopPump : Wait 30 (TP001) seconds
+
+    StopPump : Stop the condensate diaphragm pump
+
+    StopPump --> [*]
+}
 
 
+state PRESSURE_UP {
+
+    [*] --> PressureCheckUp
+
+    PressureCheckUp --> [*] : Current reactor pressure \n>= set point (OP001)
+    PressureCheckUp --> PromptVacOff : Vacuum system is running
+    PressureCheckUp --> upset : Vacuum system is not running AND \nCurrent reactor pressure \n< set point (OP001)
+
+    PromptVacOff : ACK operator to "Turn off vacuum system before continuing with Pressure Up"
+
+    PromptVacOff --> upset : ACK response: YES
+
+    PromptVacOff --> PromptVacOff : ACK response: NO
+
+    state upset as "PRESSURE_UP Setup" {
+        upset : Close vacuum bypass valve
+        upset : Close the vacuum control valve in Manual at 0%
+        upset : Close decanter vent valve
+        upset : Close scrubber vent control valve in Manual at 0%
+    }
+
+    upset --> Pressurize
+
+    state Pressurize {
+        Pressurize : Open nitrogen control valve in manual at 30% (TP004)
+        Pressurize : Set the nitrogen control valve in Auto at 2 scfm (TP005)
+        Pressurize : Open nitrogen valve
+    }
+
+    Pressurize --> upend : Wait until reactor pressure is > Target
+
+    state upend as "PRESSURE_UP Finish" {
+        upend : Close nitrogen valve
+        upend : Close the nitrogen control valve in Manual at 0%
+    }
+
+    upend --> [*]
+}
+
+state VENT {
 
 
-
-
+}
 
 @enduml
