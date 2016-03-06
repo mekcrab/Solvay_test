@@ -1,6 +1,8 @@
 @startuml
 scale 350 width
 
+!pragma svek_trace on
+
 state START_VACUUM {
 
     state startset as "START_VACUUM Setup" {
@@ -79,6 +81,58 @@ state PRESSURE_UP {
 }
 
 state VENT {
+    [*] --> VentCheck
+
+    VentCheck --> SetValves : Current reactor pressure > \nset point (OP002)
+    VentCheck --> [*] : Current reactor pressure <= \nset point (OP002)
+
+    state SetValves {
+        SetValves: Close nitrogen valve
+        SetValves: Open decanter vent valve
+        SetValves: Open scrubber vent control valve \n\tin Manual at 50% (TP006)
+    }
+
+    SetValves --> RampVent : Wait unit reactor pressure < \n10 psig (TP007)
+
+    RampVent : Ramp the scrubber vent valve \n\topen to 100% at 10%/min (TP008)
+
+    RampVent --> CloseVent : Wait until reactor pressure < \ntarget set point (OP002)
+
+    CloseVent : Close decanter vent valve
+    CloseVent : Close scrubber vent control valve in Manual at 0%
+
+    CloseVent --> [*]
+
+}
+
+state DEAERATE {
+
+    state cycle as "Dearation Command Cycle" {
+        [*] --> START_VACUUM_CMD
+
+        RampVac : Ramp vacuum control valve \n\topen to 100% at 10%/min
+
+        RampVac --> OpenBypass : Wait until vacuum control valve \nis 100% open
+
+        OpenBypass : Open vacuum bypass valve
+
+        OpenBypass -right-> STOP_VACUUM_CMD : Wait until reactor pressure \n< 100 mmHg (OP004)
+
+        STOP_VACUUM_CMD -down-> ReportCycles : Command complete \nAND\n number cycle >= specified (OP003)
+
+        PRESSURE_UP_CMD -left-> START_VACUUM_CMD : Command complete
+
+        START_VACUUM_CMD --> RampVac : Command complete
+
+        STOP_VACUUM_CMD : Increment dearation \n\tcycle counter
+
+        STOP_VACUUM_CMD -up-> PRESSURE_UP_CMD : Command complete \nAND number cycles < specified (OP003)
+    }
+
+    state ReportCycles {
+        ReportCycles : Report number of dearation cycles (RP001)
+    }
+    ReportCycles --> [*]
 
 
 }

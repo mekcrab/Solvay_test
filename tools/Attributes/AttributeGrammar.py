@@ -14,7 +14,6 @@ def keyword_list(list_in):
     '''Generates a list of pyparsing.CaselessKeyword instances from a list of strings'''
     return pp.Or(map(pp.CaselessKeyword, list_in))
 
-
 # ========Grammar definitions============
 
 # ***Comparison Operators***
@@ -24,7 +23,7 @@ LT = keyword_list(['<', 'less than', 'is less than', 'not more than'])
 GTE = pp.Literal('>=')
 LTE = pp.Literal('<=')
 NOTEQUAL = keyword_list(['<>', 'not equal', '!='])
-compare = GT ^ LT ^ GTE ^ LTE ^ EQUALS ^ NOTEQUAL
+compare = (GT ^ LT ^ GTE ^ LTE ^ EQUALS ^ NOTEQUAL).setResultsName('compare')
 ASSIGN = pp.Literal(':=')
 operator = (compare ^ ASSIGN).setResultsName('operator')
 
@@ -35,7 +34,7 @@ NOT = pp.CaselessKeyword('NOT')
 logical = (AND ^ OR ^ NOT)
 
 # ***Primitive data types for comparisons***
-NUMBER = pp.Combine(pp.Word(pp.nums) + pp.Optional(pp.Literal('.') + pp.Word(pp.nums)))
+NUMBER = pp.Regex(r'\d+(\.\d*)?')
 STRING = pp.dblQuotedString
 TRUE = pp.CaselessKeyword('TRUE')
 FALSE = pp.CaselessKeyword('FALSE')
@@ -62,10 +61,17 @@ tick = pp.Literal('\'')
 tag = pp.Combine(pp.Suppress(tick + pp.Optional('/')) + (pp.Word(pp.alphanums+'-_$') ^ opc_path) + pp.Suppress(tick)). \
     setResultsName('tag')
 
-# Word at the begining of the raw string
-modes = keyword_list(['LO', 'MAN', 'IMAN', 'AUTO', 'CAS', 'ROUT', 'RCAS'])
+# Mode keywords
+LO = keyword_list(['LO', 'local_override', 'interlocked']).setParseAction(lambda s, l, t: ['LO'])
+MAN = keyword_list(['MAN', 'manual']).setParseAction(lambda s,l,t: ['MAN'])
+IMAN = keyword_list(['init manual', 'initialize manual', 'IMAN']).setParseAction(lambda s,l,t: ['IMAN'])
+AUTO = keyword_list(['AUTO', 'Automatic']).setParseAction(lambda s,l,t: ['AUTO'])
+CAS = keyword_list(['CAS', 'cascade']).setParseAction(lambda s,l,t: ['CAS'])
+RCAS = keyword_list(['RCAS', 'remote cascade', 'remote auto']).setParseAction(lambda s,l,t: ['RCAS'])
+ROUT = keyword_list(['ROUT', 'remote output', 'remote out', 'remote manual']).setParseAction(lambda s,l,t: t.__setitem__(0,'ROUT'))
+modes = (LO ^ MAN ^ IMAN ^ AUTO ^ CAS ^ RCAS ^ ROUT)
 
-# Map of keywords which define Attribute execution types. Keywords are based on execution types.
+# Map of action keywords which define Attribute execution types. Keywords are based on execution types.
 # Grammar is restricted such that keywords should be the first word of the raw attribute string (EFK as of 3/1/2016).
 #   This restriction may be lifted in future versions...
 
@@ -83,7 +89,7 @@ wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResul
 
 # ===OAR prompt keywords===
 prompt = (keyword_list(['prompt', 'oar', 'ack', 'ack', 'ask', 'message']) +
-          pp.Optional(pp.Suppress('operator'))) + pp.dblQuotedString
+          pp.Optional(pp.Suppress('operator'))) + STRING
 prompt = prompt.setResultsName('prompt')
 
 # ===Report parameters for batch===
@@ -106,20 +112,20 @@ action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ read_keyword ^ wait_k
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
 # ===========Expressions=================
-value = pp.Combine((tag ^ NUMBER ^ BOOL ^ modes) + pp.Optional(pp.Suppress(eng_units))). \
+value = ((tag ^ NUMBER ^ BOOL ^ modes) + pp.Optional(pp.Suppress(eng_units))). \
     setResultsName('value', listAllMatches=True)
 
-condition = (tag + (operator ^ logical) + value ).setResultsName('condition')
+condition = (tag + compare + value).setResultsName('condition', listAllMatches=True)
 
-command = (tag + pp.Optional(operator) + value +
-           pp.Optional((pp.Suppress(keyword_list(['in', 'at', ',', 'to'])) + value))
-           ).setResultsName('command')
+command = (tag + pp.Optional(EQUALS ^ ASSIGN) + value +
+            pp.Optional(pp.Suppress(keyword_list(['in', 'at', ',', 'to'])) + value)).setResultsName('command', listAllMatches=True)
 
-expression = condition ^ command
+
+expression = pp.Group(condition ^ command)
 
 # ==========Compound Expressions=========
-compound_exp = (expression + pp.Optional(pp.OneOrMore(logical + expression))).setResultsName('expression', listAllMatches=True)
+compound_exp = (expression + pp.ZeroOrMore(logical + expression)).setResultsName('expression', listAllMatches=True)
 
 # =========keyword-based actions=========
-action = (action_word.setResultsName('action_word') + (compound_exp ^ tag)) ^ action_phrase
+action = (action_word.setResultsName('action_word') + (compound_exp ^ tag)) ^ action_phrase.setResultsName('action_phrase')
 

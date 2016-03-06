@@ -35,12 +35,14 @@ import logging
 import os
 import logging.handlers
 import tools.config as config
+from sys import stdout
+
 
 class LogTools(object):
     def __init__(self, log_filename='test.log', module="ModuleName",
-                    level=config.log_level,
-                     maxSize=500000, maxCount=5,
-                     streamLevel=config.log_level):
+                        level=config.log_level,
+                        maxSize=500000, maxCount=5,
+                        streamLevel=config.log_level):
         '''Initialize Root Logger Instance'''
         self.fileformat = logging.Formatter('%(asctime)s ::%(levelname)8s:: %(name)15s:: %(message)s')
         self.handler = logging.handlers.RotatingFileHandler(
@@ -62,7 +64,7 @@ class LogTools(object):
             self.rootlog.addHandler(self.shandler)
             self.rootlog.propagate = 0
 
-    def MakeChild(self, name=__name__, level_name=None):
+    def MakeChild(self, name=__name__, level_name='debug'):
         if not level_name:
             level_name = self.handler.level
         childlog = self.rootlog.getChild(name)
@@ -79,7 +81,6 @@ class LogTools(object):
 
     def Output2Stdout(self, level='info'):
         '''Method changes log's output from rotating file handler to the standard out'''
-        from sys import stdout
         self.rootlog.removeHandler(self.handler)
         self.rootlog.removeHandler(self.shandler)
         stdout_handler = logging.StreamHandler(stdout)
@@ -95,6 +96,7 @@ def logLevel(level):
               'error': logging.ERROR,
               'critical': logging.CRITICAL,
               }
+
     loglvl = LEVELS.get(level, logging.NOTSET)
     return loglvl
 
