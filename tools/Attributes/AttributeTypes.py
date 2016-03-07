@@ -42,9 +42,9 @@ class Attribute_Base(object):
 
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
 
-        self.complete = None  # value of attribute evaluation - set in self.evaluate method.
+        self._complete = None  # value of attribute evaluation - set in self.evaluate method.
                               # Nonetype means not yet evaluated
-
+        self.active = False
         self.data = list()  # list of timeseries data for trending/checking historical data
 
     def __str__(self):
@@ -100,6 +100,12 @@ class Attribute_Base(object):
         self.complete = complete
         return self.complete
 
+    def activate(self):
+        self._active = True
+
+    def deactivate(self):
+        self._active = False
+
     def OPC_path(self):
         '''
         Prints the OPC path of this attribute
@@ -110,7 +116,7 @@ class Attribute_Base(object):
         '''
         Sets value of self.complete based on read/write method combination as required.
         Attribute_Base instances implements a dummy method, always returning false.'''
-        return self.set_complete(complete=False)
+        raise NotImplementedError
 
 
 class DiscreteAttribute(Attribute_Base):
@@ -199,19 +205,21 @@ class ModeAttribute(NamedDiscrete):
     def __init__(self, tag, attr_path='MODE'):
         NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
 
-    def setmode(self, mode):
+    def write(self, mode):
         '''Writes are directed to MODE.TARGET '''
         if type(mode) in [str, unicode]:
             mode = ModeAttribute.target_int_dict[mode]
-        Attribute_Base.write(mode, param='TARGET')
+        return Attribute_Base.write(mode, param='TARGET')
 
-    def checkmode(self):
+    def read(self):
         '''Reads are directed to MODE.ACTUAL'''
-        Attribute_Base.read(self, param='ACTUAL')
+        return Attribute_Base.read(self, param='ACTUAL')
 
     def evaluate(self):
         raise NotImplementedError
 
+    def read_Mode(self):
+        return self.read()
 
 class PositionAttribute(NamedDiscrete):
     '''
@@ -235,7 +243,7 @@ class PositionAttribute(NamedDiscrete):
         self.tag = tag
         NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
 
-    def set(self, target_value, mode):
+    def write(self, target_value, mode):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
@@ -251,10 +259,10 @@ class PositionAttribute(NamedDiscrete):
             mode = PositionAttribute.modenum_str_dict[mode]
 
         self.attr_path = PositionAttribute.mode_act_dict[mode]
-        Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(target_value)
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(target_value)
 
-    def checkposition(self):
-        Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+    def read(self):
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
 
 
 class StatusAttribute(NamedDiscrete):
@@ -316,7 +324,7 @@ class PromptAttribute(Attribute_Base):
         self.Class = Class.upper()
         Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
-    def answer(self, input):
+    def write(self, input):
         '''read prompt, define the prompt type, then write input (YES/NO/OK/FP/INT) to
         '^/FAIL_MONITOR/OAR/INPUT' for phase classes and '^/MONITOR/OAR/INPUT' for EM classes
         '''
@@ -333,7 +341,7 @@ class PromptAttribute(Attribute_Base):
         #if input_type == OAR_Type and keyword in OAR_MSG:
 
         self.input_path = PromptAttribute.class_path_dict[self.Class] + 'OAR/INPUT'
-        Attribute_Base(self.tag, attr_path = self.input_path).write(input)
+        return Attribute_Base(self.tag, attr_path = self.input_path).write(input)
 
     def readprompt(self):
         OAR_Type = 1
@@ -353,15 +361,14 @@ class InicationAttribute(Attribute_Base):
     Indicators use AI1 or INT1 functional blocks
     '''
 
-    def __init__(self, tag):
+    def __init__(self, tag, attr_path):
         self.tag = tag
-        Attribute_Base.__init__(self, tag, attr_path = '')
+        Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def indicate(self):
-        # TODO: need to verify which value (AI1 or INT1) is readable
-        AI1 = Attribute_Base(tag = self.tag, attr_path = 'AI1/OUT').read()
-        INT1 = Attribute_Base(tag = self.tag, attr_path = 'INT1/OUT').read()
-        return AI1, INT1
+    def execute(self):
+        Attribute_Base.read()
+
+
 
 
 class EMCMDAttribute(Attribute_Base):
@@ -377,13 +384,13 @@ class EMCMDAttribute(Attribute_Base):
         self.tag = tag
         Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
 
-    def set(self, command):
+    def write(self, command):
         self.attr_path = 'A_COMMAND'
         if command in [str, unicode]:
             command = EMCMDAttribute.EMCMD_int_dict[command]
-        Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(command)
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(command)
 
-    def checkcmd(self):
+    def read(self):
         self.attr_path = 'A_TARGET'
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
 
@@ -405,16 +412,21 @@ class OtherAttribute(Attribute_Base):
         Attribute_Base.__init__(self, tag, attr_path)
 
     def read(self):
-        Attribute_Base.read(self, param = self.param)
+        return Attribute_Base.read(self, param = self.param)
 
     def write(self, target_value):
-        Attribute_Base.write(self, value = target_value, param = self.param)
+        return Attribute_Base.write(self, value = target_value, param = self.param)
 
 
 #####################Transition Attribute Types (use read functions and compare) #########################
 class ComparisonAttributes:
     #TODO: Get system values with the read functions above
-    pass
+    def __init__(self, **kwargs):
+        # just a string
+        lhs = kwargs.pop('leftside', AttributeDummy())
+
+
+
 
 
 if __name__ == "__main__":
