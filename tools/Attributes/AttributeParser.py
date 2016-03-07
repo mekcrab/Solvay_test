@@ -70,7 +70,9 @@ class AST(object):
             'other'     : [AT.OtherAttribute]
         }
 
-    def solve(self, parse_results, datatype):
+
+
+    def solve(self, parse_results):
         '''Solves for attribute type based on parser results
             Returns of list of AttributeType instances
         '''
@@ -79,11 +81,20 @@ class AST(object):
             if any('open', 'close') in parse_results:
                 pass
 
-
         # action phrases require varied arguments
         elif 'action_phrase' in parse_results:
             pass
 
+    def resolve_tag(self, tag):
+        '''
+        Resolves attribute datatypes based on external configuration data
+        :param tag: string tag to look up from DeltaV configuration
+        :return:
+            Type of tag referenced by input argument 'tag' - i.e. discrete, analog, position, etc.
+        '''
+        # discrete types
+        if any(['CV', 'HS']) in tag:
+            pass
 
 class AttributeParser(object):
     '''
@@ -124,21 +135,10 @@ class AttributeParser(object):
         return parse_result
 
     def create_attribute_instance(self, tag, raw_string):
-        '''Creates a new attribute instance based on text parsing results'''
-        self.logger.debug('Creating new attribute from %s as %s', tag, attr_type)
+        '''Creates a new attribute instance based on text parsing results.
+            There should be a single attribute for each command or condition.'''
+        self.logger.debug('Creating new attribute from %s as %s', raw_string, tag)
         pass
-
-    def resolve_tag(self, tag):
-        '''
-        Resolves attribute datatypes based on external configuration data
-        :param tag: string tag to look up from DeltaV configuration
-        :return:
-            Type of tag referenced by input argument 'tag' - i.e. discrete, analog, position, etc.
-        '''
-        # discrete types
-        if any(['CV', 'HS']) in tag:
-            pass
-
 
     def log2stdout(self):
         '''methods redirects all logging statements to stout'''
@@ -167,5 +167,8 @@ if __name__ == "__main__":
     results = list()
     for attr_str in test_strings:
         results.append(parser.parse(attr_str))
+
+    r = compound_exp.parseString(test_strings[6])
+
 
     print "=====Testing Complete====="
