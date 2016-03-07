@@ -180,6 +180,7 @@ class AnalogCondition(AnalogAttribute):
         # call parent method to complete
         return self.complete
 
+############################# State Attribute Types (Set Values) ##############################
 
 class ModeAttribute(NamedDiscrete):
     '''
@@ -195,25 +196,24 @@ class ModeAttribute(NamedDiscrete):
         {'LO' : 4, 'MAN' : 8, 'AUTO' : 16, 'CAS' : 32, 'ROUT':128, 'RCAS':64}
 
 
-    def __init__(self, tag, attr_path='/MODE'):
+    def __init__(self, tag, attr_path='MODE'):
         NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
 
     def setmode(self, mode):
-        '''Writes are directed to MODE.TARGET and evaluate if MODE.ACTUAL matches the TARGET'''
+        '''Writes are directed to MODE.TARGET '''
         if type(mode) in [str, unicode]:
             mode = ModeAttribute.target_int_dict[mode]
         Attribute_Base.write(mode, param='TARGET')
 
-        readvalue = list(self.checkmode())[0]
-        if readvalue != mode:
-            raise NotImplementedError
-
     def checkmode(self):
         '''Reads are directed to MODE.ACTUAL'''
-        return Attribute_Base.read(self, param='ACTUAL')
+        Attribute_Base.read(self, param='ACTUAL')
+
+    def evaluate(self):
+        raise NotImplementedError
 
 
-class PositionAttribute(ModeAttribute):
+class PositionAttribute(NamedDiscrete):
     '''
     Unique class of attribute for Valve/Pump position
     '''
@@ -224,42 +224,37 @@ class PositionAttribute(ModeAttribute):
 
     modenum_str_dict = {16: 'AUTO', 32 : 'CAS', 48: 'CAS', 128: 'ROUT', 144 : 'ROUT', 64: 'RCAS', 80:'RCAS'}
 
+    # mode:attr_path dictionary --> used for writes by default
     mode_act_dict = {'AUTO' : 'SP_D', 'CAS' : 'REQ_SP', 'ROUT':'REQ_OUTP', 'RCAS':'REQ_SP'}
 
+    # mode: attr_path dictionary--> used for reads by default
     mode_confim_dict = {'AUTO' : 'PV_D', 'CAS' : 'PV_D', 'ROUT':'OUTP', 'RCAS':'PV_D'}
 
-    def __init__(self, tag):
+    def __init__(self, tag, attr_path =''):
+        self.attr_path = attr_path
         self.tag = tag
-        ModeAttribute.__init__(self, tag, attr_path='/MODE')
-        self.current_mode = ModeAttribute(tag = self.tag, attr_path = '/MODE').checkmode()
+        NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
 
-    def set(self, target_value, *args, **kwargs):
-        ''' Set Valve/Pump position with confirm. If no mode specified, it will use the current mode
+    def set(self, target_value, mode):
+        '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
-        :param: args can be mode or empty
+        :param: mode can be int, str or unicode
         '''
 
-        if target_value in [str]:
+        if target_value in [str, unicode]:
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
 
-        mode = self.current_mode
-        if args in PositionAttribute.mode_act_dict or PositionAttribute.modenum_str_dict:
-            mode = args
-            ModeAttribute(tag = self.tag, attr_path = '/MODE').setmode(mode = mode)
-
-        if type(mode) in [int]:
+        if type(mode) in [str, unicode]:
+            mode = mode.upper()
+        elif type(mode) in [int]:
             mode = PositionAttribute.modenum_str_dict[mode]
 
         self.attr_path = PositionAttribute.mode_act_dict[mode]
         Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(target_value)
 
-        readvalue = list(self.checkposition())[0]
-        if readvalue != target_value:
-            raise NotImplementedError
-
     def checkposition(self):
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+        Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
 
 
 class StatusAttribute(NamedDiscrete):
@@ -277,7 +272,7 @@ class StatusAttribute(NamedDiscrete):
        NamedDiscrete.__init__(self, tag, int_dict=StatusAttribute.status_int_dict, attr_path=attr_path)
 
 
-class PromptAttribute(NamedDiscrete):
+class PromptAttribute(Attribute_Base):
     '''
     Unique class of attribute for OAR prompts
     '''
@@ -288,60 +283,150 @@ class PromptAttribute(NamedDiscrete):
         #FP/INT, etc...
     }
 
-    def __init__(self, attr_path =''):
-        NamedDiscrete.__init__(self, tag='^/FAIL_MONITOR/OAR', int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+    OAR_Type_dict = {
+        'YES': 'YES/NO',
+        'NO': 'YES/NO',
+        'OK': 'OK'
 
-    def write(self, input):
-        '''write input (YES/NO/OK/FP/INT) to  '^/FAIL_MONITOR/OAR/INPUT'''
-        pass
+    }
 
-    def read(self):
+    Type_int_dict = {
+        'RESET': 0,
+        'NONE': 1,
+        'INT - NO LIMITS': 2,
+        'INT - WITH LIMITS': 3,
+        'FP - NO LIMITS': 4,
+        'FP - WITH LIMITS': 5,
+        'YES/NO': 6,
+        'OK': 7,
+        'STRING': 8
+
+    }
+    class_path_dict = {'PHASE': 'FAIL_MONITOR', 'EM': 'MONITOR'}
+
+    def __init__(self, Class, tag, attr_path =''):
         '''
-        :return:'^/P_MSG1.CV', '^/P_MSG2.CV', '^/FAIL_MONITOR/OAR/TYPE.CV'
+
+        :param Class: define if it's a phase or EM
+        :param tag: should be the phase or EM instance name
+        :param attr_path:
+        :return:
         '''
-        pass
+        self.tag = tag
+        self.Class = Class.upper()
+        Attribute_Base.__init__(self, tag, attr_path=attr_path)
+
+    def answer(self, input):
+        '''read prompt, define the prompt type, then write input (YES/NO/OK/FP/INT) to
+        '^/FAIL_MONITOR/OAR/INPUT' for phase classes and '^/MONITOR/OAR/INPUT' for EM classes
+        '''
+
+        input_type = 1
+        if input in [str, unicode]: # If input is Yes/No or OK
+            self.input = input.upper()
+            input_type = PromptAttribute.OAR_Type_dict[self.input] # Capitalized input
+            if self.input in PromptAttribute.OAR_int_dict:
+                input = PromptAttribute.OAR_int_dict[self.input]
+
+        #TODO: Verify if it's answering the right question. Maybe do it in the generator?
+        #TODO: My thought was to pull out the OAR_MSG and OAR_Type with readprompt function and compare.
+        #if input_type == OAR_Type and keyword in OAR_MSG:
+
+        self.input_path = PromptAttribute.class_path_dict[self.Class] + 'OAR/INPUT'
+        Attribute_Base(self.tag, attr_path = self.input_path).write(input)
+
+    def readprompt(self):
+        OAR_Type = 1
+        if self.Class in PromptAttribute.class_path_dict:
+            self.oar_path = PromptAttribute.class_path_dict[self.Class] + 'OAR/TYPE'
+            OAR_Type = Attribute_Base(self.tag, attr_path = self.oar_path).read()
+        MSG1 = Attribute_Base(self.tag, attr_path = 'P_MSG1').read()
+        MSG2 = Attribute_Base(self.tag, attr_path = 'P_MSG2').read()
+
+        return (OAR_Type, MSG1, MSG2)
 
 
-class InicationAttribute(AnalogCondition):
+class InicationAttribute(Attribute_Base):
     '''
     Unique class of attribute for PV indication.
     Ex: Flow Rate (FIC), Tank Level, PH, Pressure (PIC), Temperature (TI), Tank Weight, etc.
+    Indicators use AI1 or INT1 functional blocks
     '''
 
     def __init__(self, tag):
-        AnalogCondition.__init__(self, tag, target_value=self.target, operator='=', value_tolerance=0.01, attr_path='')
+        self.tag = tag
+        Attribute_Base.__init__(self, tag, attr_path = '')
+
+    def indicate(self):
+        # TODO: need to verify which value (AI1 or INT1) is readable
+        AI1 = Attribute_Base(tag = self.tag, attr_path = 'AI1/OUT').read()
+        INT1 = Attribute_Base(tag = self.tag, attr_path = 'INT1/OUT').read()
+        return AI1, INT1
 
 
-    def read(self):
-        pass
-
-
-class EMCMDAttribute(NamedDiscrete):
+class EMCMDAttribute(Attribute_Base):
     #TODO: import EMCMD dictionary to EMCMD_int_dict
     EMCMD_int_dict = {
 
     }
 
-    def __int__(self, tag):
-        pass
+    def __int__(self, tag, attr_path = ''):
+        ''' :param: tag: the name of EM class
+        '''
+        self.attr_path = attr_path
+        self.tag = tag
+        Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
+
+    def set(self, command):
+        self.attr_path = 'A_COMMAND'
+        if command in [str, unicode]:
+            command = EMCMDAttribute.EMCMD_int_dict[command]
+        Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(command)
+
+    def checkcmd(self):
+        self.attr_path = 'A_TARGET'
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
 
 
 class PhaseCMDAttribute(NamedDiscrete):
     #TODO: import Phase Command dictionary to PhaseCMD_int_dict
+    #TODO: Which attr_path are we using to run a phase???
 
     def __int__(self):
         pass
 
 
-class OtherAttribute(AnalogCondition):
+class OtherAttribute(Attribute_Base):
     '''
     class for all other kind of attribute
     '''
-    def __init__(self, tag):
-        AnalogCondition.__init__(self, tag, target_value=self.target, operator='=', value_tolerance=0.01, attr_path='')
+    def __init__(self, tag, attr_path, param = 'CV'):
+        self.param = param
+        Attribute_Base.__init__(self, tag, attr_path)
 
     def read(self):
-        pass
+        Attribute_Base.read(self, param = self.param)
 
     def write(self, target_value):
-        pass
+        Attribute_Base.write(self, value = target_value, param = self.param)
+
+
+#####################Transition Attribute Types (use read functions and compare) #########################
+class ComparisonAttributes:
+    #TODO: Get system values with the read functions above
+    pass
+
+
+if __name__ == "__main__":
+    from tools.serverside.OPCclient import OPC_Connect
+
+    connection = OPC_Connect()
+
+    m1 = ModeAttribute('CV-1423', 'DC1/MODE')
+    m2 = ModeAttribute('CV-3854', 'MODE')
+
+    attrs = [m1, m2]
+
+    for attr in attrs:
+        attr.set_read_hook(connection.read)
+        attr.set_write_hook(connection.write)
