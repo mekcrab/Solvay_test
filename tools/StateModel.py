@@ -73,7 +73,7 @@ class StateDiagram(DiGraph):
         return edge_names
 
     def check_state_exists(self, state_id):
-        if isinstance(state_id, str) or isinstance(state_id, unicode) and state_id in self.state_names:
+        if (isinstance(state_id, str) or isinstance(state_id, unicode)) and state_id in self.state_names:
             return True
         elif self.has_node(state_id):  # state_id reference is a state object
             return True
@@ -194,7 +194,6 @@ class State(object):
         self.attrs = list()
         self.substates = StateDiagram()
         self.num_substates = 0
-        self.active = False
         self.source = list()
         self.destination = list()
 

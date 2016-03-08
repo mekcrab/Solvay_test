@@ -10,3 +10,26 @@
 2016-03-07 12:55:56,993 :: WARNING::      StateModel:: Module initialized
 2016-03-07 12:57:33,618 :: WARNING::      StateModel:: Module initialized
 2016-03-07 12:58:46,493 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:54:37,745 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:54:48,223 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:55:31,759 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:55:47,279 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:55:47,280 ::   ERROR:: StateModel.StateDiagram:: No state named state0exists in diagram
+2016-03-08 16:56:12,205 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:56:12,207 ::   ERROR:: StateModel.StateDiagram:: No state named state0exists in diagram
+2016-03-08 16:57:31,928 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:57:31,942 ::   ERROR:: StateModel.StateDiagram:: No state named state0exists in diagram
+2016-03-08 16:58:26,600 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:58:34,792 :: WARNING::      StateModel:: Module initialized
+2016-03-08 16:59:04,106 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:01:20,469 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:02:47,260 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:02:56,515 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:03:55,529 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:05:25,523 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:05:52,955 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:06:31,485 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:07:07,794 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:07:28,577 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:10:57,638 :: WARNING::      StateModel:: Module initialized
+2016-03-08 17:13:11,445 :: WARNING::      StateModel:: Module initialized

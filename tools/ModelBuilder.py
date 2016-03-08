@@ -17,7 +17,6 @@ dlog = LogTools('ModelBuilder.log', 'ModelBuilder')
 dlog.rootlog.warning('Module initialized')
 
 
-
 class ModelBuilder(object):
 
     # dictionary of {token types: callback functions}

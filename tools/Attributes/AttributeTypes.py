@@ -37,15 +37,16 @@ class Attribute_Base(object):
 
     def __init__(self, tag, *args, **kwargs):
         self.tag = tag  # root tag
-
-        self.attr_path = kwargs.pop('attr_path', '')  # attribute path from tag designation, defaults to empty string
-
+        self.attr_path = kwargs.pop('path', '')  # attribute path from tag designation, defaults to empty string
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
 
         self._complete = None  # value of attribute evaluation - set in self.evaluate method.
-                              # Nonetype means not yet evaluated
-        self.active = False
+                                 # Nonetype means not yet evaluated
+        self.active = False  # flag to indicate if the self.execute() method should be evaluated during a test
+
         self.data = list()  # list of timeseries data for trending/checking historical data
+        self.exe_cnt = 0  # number of times self.execute() has been called
+        self.exe_start = 0  # internal timer, intended to be initiated on call to self.execute
 
     def __str__(self):
         '''String method for base attribute - can be overridden in subclasses'''
@@ -60,21 +61,6 @@ class Attribute_Base(object):
         '''Logical AND of attributes - conjunction of attribute.complete parameters.
             Note "True and None" returns None'''
         return self.complete and other.complete
-
-    # TODO: decide if __enter__ and __exit__ methods are appropriate for running self.evaluate in a
-    # TODO:     with xxx as yyy: context - perhaps used to set readhook/writehook or add to OPC tag group?
-
-   # def set_attr_path(self, attribute_path):
-   #     '''Adds an attribute to the base tag. '''
-   #     # todo: evaluate if this is a valid attribute based on self.tag
-   #     self.attr_path = attribute_path
-
-    def save_value(self):
-        '''Adds a timestamp, value tuple to this attribute's self.data
-        for later retrieval and analysis
-        :param: value - any serializable object (ex. float, string, "condition object", tuples ...)
-        '''
-        self.data.append((time.time, self.read()))
 
     def read(self, param='CV'):
         '''Stub for reading a value for this attribute
@@ -112,17 +98,95 @@ class Attribute_Base(object):
         '''
         return str(self.tag) + str(self.attr_path)
 
-    def evaluate(self):
-        '''
-        Sets value of self.complete based on read/write method combination as required.
-        Attribute_Base instances implements a dummy method, always returning false.'''
-        raise NotImplementedError
+    def start_timer(self):
+        self.exe_start = time.time()
+
+    def get_timer(self):
+        return time.time() - self.exe_start
 
     def execute(self):
         '''
-        Execute "Set" or "Compare" (read/write) commands in the attributes and flag is_complete parameter.
+        Execute "Set" or "Compare" (read/write)
+        commands in the attributes and flag is_complete parameter.
+
+        Base method is a dummy - sets itself to True after 10 executions.
         '''
-        pass
+        if self.exe_cnt < 1:
+            self.start_timer()
+        elif self.exe_cnt > 10:
+            return self.set_complete(True)
+
+        self.exe_cnt += 1
+        return self.set_complete(False)
+
+    def save_value(self):
+        '''Adds a timestamp, value tuple to this attribute's self.data
+        for later retrieval and analysis
+        :param: value - any serializable object (ex. float, string, "condition object", tuples ...)
+        '''
+        self.data.append((time.time(), self.read()))
+
+
+class Constant(Attribute_Base):
+    '''Attribute wrapper for constant values like numbers, strings, etc'''
+
+    def __init__(self, value, *args, **kwargs):
+        self.val = value
+        Attribute_Base.__init__(self, 'Constant', path=value)
+
+    def read(self):
+        return (self.val, 'Good', time.ctime())
+
+    def write(self, value):
+        self.val = value
+        return 'Success'
+
+class Compare(Attribute_Base):
+    def __init__(self, lhs, opr, rhs):
+        '''
+        Comparison between two sub-attributes in the form of:
+            (left hand side) (operator) (right hand side)
+        Ex: PI-1783 > 65
+        Both rhs and lhs must be sub classes of Attribute Base
+
+        :param rhs: right hand (value to compare)
+        :param opr: operator - one of (<, >, <=, >=, =, !=)
+        :param lhs: left hand side (value to check, most likely read from system)
+        :return: Compare instance
+        '''
+        if not isinstance(lhs, Attribute_Base) and not isinstance(rhs, Attribute_Base):
+            raise TypeError
+        else:
+            self.lhs = lhs
+            self.rhs = rhs
+
+        if opr is not any(['<', '>', '<=', '>=', '!=']):
+            raise TypeError
+        else:
+            self.opr = opr
+
+    def read(self):
+        raise NotImplementedError
+
+    def write(self):
+        '''Automaticaly set lhs equal to rhs read value'''
+        return self.lhs.write(self.rhs.read()[0])
+
+    def execute(self):
+        '''Executes comparison logic'''
+        if self.exe_cnt < 1:
+            self.start_timer()
+
+        self.exe_cnt += 1
+
+        if eval(self.lhs.read()[0]+self.opr+self.rhs.read()):
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
+
+
+
+# =============================================================
 
 
 class DiscreteAttribute(Attribute_Base):
