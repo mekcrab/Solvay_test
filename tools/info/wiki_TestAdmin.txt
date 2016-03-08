@@ -1,0 +1,25 @@
+Functionality needed in Attribute_Base (***extremely important):
+*** execute(): Should be able to call read/write() for different attribute types and flag is_complete parameter
+** attribute.set_read_hook(read.connection)
+** attribute.set_write_hook(write.connection)
+
+
+------ Basic Logic Below: Test.start() is the function we need to call in the pre-processor -----
+
+TestAdmin.recur(): testing attributes within a state
+1. set read/write hook for state attributes
+2. call state_attr.execute()
+3. if all attributes complete, deactivate state attributes and return True
+
+TestAdmin.transit(): Verify transition attributes
+1. declare a source and a destination
+2. set read hook for transition attributes
+3. call tran_attr.execute()
+4. if all attributes within this transition complete, activate destination state attributes and return True
+
+*** Test.start(): Start test diagram...
+1. declare 'start' state in the diagram
+2. set in_state parameter of TestAdmin.recur() as the 'start' state
+3. using a while function: while TestAdmin.recur(in_state) and in_state != '':
+	a. find the next_state with in_state.destination
+	b. if TestAdmin.transit(in_state, next_state): in_state = next_state and loop recur(in_state)
