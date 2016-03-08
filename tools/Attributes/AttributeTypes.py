@@ -118,6 +118,12 @@ class Attribute_Base(object):
         Attribute_Base instances implements a dummy method, always returning false.'''
         raise NotImplementedError
 
+    def execute(self):
+        '''
+        Execute "Set" or "Compare" (read/write) commands in the attributes and flag is_complete parameter.
+        '''
+        pass
+
 
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
