@@ -17,24 +17,26 @@ class TestAdmin():
         complete_count = 0
 
         # As long as attributes in state not all complete, it will keep attempting to execute until all complete.
+        x = 0
+        complete = [False] * len(state.attrs)
         while complete_count != num_attributes:
-            for state_attr in state.attrs:
+            for x in range(0, len(state.attrs)):
                 # TODO: state_attr.set_read_hook(connection.read)
                 # TODO: state_attr.set_write_hook(connection.write)
-                is_complete = state_attr.execute()
-                while not is_complete:
+                state_attr = state.attrs[x]
+                if not complete[x]:
                     print "Executing Attribute:", state_attr
-                    is_complete = state_attr.execute()
-                    print "is_complete:", is_complete
+                    complete[x] = state_attr.execute()
+                    print "is_complete:", complete[x]
+                else:
+                    print "Attribute:", state_attr
+                    print "is_complete:", complete[x]
 
-                if is_complete:
-                    complete_count += 1
-                    state_attr.deactivate()
+                complete_count = complete.count(True)
 
-                print "Complete Count:", complete_count
-                if complete_count == num_attributes:
-                    return True
-
+            print "Complete Count:", complete_count
+        if complete_count == num_attributes:
+            return True
 
     def transit(self, source, destination):
         source = self.diagram.get_state(state_id = source)
@@ -47,7 +49,7 @@ class TestAdmin():
         while complete_count != num_attributes:
             for transition in transitions:
                 for tran_attr in transition.attrs:
-                    #tran_attr.set_read_hook(connection.read)
+                    # TODO: tran_attr.set_read_hook(connection.read)
                     is_complete = tran_attr.execute()
                     while not is_complete:
                         print "Executing Transition:", tran_attr
@@ -104,8 +106,8 @@ if __name__ == "__main__":
 
     #builder = StateModelBuilder()
     #diagram = builder.parse(tkns)
-    d = AttrTest.make_state_diagram(s = 3)
-    print "State Number:", len(d.states)
+    d = AttrTest.make_state_diagram(s = 5)
+    print "State Number:", len(d.state_names)
     print "Transition Number:", len(d.transitions)
 
     Test(diagram = d, connection = connection).start()
