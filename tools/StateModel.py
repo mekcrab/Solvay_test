@@ -260,6 +260,7 @@ class State(object):
         else:
             self.destination.append(destination)
 
+
 class Transition(object):
     def __init__(self, source, dest, attrs=None):
         '''
@@ -277,7 +278,10 @@ class Transition(object):
             [self.add_attribute(attr) for attr in attrs]
 
     def add_attribute(self, attribute):
-        self.attrs.append(attribute)
+        try:
+            self.attrs.extend(attribute)
+        except:  # attribute is not iterable, expecting a list
+            self.attrs.append(attribute)
 
     def add_source(self, TranSource):
         if not isinstance(TranSource, State):

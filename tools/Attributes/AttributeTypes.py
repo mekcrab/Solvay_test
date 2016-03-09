@@ -27,8 +27,13 @@ All attribute classes should be defined as a mixin of one or more parent
 '''
 
 import time
+import tools.config as config
+from tools.Utilities.Logger import LogTools
 
 __author__ = 'ekoapche'
+
+dlog = LogTools(config.log_path + 'AttributeTypes.log', config.log_level, 'AttributeTypes')
+dlog.rootlog.warning('AttributeTypes initialized')
 
 
 class Attribute_Base(object):
@@ -141,8 +146,10 @@ class Constant(Attribute_Base):
         self.val = value
         return 'Success'
 
+
 class Compare(Attribute_Base):
-    def __init__(self, lhs, opr, rhs):
+
+    def __init__(self, lhs, opr, rhs, deadband=0):
         '''
         Comparison between two sub-attributes in the form of:
             (left hand side) (operator) (right hand side)
@@ -154,22 +161,31 @@ class Compare(Attribute_Base):
         :param lhs: left hand side (value to check, most likely read from system)
         :return: Compare instance
         '''
+
         if not isinstance(lhs, Attribute_Base) and not isinstance(rhs, Attribute_Base):
             raise TypeError
         else:
             self.lhs = lhs
             self.rhs = rhs
 
-        if opr is not any(['<', '>', '<=', '>=', '!=']):
+        if opr not in ['<', '>', '<=', '>=', '!=']:
             raise TypeError
         else:
             self.opr = opr
+
+        self.deadband = deadband  # deadband applied to rhs of comparison
+
+        self.id = self.lhs.tag+self.opr+self.rhs.tag
+
+        Attribute_Base.__init__(self, self.id)
+
+        self.logger = dlog.MakeChild(self.id)
 
     def read(self):
         raise NotImplementedError
 
     def write(self):
-        '''Automaticaly set lhs equal to rhs read value'''
+        '''Automatically set lhs equal to rhs read value'''
         return self.lhs.write(self.rhs.read()[0])
 
     def execute(self):
@@ -179,16 +195,23 @@ class Compare(Attribute_Base):
 
         self.exe_cnt += 1
 
-        if eval(self.lhs.read()[0]+self.opr+self.rhs.read()):
-            return self.set_complete(True)
-        else:
-            return self.set_complete(False)
+        return self.comp_eval()
 
+    def comp_eval(self):
+        '''
+        Evaluates comparison:  (rhs) - (lhs) (opr) (deadband)
+
+        Ex. /PI-1875/PV.CV - 65 > 0.1
+        '''
+        cmp_val = str(self.rhs.read()[0]) +'-'+str(self.lhs.read()[0])+self.opr+str(self.deadband)
+        print cmp_val
+
+        self.logger.debug('Evaluating: %s', cmp_val)
+
+        return eval(cmp_val)
 
 
 # =============================================================
-
-
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
         Examples:   NamedSets, Binary/Boolean, Bitmask'''
