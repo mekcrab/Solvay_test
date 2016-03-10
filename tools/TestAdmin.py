@@ -21,21 +21,22 @@ class TestAdmin():
         complete = [False] * len(state.attrs)
         while complete_count != num_attributes:
             for x in range(0, len(state.attrs)):
-                # TODO: state_attr.set_read_hook(connection.read)
-                # TODO: state_attr.set_write_hook(connection.write)
                 state_attr = state.attrs[x]
+                state_attr.set_read_hook(connection.read)
+                state_attr.set_write_hook(connection.write)
                 if not complete[x]:
-                    print "Executing Attribute:", state_attr
+                    #print "Executing Attribute:", state_attr
                     complete[x] = state_attr.execute()
-                    print "is_complete:", complete[x]
+                    #print "is_complete:", complete[x]
                 else:
                     print "Attribute:", state_attr
                     print "is_complete:", complete[x]
 
                 complete_count = complete.count(True)
 
-            print "Complete Count:", complete_count
+           # print "Complete Count:", complete_count
         if complete_count == num_attributes:
+            print "Complete Count:", complete_count
             return True
 
     def transit(self, source, destination):
@@ -106,7 +107,7 @@ if __name__ == "__main__":
 
     #builder = StateModelBuilder()
     #diagram = builder.parse(tkns)
-    d = AttrTest.make_state_diagram(s = 5)
+    d = AttrTest.make_state_diagram(s = 2)
     print "State Number:", len(d.state_names)
     print "Transition Number:", len(d.transitions)
 
