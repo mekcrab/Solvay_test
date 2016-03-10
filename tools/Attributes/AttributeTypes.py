@@ -26,7 +26,7 @@ All attribute classes should be defined as a mixin of one or more parent
     of execution subtype <write> combined with data subtypes <boolean> <mode> and <SP/PV>.
 '''
 
-import time
+import time, os
 import tools.config as config
 from tools.Utilities.Logger import LogTools
 
@@ -42,7 +42,7 @@ class Attribute_Base(object):
 
     def __init__(self, tag, *args, **kwargs):
         self.tag = tag  # root tag
-        self.attr_path = kwargs.pop('path', '')  # attribute path from tag designation, defaults to empty string
+        self.attr_path = kwargs.pop('attr_path', '')  # attribute path from tag designation, defaults to empty string
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
 
         self._complete = None  # value of attribute evaluation - set in self.evaluate method.
@@ -101,7 +101,7 @@ class Attribute_Base(object):
         '''
         Prints the OPC path of this attribute
         '''
-        return str(self.tag) + str(self.attr_path)
+        return os.path.join(str(self.tag), str(self.attr_path))
 
     def start_timer(self):
         self.exe_start = time.time()
@@ -219,18 +219,19 @@ class Compare(Attribute_Base):
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
         Examples:   NamedSets, Binary/Boolean, Bitmask'''
-    def __init__(self, tag, attr_path = ''):
+    def __init__(self, tag, attr_path):
         self.tag = tag
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self, command = 'compare'):
+    def execute(self, command = 'compare', op = '>', rhs = 0):
         if command == 'compare':
-            lhs = Attribute_Base(self.tag, self.attr_path)
-            lhs.set_read_hook(connection.read)
-            readleft = lhs.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-            rhs = 0
-            return readleft[0] > rhs
+            #lhs = Attribute_Base(self.tag, self.attr_path)
+            #lhs.set_read_hook(connection.read)
+            print "Reading:", self.tag
+            readleft = self.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+            if op == '>':
+                return readleft[0] > rhs
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
