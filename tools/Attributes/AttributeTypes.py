@@ -511,17 +511,6 @@ class OtherAttribute(Attribute_Base):
         return Attribute_Base.write(self, value = target_value, param = self.param)
 
 
-#####################Transition Attribute Types (use read functions and compare) #########################
-class ComparisonAttributes:
-    #TODO: Get system values with the read functions above
-    def __init__(self, **kwargs):
-        # just a string
-        lhs = kwargs.pop('leftside', AttributeDummy())
-
-
-
-
-
 if __name__ == "__main__":
     from tools.serverside.OPCclient import OPC_Connect
 

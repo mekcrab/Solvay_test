@@ -1,0 +1,36 @@
+@startuml
+scale 350 width
+
+state CHARGE {
+
+    ResetIlk : Reset all TK-20 interlocks
+    ResetIlk --> OpenVlv
+
+    OpenVlv : Open TK-20 discharge valve
+    OpenVlv : Confirm the TK-20 discharge valve is open
+
+    OpenVlv : Open TK-20 flow control valve in Manaual at 20%
+
+    OpenVlv --> SetCtrl : Wait 1 minute
+
+    SetCtrl : Set the TK-20 flow control valve in Auto at EPI FLOW (scaled)
+
+    SetCtrl --> PrePurge : Wait until FQIC > Target
+
+    PrePurge : Close the TK-20 interlock valve at R-3
+    PrePurge : Close the TK-20 discharge valve
+    PrePurge : Open the nitrogen valve to the TK-20 transfer line
+
+    note left of PrePurge : Confirmation required \non dischange valve close?
+
+    PrePurge --> PurgeLine : Wait 10 seconds
+
+    PurgeLine : Close the nitrogen valve to the TK-20 transfer line
+    PurgeLine : Close the R-3 TK-20 valve
+    PurgeLine : Close TK-20 flow control valve in Manual at 0%
+
+}
+
+
+
+@enduml
