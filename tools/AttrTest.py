@@ -1,5 +1,3 @@
-from lxml.html import _element_name
-
 import StateModel
 import Attributes.AttributeTypes as AttributeTypes
 import random
