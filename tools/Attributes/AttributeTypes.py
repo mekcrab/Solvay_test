@@ -136,7 +136,11 @@ class Constant(Attribute_Base):
     '''Attribute wrapper for constant values like numbers, strings, etc'''
 
     def __init__(self, value, *args, **kwargs):
-        self.val = value
+
+        if type(value) in [int, float, str, unicode]:
+            self.val = value
+        else:
+            raise TypeError
         Attribute_Base.__init__(self, 'Constant', path=value)
 
     def read(self):
@@ -215,10 +219,18 @@ class Compare(Attribute_Base):
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
         Examples:   NamedSets, Binary/Boolean, Bitmask'''
+    def __init__(self, tag, attr_path = ''):
+        self.tag = tag
+        self.attr_path = attr_path
+        Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def evaluate(self):
-        raise NotImplementedError
-
+    def execute(self, command = 'compare'):
+        if command == 'compare':
+            lhs = Attribute_Base(self.tag, self.attr_path)
+            lhs.set_read_hook(connection.read)
+            readleft = lhs.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+            rhs = 0
+            return readleft[0] > rhs
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
@@ -226,13 +238,13 @@ class NamedDiscrete(DiscreteAttribute):
         self.int_dict = int_dict
         Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
-    def evaluate(self):
+    def execute(self):
         raise NotImplementedError
 
 
 class DiscreteCondition(DiscreteAttribute):
 
-    def evaluate(self):
+    def execute(self):
         '''Evaluates if discrete condition is true'''
         raise NotImplementedError
 
@@ -241,7 +253,7 @@ class AnalogAttribute(Attribute_Base):
     '''Base class for analog/continuously valued attributes
         Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values)
     '''
-    def evaluate(self):
+    def execute(self):
         raise NotImplementedError
 
 
@@ -254,7 +266,7 @@ class AnalogCondition(AnalogAttribute):
 
         AnalogAttribute.__init__(self, tag, attr_path=attr_path)
 
-    def evaluate(self):
+    def execute(self):
         '''
         Evaluates analog comparision: <, >, = (within tolerance), != (within tolerance)
         '''
@@ -308,7 +320,7 @@ class ModeAttribute(NamedDiscrete):
         '''Reads are directed to MODE.ACTUAL'''
         return Attribute_Base.read(self, param='ACTUAL')
 
-    def evaluate(self):
+    def execute(self):
         raise NotImplementedError
 
     def read_Mode(self):
