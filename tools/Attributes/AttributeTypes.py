@@ -224,14 +224,15 @@ class DiscreteAttribute(Attribute_Base):
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self, command = 'compare', op = '>', rhs = 0):
+    def execute(self, command = 'compare', op = '=', rhs = 0):
         if command == 'compare':
             #lhs = Attribute_Base(self.tag, self.attr_path)
             #lhs.set_read_hook(connection.read)
             print "Reading:", self.tag
             readleft = self.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-            if op == '>':
-                return readleft[0] > rhs
+            if op == '=':
+                return readleft[0] == rhs
+
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
@@ -321,13 +322,21 @@ class ModeAttribute(NamedDiscrete):
         '''Reads are directed to MODE.ACTUAL'''
         return Attribute_Base.read(self, param='ACTUAL')
 
-    def execute(self):
-        raise NotImplementedError
+    def execute(self, command = 'write', **kwargs):
+        target_mode = kwargs.pop('mode', '')
+        if command == 'write':
+            if target_mode:
+                self.write(mode = target_mode)
+                current_mode = self.read()[0]
+                return ModeAttribute.actual_int_dict[target_mode] == current_mode
+
+            else:
+                raise TypeError
 
     def read_Mode(self):
         return self.read()
 
-class PositionAttribute(NamedDiscrete):
+class PositionAttribute(ModeAttribute):
     '''
     Unique class of attribute for Valve/Pump position
     '''
@@ -344,24 +353,28 @@ class PositionAttribute(NamedDiscrete):
     # mode: attr_path dictionary--> used for reads by default
     mode_confim_dict = {'AUTO' : 'PV_D', 'CAS' : 'PV_D', 'ROUT':'OUTP', 'RCAS':'PV_D'}
 
-    def __init__(self, tag, attr_path =''):
+    def __init__(self, tag, attr_path):
         self.attr_path = attr_path
         self.tag = tag
         NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
 
-    def write(self, target_value, mode):
+    def write(self, target_value, **kwargs):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
         '''
+        mode = kwargs.pop('mode', '')
 
         if target_value in [str, unicode]:
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
 
+        if not mode:
+            mode = self.read_Mode()[0]
+
         if type(mode) in [str, unicode]:
             mode = mode.upper()
-        elif type(mode) in [int]:
+        elif type(mode) in [int, float]:
             mode = PositionAttribute.modenum_str_dict[mode]
 
         self.attr_path = PositionAttribute.mode_act_dict[mode]
@@ -369,6 +382,17 @@ class PositionAttribute(NamedDiscrete):
 
     def read(self):
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        mode = kwargs.pop('mode','')
+        target_value = kwargs.pop('target_value', '')
+        if command == 'write':
+            if target_value:
+                self.write(target_value, mode = mode)
+                current_value = self.read()[0]
+                return target_value == current_value
+            else:
+                raise TypeError
 
 
 class StatusAttribute(NamedDiscrete):
@@ -467,14 +491,20 @@ class InicationAttribute(Attribute_Base):
     Indicators use AI1 or INT1 functional blocks
     '''
 
-    def __init__(self, tag, attr_path):
+    def __init__(self, tag, attr_path = 'PV'):
         self.tag = tag
+        self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self):
-        Attribute_Base.read()
+    def read(self):
+        return Attribute_Base(self.tag, self.attr_path).read()
 
-
+    def execute(self, command = 'read'):
+        if command == 'read':
+            if (self.read()[0]) and (self.read()[1] == 'Good'):
+                return True
+            else:
+                return False
 
 
 class EMCMDAttribute(Attribute_Base):
@@ -523,6 +553,21 @@ class OtherAttribute(Attribute_Base):
     def write(self, target_value):
         return Attribute_Base.write(self, value = target_value, param = self.param)
 
+    def execute(self, command = 'read', **kwargs):
+        if command == 'read':
+            if (self.read()[0]) and (self.read()[1] == 'Good'):
+                return True
+            else:
+                return False
+        elif command == 'write':
+            target_value = kwargs.pop('target_value', '')
+            if target_value:
+                self.write(target_value)
+                current_value = self.read()[0]
+                return target_value == current_value
+            else:
+                raise TypeError
+
 
 #####################Transition Attribute Types (use read functions and compare) #########################
 class ComparisonAttributes:
@@ -530,9 +575,6 @@ class ComparisonAttributes:
     def __init__(self, **kwargs):
         # just a string
         lhs = kwargs.pop('leftside', AttributeDummy())
-
-
-
 
 
 if __name__ == "__main__":
