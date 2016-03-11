@@ -1,0 +1,34 @@
+@startuml
+scale 350 width
+
+[*] --> ZeroTotalizers
+
+state ZeroTotalizers {
+
+    ZeroTotalizers : Zero TK-20 target
+    ZeroTotalizers : Zero R-3 totalizer
+    ZeroTotalizers : Tare the reactor scale
+}
+
+ZeroTotalizers --> RecipeOwned : Owned by unit
+ZeroTotalizers --> OperatorOwned : Owned by operator
+
+RecipeOwned : Calculate the target based \n on Epi Target and Batch Size
+RecipeOwned --> CheckCharge
+
+OperatorOwned : Prompt operator to \nenter the desired \nEpi charge in lbs
+OperatorOwned --> CheckCharge
+
+CheckCharge --> [*] : Target < 10
+
+CheckCharge --> Charge : Target >= 10
+
+state Charge {
+    Charge: EPI_EM:CHARGE
+'    !include EPI_EM_EXAMPLE.puml
+}
+
+Charge --> [*] : Epi EM command complete
+}
+
+@enduml
