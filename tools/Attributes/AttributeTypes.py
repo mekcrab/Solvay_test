@@ -224,14 +224,14 @@ class DiscreteAttribute(Attribute_Base):
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self, command = 'compare', op = '>', rhs = 0):
+    def execute(self, command = 'compare', op = '=', rhs = 0):
         if command == 'compare':
             #lhs = Attribute_Base(self.tag, self.attr_path)
             #lhs.set_read_hook(connection.read)
             print "Reading:", self.tag
             readleft = self.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-            if op == '>':
-                return readleft[0] > rhs
+            if op == '=':
+                return readleft[0] == rhs
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)
@@ -330,8 +330,13 @@ class ModeAttribute(NamedDiscrete):
         '''Reads are directed to MODE.ACTUAL'''
         return Attribute_Base.read(self, param='ACTUAL')
 
-    def execute(self):
-        raise NotImplementedError
+    def execute(self, command = 'write', **kwargs):
+        target_mode = kwargs.pop('mode', '')
+        if command == 'write':
+            if target_mode:
+                self.write(mode = target_mode)
+                current_mode = self.read()[0]
+                return ModeAttribute.actual_int_dict[target_mode] == current_mode
 
     def read_Mode(self):
         return self.read()
@@ -358,15 +363,19 @@ class PositionAttribute(NamedDiscrete):
         self.tag = tag
         NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
 
-    def write(self, target_value, mode):
+    def write(self, target_value, **kwargs):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
         '''
+        mode = kwargs.pop('mode', '')
 
         if target_value in [str, unicode]:
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
+
+        if not mode:
+            more = self.read_Mode()[0]
 
         if type(mode) in [str, unicode]:
             mode = mode.upper()
@@ -378,6 +387,17 @@ class PositionAttribute(NamedDiscrete):
 
     def read(self):
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        mode = kwargs.pop('mode','')
+        target_value = kwargs.pop('target_value', '')
+        if command == 'write':
+            if target_value:
+                self.write(target_value, mode = mode)
+                current_value = self.read()[0]
+                return target_value == current_value
+            else:
+                raise TypeError
 
 
 class StatusAttribute(NamedDiscrete):
@@ -444,12 +464,9 @@ class PromptAttribute(Attribute_Base):
         '^/FAIL_MONITOR/OAR/INPUT' for phase classes and '^/MONITOR/OAR/INPUT' for EM classes
         '''
 
-        input_type = 1
         if input in [str, unicode]: # If input is Yes/No or OK
             self.input = input.upper()
-            input_type = PromptAttribute.OAR_Type_dict[self.input] # Capitalized input
-            if self.input in PromptAttribute.OAR_int_dict:
-                input = PromptAttribute.OAR_int_dict[self.input]
+            input = PromptAttribute.OAR_int_dict[self.input]
 
         #TODO: Verify if it's answering the right question. Maybe do it in the generator?
         #TODO: My thought was to pull out the OAR_MSG and OAR_Type with readprompt function and compare.
@@ -468,6 +485,28 @@ class PromptAttribute(Attribute_Base):
 
         return (OAR_Type, MSG1, MSG2)
 
+    def readinput(self):
+        return Attribute_Base(self.tag, attr_path = self.input_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        if command == 'write':
+            input = kwargs.pop('input', '')
+            input_type = kwargs.pop('input_type', '')
+            OAR_Type, MSG1, MSG2  = self.readprompt()
+            if input in [str, unicode]:
+                input = input.upper()
+                input_type = PromptAttribute.OAR_Type_dict[input]
+                input = PromptAttribute.OAR_int_dict[input]
+
+            if input_type in[str, unicode]:
+                input_type = PromptAttribute.Type_int_dict[input_type]
+
+            if input_type == OAR_Type:
+                self.write(input)
+
+            readinput = self.readinput()[0]
+            return readinput == input
+
 
 class InicationAttribute(Attribute_Base):
     '''
@@ -478,12 +517,18 @@ class InicationAttribute(Attribute_Base):
 
     def __init__(self, tag, attr_path):
         self.tag = tag
+        self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self):
-        Attribute_Base.read()
+    def read(self):
+        Attribute_Base(self.tag, self.attr_path).read()
 
-
+    def execute(self, command = 'read'):
+        if command == 'read':
+            if (self.read()[0]) and (self.read()[1] == 'Good'):
+                return True
+            else:
+                return False
 
 
 class EMCMDAttribute(Attribute_Base):
