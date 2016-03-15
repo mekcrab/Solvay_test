@@ -29,6 +29,7 @@ All attribute classes should be defined as a mixin of one or more parent
 import time, os
 import tools.config as config
 from tools.Utilities.Logger import LogTools
+import operator
 
 __author__ = 'ekoapche'
 
@@ -224,14 +225,14 @@ class DiscreteAttribute(Attribute_Base):
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self, command = 'compare', op = '>', rhs = 0):
+    def execute(self, command = 'compare', op = '=', rhs = 0):
         if command == 'compare':
             #lhs = Attribute_Base(self.tag, self.attr_path)
             #lhs.set_read_hook(connection.read)
             print "Reading:", self.tag
             readleft = self.read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-            if op == '>':
-                return readleft[0] > rhs
+            if op == '=':
+                return readleft[0] == rhs
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)
@@ -330,13 +331,18 @@ class ModeAttribute(NamedDiscrete):
         '''Reads are directed to MODE.ACTUAL'''
         return Attribute_Base.read(self, param='ACTUAL')
 
-    def execute(self):
-        raise NotImplementedError
+    def execute(self, command = 'write', **kwargs):
+        target_mode = kwargs.pop('mode', '')
+        if command == 'write':
+            if target_mode:
+                self.write(mode = target_mode)
+                current_mode = self.read()[0]
+                return ModeAttribute.actual_int_dict[target_mode] == current_mode
 
     def read_Mode(self):
         return self.read()
 
-class PositionAttribute(NamedDiscrete):
+class PositionAttribute(ModeAttribute):
     '''
     Unique class of attribute for Valve/Pump position
     '''
@@ -356,17 +362,21 @@ class PositionAttribute(NamedDiscrete):
     def __init__(self, tag, attr_path =''):
         self.attr_path = attr_path
         self.tag = tag
-        NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
+        ModeAttribute.__init__(self.tag, self.attr_path)
 
-    def write(self, target_value, mode):
+    def write(self, target_value, **kwargs):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
         '''
+        mode = kwargs.pop('mode', '')
 
         if target_value in [str, unicode]:
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
+
+        if not mode:
+            mode = self.read_Mode()[0]
 
         if type(mode) in [str, unicode]:
             mode = mode.upper()
@@ -378,6 +388,17 @@ class PositionAttribute(NamedDiscrete):
 
     def read(self):
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        mode = kwargs.pop('mode','')
+        target_value = kwargs.pop('target_value', '')
+        if command == 'write':
+            if target_value:
+                self.write(target_value, mode = mode)
+                current_value = self.read()[0]
+                return target_value == current_value
+            else:
+                raise TypeError
 
 
 class StatusAttribute(NamedDiscrete):
@@ -444,12 +465,9 @@ class PromptAttribute(Attribute_Base):
         '^/FAIL_MONITOR/OAR/INPUT' for phase classes and '^/MONITOR/OAR/INPUT' for EM classes
         '''
 
-        input_type = 1
         if input in [str, unicode]: # If input is Yes/No or OK
             self.input = input.upper()
-            input_type = PromptAttribute.OAR_Type_dict[self.input] # Capitalized input
-            if self.input in PromptAttribute.OAR_int_dict:
-                input = PromptAttribute.OAR_int_dict[self.input]
+            input = PromptAttribute.OAR_int_dict[self.input]
 
         #TODO: Verify if it's answering the right question. Maybe do it in the generator?
         #TODO: My thought was to pull out the OAR_MSG and OAR_Type with readprompt function and compare.
@@ -468,6 +486,28 @@ class PromptAttribute(Attribute_Base):
 
         return (OAR_Type, MSG1, MSG2)
 
+    def readinput(self):
+        return Attribute_Base(self.tag, attr_path = self.input_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        if command == 'write':
+            input = kwargs.pop('input', '')
+            input_type = kwargs.pop('input_type', '')
+            OAR_Type, MSG1, MSG2  = self.readprompt()
+            if input in [str, unicode]:
+                input = input.upper()
+                input_type = PromptAttribute.OAR_Type_dict[input]
+                input = PromptAttribute.OAR_int_dict[input]
+
+            if input_type in[str, unicode]:
+                input_type = PromptAttribute.Type_int_dict[input_type]
+
+            if input_type == OAR_Type:
+                self.write(input)
+
+            readinput = self.readinput()[0]
+            return readinput == input
+
 
 class InicationAttribute(Attribute_Base):
     '''
@@ -478,12 +518,18 @@ class InicationAttribute(Attribute_Base):
 
     def __init__(self, tag, attr_path):
         self.tag = tag
+        self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self):
-        Attribute_Base.read()
+    def read(self):
+        Attribute_Base(self.tag, self.attr_path).read()
 
-
+    def execute(self, command = 'read'):
+        if command == 'read':
+            if (self.read()[0]) and (self.read()[1] == 'Good'):
+                return True
+            else:
+                return False
 
 
 class EMCMDAttribute(Attribute_Base):
@@ -499,15 +545,29 @@ class EMCMDAttribute(Attribute_Base):
         self.tag = tag
         Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
 
-    def write(self, command):
+    def write(self, target):
         self.attr_path = 'A_COMMAND'
-        if command in [str, unicode]:
-            command = EMCMDAttribute.EMCMD_int_dict[command]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(command)
+        self.target = target
+        if target in [str, unicode]:
+            self.target = EMCMDAttribute.EMCMD_int_dict[target]
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(self.target)
 
-    def read(self):
+    def readtarget(self):
         self.attr_path = 'A_TARGET'
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def readPV(self):
+        self.attr_path = 'A_PV'
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        if command == 'write':
+            target = kwargs.pop('target', '')
+            self.write(target)
+            readtarget = self.readtarget()[0]
+            readPV = self.readPV()[0]
+            #TODO: confirm below:
+            return readtarget == self.target or readPV == self.target
 
 
 class PhaseCMDAttribute(NamedDiscrete):
@@ -547,13 +607,53 @@ class OtherAttribute(Attribute_Base):
             else:
                 raise TypeError
 
+class AttributeDummy(Attribute_Base):
+    def __init__(self):
+        Attribute_Base.__init__(self, tag = '')
+
+    def read(self):
+        pass
+
+    def write(self):
+        pass
+
+    def execute(self):
+        pass
 
 #####################Transition Attribute Types (use read functions and compare) #########################
-class ComparisonAttributes:
+class ComparisonAttributes(object):
+
+    operator_dict = {'>': operator.gt,
+                     '>=': operator.ge,
+                     '==': operator.eq,
+                     '=': operator.eq,
+                     '<': operator.lt,
+                     '<=': operator.le,
+                     '!=': operator.ne}
+
     #TODO: Get system values with the read functions above
     def __init__(self, **kwargs):
         # just a string
-        lhs = kwargs.pop('leftside', AttributeDummy())
+        self.op = kwargs.pop('op', '')
+        self.lhs = kwargs.pop('lhs', AttributeDummy())
+        self.rhs = kwargs.pop('rhs', AttributeDummy())
+
+    def execute(self, **kwargs):
+        if self.op not in ComparisonAttributes.operator_dict:
+            raise TypeError
+
+        leftval = self.lhs.read()[0] # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+        rightval = self.rhs.read()[0]
+        op = ComparisonAttributes.operator_dict[self.op]
+        return op(leftval, rightval)
+
+    def set_read_hook(self, readhook):
+        self.lhs.set_read_hook(readhook)
+        self.rhs.set_read_hook(readhook)
+
+    def set_write_hook(self, writehook):
+        self.lhs.set_write_hook(writehook)
+        self.rhs.set_write_hook(writehook)
 
 
 if __name__ == "__main__":
