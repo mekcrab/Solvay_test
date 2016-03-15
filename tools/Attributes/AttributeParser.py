@@ -30,7 +30,7 @@ Wait 30 minutes
 Heat/Cool mode in auto at (Reaction Temp +2F)
 Wait for reactor temperature > Reaction Temp degF
 Wait for Hydrolysis Hold Time minutes
-Slowly ramp open the vent vale to ATM
+Slowly ramp open the vent valve to ATM
 '''
 
 
@@ -167,8 +167,6 @@ if __name__ == "__main__":
     results = list()
     for attr_str in test_strings:
         results.append(parser.parse(attr_str))
-
-    r = compound_exp.parseString(test_strings[6])
 
 
     print "=====Testing Complete====="
