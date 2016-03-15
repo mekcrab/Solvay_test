@@ -1,0 +1,9 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R6-PT5CHG-EM'
+	!define	FLOW_TOT	'ignore'
+	!define	FLOW_VLV1	'CV-2121'
+	!define	FLOW_CTL	'ignore'
+	!define CHG_TGT		'R6-PT5CHG-EM/OP001'
+
+@enduml

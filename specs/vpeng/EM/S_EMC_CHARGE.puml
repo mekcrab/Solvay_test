@@ -1,0 +1,27 @@
+
+Definitions for all of the instances in this EM class enclosed in the Definitions folder.
+Use a !include <instance path> to substitute Aliases/Parameter_path in this flowchart.
+i.e. copy this to the code:
+!include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
+
+@startuml
+!define charge_target 1000
+
+[*] --> StartEM
+StartEM: Set S_EMC_CHARGE to CHARGE
+
+StartEM --> OAR_ChargeTarget: Verify S_EMC_CHARGE is in CHARGE and \n FLOW_TOT = 0 and CHG_TGT = 0
+
+OAR_ChargeTarget: Set OAR Input to charge_target
+
+OAR_ChargeTarget --> ValveOpened: Verify FLOW_VLV1 Open
+
+ValveOpened --> ChargeComplete: Wait for FLOW_TOT >= CHG_TGT
+
+ChargeComplete --> [*]: Verify FLOW_VLV1 Closed and S_EMC_CHARGE in CHARGE complete
+
+@enduml
+
+# CHG_TGT is an OP, it can be read/write with OtherAttribute
+# FLOW_TOT can be OtherAttribute too, or IndicationAttribute if declare tag = 'FQIC-####' and attr_path = 'TOTAL'
+# FLOW_VLV1 is PositionAttribute

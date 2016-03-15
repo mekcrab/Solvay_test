@@ -1,0 +1,9 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R10-UVCHG-EM'
+	!define	FLOW_TOT	'FQIC-4278/TOTAL'
+	!define	FLOW_VLV1	'CV-4278'
+	!define	FLOW	'FI-4278'
+	!define CHG_TGT		'R10-UVCHG-EM/OP001'
+
+@enduml

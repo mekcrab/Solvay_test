@@ -1,0 +1,9 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R10-TK50CHG-EM'
+	!define	FLOW_TOT	'FQIC-4270/TOTAL'
+	!define	FLOW_VLV1	'CV-4270'
+	!define	FLOW_CTL	'FIC-4270'
+	!define CHG_TGT		'R10-TK50CHG-EM/OP001'
+
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R10-TK2CHG-EM'
+	!define	FLOW_TOT	'FQIC-2623/TOTAL'
+	!define	FLOW_VLV1	'CV-2623'
+	!define	FLOW_CTL	'FIC-2623'
+	!define CHG_TGT		'R10-TK2CHG-EM/OP001'
+
+@enduml

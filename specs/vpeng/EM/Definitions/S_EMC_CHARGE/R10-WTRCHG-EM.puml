@@ -1,0 +1,9 @@
+@startuml
+
+!define	S_EMC_CHARGE	'R10-WTRCHG-EM'
+!define	FLOW	'FI-4289'
+!define	FLOW_VLV1	'CV-4289'
+!define	FLOW_TOT	'FQIC-4289/TOTAL'
+!define CHG_TGT   'R10-WTRCHG-EM/OP001'
+
+@enduml

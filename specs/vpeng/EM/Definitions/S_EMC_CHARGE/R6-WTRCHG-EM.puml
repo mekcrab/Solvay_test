@@ -1,0 +1,9 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R6-WTRCHG-EM'
+	!define	FLOW_TOT	'FQIC-3008/TOTAL'
+	!define	FLOW_VLV1	'CV-3008'
+	!define	FLOW	'FI-3008'
+	!define CHG_TGT		'R6-WTRCHG-EM/OP001'
+
+@enduml
