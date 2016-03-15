@@ -29,6 +29,7 @@ All attribute classes should be defined as a mixin of one or more parent
 import time, os
 import tools.config as config
 from tools.Utilities.Logger import LogTools
+import operator
 
 __author__ = 'ekoapche'
 
@@ -341,7 +342,7 @@ class ModeAttribute(NamedDiscrete):
     def read_Mode(self):
         return self.read()
 
-class PositionAttribute(NamedDiscrete):
+class PositionAttribute(ModeAttribute):
     '''
     Unique class of attribute for Valve/Pump position
     '''
@@ -361,7 +362,7 @@ class PositionAttribute(NamedDiscrete):
     def __init__(self, tag, attr_path =''):
         self.attr_path = attr_path
         self.tag = tag
-        NamedDiscrete.__init__(self, tag, int_dict=PositionAttribute.bool_position_dict, attr_path=self.attr_path)
+        ModeAttribute.__init__(self.tag, self.attr_path)
 
     def write(self, target_value, **kwargs):
         '''
@@ -375,7 +376,7 @@ class PositionAttribute(NamedDiscrete):
             target_value = PositionAttribute.bool_position_dict[target_value]
 
         if not mode:
-            more = self.read_Mode()[0]
+            mode = self.read_Mode()[0]
 
         if type(mode) in [str, unicode]:
             mode = mode.upper()
@@ -544,15 +545,29 @@ class EMCMDAttribute(Attribute_Base):
         self.tag = tag
         Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
 
-    def write(self, command):
+    def write(self, target):
         self.attr_path = 'A_COMMAND'
-        if command in [str, unicode]:
-            command = EMCMDAttribute.EMCMD_int_dict[command]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(command)
+        self.target = target
+        if target in [str, unicode]:
+            self.target = EMCMDAttribute.EMCMD_int_dict[target]
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(self.target)
 
-    def read(self):
+    def readtarget(self):
         self.attr_path = 'A_TARGET'
         return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def readPV(self):
+        self.attr_path = 'A_PV'
+        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+
+    def execute(self, command = 'write', **kwargs):
+        if command == 'write':
+            target = kwargs.pop('target', '')
+            self.write(target)
+            readtarget = self.readtarget()[0]
+            readPV = self.readPV()[0]
+            #TODO: confirm below:
+            return readtarget == self.target or readPV == self.target
 
 
 class PhaseCMDAttribute(NamedDiscrete):
@@ -592,13 +607,53 @@ class OtherAttribute(Attribute_Base):
             else:
                 raise TypeError
 
+class AttributeDummy(Attribute_Base):
+    def __init__(self):
+        Attribute_Base.__init__(self, tag = '')
+
+    def read(self):
+        pass
+
+    def write(self):
+        pass
+
+    def execute(self):
+        pass
 
 #####################Transition Attribute Types (use read functions and compare) #########################
-class ComparisonAttributes:
+class ComparisonAttributes(object):
+
+    operator_dict = {'>': operator.gt,
+                     '>=': operator.ge,
+                     '==': operator.eq,
+                     '=': operator.eq,
+                     '<': operator.lt,
+                     '<=': operator.le,
+                     '!=': operator.ne}
+
     #TODO: Get system values with the read functions above
     def __init__(self, **kwargs):
         # just a string
-        lhs = kwargs.pop('leftside', AttributeDummy())
+        self.op = kwargs.pop('op', '')
+        self.lhs = kwargs.pop('lhs', AttributeDummy())
+        self.rhs = kwargs.pop('rhs', AttributeDummy())
+
+    def execute(self, **kwargs):
+        if self.op not in ComparisonAttributes.operator_dict:
+            raise TypeError
+
+        leftval = self.lhs.read()[0] # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+        rightval = self.rhs.read()[0]
+        op = ComparisonAttributes.operator_dict[self.op]
+        return op(leftval, rightval)
+
+    def set_read_hook(self, readhook):
+        self.lhs.set_read_hook(readhook)
+        self.rhs.set_read_hook(readhook)
+
+    def set_write_hook(self, writehook):
+        self.lhs.set_write_hook(writehook)
+        self.rhs.set_write_hook(writehook)
 
 
 if __name__ == "__main__":
