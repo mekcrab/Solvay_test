@@ -5,21 +5,37 @@ i.e. copy this to the code:
 !include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
 
 @startuml
-!define charge_target 1000
+
+state CHARGE {
+!define good_charge_target 1000
+!define bad_charge_target 5
 
 [*] --> StartEM
 StartEM: Set S_EMC_CHARGE to CHARGE
 
 StartEM --> OAR_ChargeTarget: Verify S_EMC_CHARGE is in CHARGE and \n FLOW_TOT = 0 and CHG_TGT = 0
 
-OAR_ChargeTarget: Set OAR Input to charge_target
+OAR_ChargeTarget --> ValveOpened: Set OAR Input to good_charge_target
+OAR_ChargeTarget --> NotCharge: Set OAR Input to bad_charge_target
 
-OAR_ChargeTarget --> ValveOpened: Verify FLOW_VLV1 Open
+NotCharge: Verify S_EMC_CHARGE not in CHARGE
+
+ValveOpened: Verify FLOW_VLV1 Open
 
 ValveOpened --> ChargeComplete: Wait for FLOW_TOT >= CHG_TGT
 
 ChargeComplete --> [*]: Verify FLOW_VLV1 Closed and S_EMC_CHARGE in CHARGE complete
+NotCharge --> [*]
 
+}
+
+state CLOSE_ALL{
+[*] --> Set_EM_Close
+Set_EM_Close: Set S_EMC_CHARGE to CLOSE ALL
+
+Set_EM_Close --> [*]: Verify FLOW_VLV1 Closed and S_EMC_CHARGE in CLOSE ALL complete
+
+}
 @enduml
 
 # CHG_TGT is an OP, it can be read/write with OtherAttribute
