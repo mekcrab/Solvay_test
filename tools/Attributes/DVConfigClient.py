@@ -38,20 +38,40 @@ class DVConfigClient(jsocket.JsonClient):
             "tag": tag
                    }
 
-
         self.send_obj(rpc_req)
-        time.sleep(1)
+        time.sleep(0.5)
         info = self.read_obj()
         print info
 
+        return info
 
+    def get_alias(self, tag, alias):
+        '''
+        Returns dictionary of information resolving alias
+        :param tag:
+        :param alias:
+        :return:
+        '''
+        rpc_req = {
+            "method": "get_alias",
+            "tag": tag,
+            "reference_id": alias
+        }
+
+        self.send_obj(rpc_req)
+        time.sleep(0.5)
+        info = self.read_obj()
+        print info
         return info
 
 
 if __name__ == "__main__":
-    dv_client = DVConfigClient()
+    client = DVConfigClient()
 
-    dv_client.connect()
-
-    dv_client.get_module_info('CV-4148')
+    client.connect()
+    while 1:
+        client.get_module_info('CV-4148')
+        time.sleep(1)
+        client.get_alias('R3-PRES-EM', 'ATM_VENT_VLV')
+        time.sleep(1)
 

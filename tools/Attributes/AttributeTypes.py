@@ -253,13 +253,6 @@ class NamedDiscrete(DiscreteAttribute):
         raise NotImplementedError
 
 
-class DiscreteCondition(DiscreteAttribute):
-
-    def execute(self):
-        '''Evaluates if discrete condition is true'''
-        raise NotImplementedError
-
-
 class AnalogAttribute(Attribute_Base):
     '''Base class for analog/continuously valued attributes
         Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values)
@@ -267,40 +260,6 @@ class AnalogAttribute(Attribute_Base):
     def execute(self):
         raise NotImplementedError
 
-
-class AnalogCondition(AnalogAttribute):
-
-    def __init__(self, tag, target_value, operator='=', value_tolerance = 0.01, attr_path=''):
-        self.val_tol = value_tolerance
-        self.target = target_value
-        self.operator = operator  # single character of operator type
-
-        AnalogAttribute.__init__(self, tag, attr_path=attr_path)
-
-    def execute(self):
-        '''
-        Evaluates analog comparision: <, >, = (within tolerance), != (within tolerance)
-        '''
-        # gather required parameters to build python expression
-        current_value = self.read()
-        # read a target value from the system if required
-        if isinstance(self.target, Attribute_Base):
-            target = self.target.read()
-        else:
-            target = self.target
-        # this string will be evaluated as a python expression
-        expr = ''.join([str(current_value), self.operator, str(target)])
-
-        # evaluate condition
-        cnd_val = eval(expr)
-
-        # check tolerance
-        # fixme: add tolerance band (will be based on operator type....)
-
-        # return result
-        self.complete = cnd_val
-        # call parent method to complete
-        return self.complete
 
 ############################# State Attribute Types (Set Values) ##############################
 
@@ -399,21 +358,6 @@ class PositionAttribute(ModeAttribute):
                 return target_value == current_value
             else:
                 raise TypeError
-
-
-class StatusAttribute(NamedDiscrete):
-    '''
-    Unique class of attribute for evaluation of OPC status
-    '''
-    # dictionary of status names to integer values
-    status_int_dict = {
-        'BAD': 0,
-        'GOOD': 128,
-        # etc...
-    }
-
-    def __init__(self, tag, attr_path=''):
-       NamedDiscrete.__init__(self, tag, int_dict=StatusAttribute.status_int_dict, attr_path=attr_path)
 
 
 class PromptAttribute(Attribute_Base):
@@ -642,7 +586,7 @@ class ComparisonAttributes(object):
         if self.op not in ComparisonAttributes.operator_dict:
             raise TypeError
 
-        leftval = self.lhs.read()[0] # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+        leftval = self.lhs.read()[0] # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
         rightval = self.rhs.read()[0]
         op = ComparisonAttributes.operator_dict[self.op]
         return op(leftval, rightval)
