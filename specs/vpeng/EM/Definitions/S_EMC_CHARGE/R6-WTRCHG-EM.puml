@@ -4,6 +4,9 @@
 	!define	FLOW_TOT	'FQIC-3008/TOTAL'
 	!define	FLOW_VLV1	'CV-3008'
 	!define	FLOW	'FI-3008'
-	!define CHG_TGT		'R6-WTRCHG-EM/OP001'
+	!define	CHG_SP	'R6-WTRCHG-EM/OP001'
+	!define	RX_TARE	'ignore'
+	!define	good_charge_target	1000
+	!define	bad_charge_target	5
 
 @enduml

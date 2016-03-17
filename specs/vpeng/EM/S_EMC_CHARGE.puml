@@ -6,36 +6,50 @@ i.e. copy this to the code:
 
 @startuml
 
+
+state CLOSE_ALL{
+
+[*] --> CloseValve
+CloseValve: Close FLOW_VLV1
+CloseValve --> [*]
+
+}
+
 state CHARGE {
-!define good_charge_target 1000
-!define bad_charge_target 5
 
 [*] --> StartEM
-StartEM: Set S_EMC_CHARGE to CHARGE
 
-StartEM --> OAR_ChargeTarget: Verify S_EMC_CHARGE is in CHARGE and \n FLOW_TOT = 0 and CHG_TGT = 0
+StartEM: Set FLOW_TOT = 0
+StartEM: Set CHG_SP = 0
+StartEM: Set RX_TARE = 0
 
-OAR_ChargeTarget --> ValveOpened: Set OAR Input to good_charge_target
-OAR_ChargeTarget --> NotCharge: Set OAR Input to bad_charge_target
+StartEM --> RecipeCTRL: OWNER_ID = 'Recipe'
+RecipeCTRL: Set CHG_SP = RCP_TGT
 
-NotCharge: Verify S_EMC_CHARGE not in CHARGE
+RecipeCTRL --> OpenValve
 
-ValveOpened: Verify FLOW_VLV1 Open
+StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
+OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"
 
-ValveOpened --> ChargeComplete: Wait for FLOW_TOT >= CHG_TGT
+OAR_ChargeTarget --> NotCharge: OAR Input is bad_charge_target
+OAR_ChargeTarget --> Set_Charge_TGT: OAR Input is good_charge_target
 
-ChargeComplete --> [*]: Verify FLOW_VLV1 Closed and S_EMC_CHARGE in CHARGE complete
+Set_Charge_TGT: Set CHG_SP to good_charge_target
+Set_Charge_TGT --> OpenValve
+
+
+NotCharge: Close FLOW_VLV1
+
+OpenValve: Open FLOW_VLV1
+
+OpenValve --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
+
+ChargeComplete: Close FLOW_VLV1
+ChargeComplete --> [*]: Verify FLOW_VLV1 Closed
 NotCharge --> [*]
 
 }
 
-state CLOSE_ALL{
-[*] --> Set_EM_Close
-Set_EM_Close: Set S_EMC_CHARGE to CLOSE ALL
-
-Set_EM_Close --> [*]: Verify FLOW_VLV1 Closed and S_EMC_CHARGE in CLOSE ALL complete
-
-}
 @enduml
 
 # CHG_TGT is an OP, it can be read/write with OtherAttribute

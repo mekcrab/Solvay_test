@@ -1,0 +1,80 @@
+
+Definitions for all of the instances in this EM class enclosed in the Definitions folder.
+Use a !include <instance path> to substitute Aliases/Parameter_path in this flowchart.
+i.e. copy this to the code:
+!include Definitions/S_EMC_CHG_BLWDN/R10-TK36CHG-EM.puml
+
+@startuml
+
+
+state CLOSE_ALL{
+
+[*] --> CloseAllVlvs
+CloseAllVlvs: Close FLOW_VLV1
+CloseAllVlvs: Close FLOW_VLV2
+CloseAllVlvs: Set FLOW_CTL to 0%
+CloseAllVlvs --> [*]
+
+}
+
+state CHARGE {
+
+[*] --> StartEM
+StartEM: Set FLOW_TOT = 0
+StartEM: Set CHG_SP = 0
+StartEM: Set RX_TARE = 0
+
+StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
+OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"
+OAR_ChargeTarget --> NotCharge: OAR Input is bad_charge_target
+OAR_ChargeTarget --> Charge: OAR Input is good_charge_target
+
+state Charge {
+[*] --> OpenValves
+
+NotCharge: Close FLOW_VLV1
+NotCharge: Close FLOW_VLV2
+NotCharge: Set FLOW_CTL to 0%
+
+OpenValves: Set FLOW_CTL to 15% in RCAS
+OpenValves: Open FLOW_VLV1
+
+OpenValves --> Diverge: Wait for FLOW_TOT >= (CHG_SP - 200)
+
+Diverge --> AutoMCA: FLOW_CTL in RCAS and PV_D > 100
+AutoMCA: Set FLOW_CTL to 0.5*PV_D in RCAS
+AutoMCA --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
+
+Diverge --> ManMCA: FLOW_CTL in ROUT and OUTP > 20
+ManMCA: Set FLOW_CTL to 0.5*OUT in ROUT
+ManMCA --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
+
+ChargeComplete: Close FLOW_VLV1
+ChargeComplete: Set FLOW_CTL to 0%
+}
+
+ChargeComplete --> Blowdown: BLWDN_Needed = True
+
+state Blowdown{
+
+[*] --> OpenBlwdnValve
+OpenBlwdnValve: Open FLOW_VLV2
+
+OpenBlwdnValve --> CloseBlwdnValve: Wait for blowdown_time
+
+CloseBlwdnValve: Close FLOW_VLV2
+
+}
+
+ChargeComplete --> [*]: BLWDN_Needed = False
+CloseBlwdnValve --> [*]
+NotCharge --> [*]
+
+
+}
+
+@enduml
+
+# CHG_TGT is an OP, it can be read/write with OtherAttribute
+# FLOW_TOT can be OtherAttribute too, or IndicationAttribute if declare tag = 'FQIC-####' and attr_path = 'TOTAL'
+# FLOW_VLV1 is PositionAttribute
