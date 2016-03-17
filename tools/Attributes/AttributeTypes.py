@@ -125,6 +125,10 @@ class Attribute_Base(object):
         self.exe_cnt += 1
         return self.set_complete(False)
 
+    def force(self):
+        '''Forces a value, if possible. Used for write-based tests or forcing stuck values'''
+        raise NotImplementedError
+
     def save_value(self):
         '''Adds a timestamp, value tuple to this attribute's self.data
         for later retrieval and analysis
@@ -225,7 +229,7 @@ class DiscreteAttribute(Attribute_Base):
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def execute(self, command = 'compare', op = '=', rhs = 0):
+    def execute(self, command='compare', op='=', rhs=0):
         if command == 'compare':
             #lhs = Attribute_Base(self.tag, self.attr_path)
             #lhs.set_read_hook(connection.read)
@@ -245,7 +249,14 @@ class DiscreteAttribute(Attribute_Base):
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
-    def __init__(self, tag, int_dict = {}, attr_path=''):
+    def __init__(self, tag, int_dict={}, attr_path=''):
+        '''
+
+        :param tag:
+        :param int_dict:
+        :param attr_path:
+        :return:
+        '''
         self.int_dict = int_dict
         Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
@@ -269,13 +280,12 @@ class ModeAttribute(NamedDiscrete):
     '''
     # integer mapping of mode values to MODE.TARGET
     # --> used for writes by default
-    target_int_dict = {'LO':4, 'MAN':8, 'AUTO' : 16, 'CAS' : 48, 'ROUT':144, 'RCAS':80}
+    target_int_dict = {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 48, 'ROUT': 144, 'RCAS': 80}
 
     # integer mapping MODE.ACTUAL (not sure why these are different...)
     # --> used for reads by default
     actual_int_dict = \
-        {'LO' : 4, 'MAN' : 8, 'AUTO' : 16, 'CAS' : 32, 'ROUT':128, 'RCAS':64}
-
+        {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
     def __init__(self, tag, attr_path='MODE'):
         NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
@@ -301,26 +311,34 @@ class ModeAttribute(NamedDiscrete):
     def read_Mode(self):
         return self.read()
 
+
 class PositionAttribute(ModeAttribute):
     '''
     Unique class of attribute for Valve/Pump position
     '''
-    bool_position_dict = {'OPEN' : 1, 'CLOSE': 0,
+    bool_position_dict = {'OPEN': 1, 'CLOSE': 0,
                      'OPENED': 1, 'CLOSED': 0,
                      'START': 1, 'STOP': 0,
                      'RUNNING': 1, 'STOPPED': 0}
 
-    modenum_str_dict = {16: 'AUTO', 32 : 'CAS', 48: 'CAS', 128: 'ROUT', 144 : 'ROUT', 64: 'RCAS', 80:'RCAS'}
+    modenum_str_dict = {16: 'AUTO', 32: 'CAS', 48: 'CAS', 128: 'ROUT', 144: 'ROUT', 64: 'RCAS', 80: 'RCAS'}
 
     # mode:attr_path dictionary --> used for writes by default
-    mode_act_dict = {'AUTO' : 'SP_D', 'CAS' : 'REQ_SP', 'ROUT':'REQ_OUTP', 'RCAS':'REQ_SP'}
+    mode_act_dict = {'AUTO': 'SP_D', 'CAS': 'REQ_SP', 'ROUT': 'REQ_OUTP', 'RCAS': 'REQ_SP'}
 
     # mode: attr_path dictionary--> used for reads by default
-    mode_confim_dict = {'AUTO' : 'PV_D', 'CAS' : 'PV_D', 'ROUT':'OUTP', 'RCAS':'PV_D'}
+    mode_confim_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUTP', 'RCAS': 'PV_D'}
 
-    def __init__(self, tag, attr_path =''):
-        self.attr_path = attr_path
+    def __init__(self, tag, attr_path ='', mode_attr=None):
         self.tag = tag
+        self.attr_path = attr_path
+
+        if not mode_attr:
+            self.mode = mode_attr
+        elif not isinstance(mode_attr, ModeAttribute):
+            print "Mode must be a mode attribute type"
+            raise TypeError
+
         ModeAttribute.__init__(self.tag, self.attr_path)
 
     def write(self, target_value, **kwargs):

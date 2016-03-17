@@ -5,6 +5,7 @@ Module contains client definitions to get DeltaV configuration data from a DVCon
 import jsocket
 import time
 
+
 class DVConfigClient(jsocket.JsonClient):
 
     def __init__(self, address='127.0.0.1', port=5489):
@@ -41,7 +42,6 @@ class DVConfigClient(jsocket.JsonClient):
         self.send_obj(rpc_req)
         time.sleep(0.5)
         info = self.read_obj()
-        print info
 
         return info
 
@@ -61,7 +61,7 @@ class DVConfigClient(jsocket.JsonClient):
         self.send_obj(rpc_req)
         time.sleep(0.5)
         info = self.read_obj()
-        print info
+
         return info
 
 
@@ -69,9 +69,9 @@ if __name__ == "__main__":
     client = DVConfigClient()
 
     client.connect()
-    while 1:
-        client.get_module_info('CV-4148')
-        time.sleep(1)
-        client.get_alias('R3-PRES-EM', 'ATM_VENT_VLV')
-        time.sleep(1)
+    # while 1:
+    client.get_module_info('CV-4148')
+    time.sleep(1)
+    client.get_alias('R3-PRES-EM', 'ATM_VENT_VLV')
+    time.sleep(1)
 
