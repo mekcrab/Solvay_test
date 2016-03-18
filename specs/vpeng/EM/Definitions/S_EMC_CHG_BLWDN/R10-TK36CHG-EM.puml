@@ -9,7 +9,8 @@
 	!define	RX_TARE	'WI-2120'
 	!define	good_charge_target	1000
 	!define	bad_charge_target	0.5
-	!define blowdown_time	5
+	!define blowdown_time	5 minutes
+	!define valve_position	15%
 	!define BLWDN_Needed	'R10-TK36CHG-EM/RP007'
 
 @enduml

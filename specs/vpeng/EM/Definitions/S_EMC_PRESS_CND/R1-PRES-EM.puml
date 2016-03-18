@@ -1,0 +1,20 @@
+@startuml
+
+!define S_EMC_PRESS_CND 'R1-PRES-EM'
+!define	DECANT_VENT_VLV	'ignore'
+!define	VAC_KO_SCRUB	'ignore'
+!define	PRESS_GAP_CTL	'PIC-1636'
+!define	SCRUB_VENT_VLV	'CV-1639'
+!define	VAC_CTL	'PIC-1637'
+!define	VAC_PMP	'HS-2804'
+!define	VAC_RAMP	'PIC-1637_RAMP'
+!define	VAC_STM_VLV	'CV-1647'
+
+!define pressure_setpoint 'R1-PRES-EM/OP001_VALUE'
+!define nitrogen_valve  'CV-1606'
+!define control_valve_position 30%
+!define ramp_target 100 mmHg
+!define target_pressure 'R1-PRES-EM/OP002_VALUE'
+
+
+@enduml

@@ -3,9 +3,10 @@ Definitions for all of the instances in this EM class enclosed in the Definition
 Use a !include <instance path> to substitute Aliases/Parameter_path in this flowchart.
 i.e. copy this to the code:
 !include Definitions/S_EMC_CHG_BLWDN/R10-TK36CHG-EM.puml
+!include Definitions/S_EMC_CHG_BLWDN/R9-TK36CHG-EM.puml
+!include Definitions/S_EMC_CHG_BLWDN/R6-TK36CHG-EM.puml
 
 @startuml
-
 
 state CLOSE_ALL{
 
@@ -24,6 +25,7 @@ StartEM: Set FLOW_TOT = 0
 StartEM: Set CHG_SP = 0
 StartEM: Set RX_TARE = 0
 
+StartEM --> Charge: OWNER_ID = 'Recipe'
 StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
 OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"
 OAR_ChargeTarget --> NotCharge: OAR Input is bad_charge_target
@@ -34,9 +36,9 @@ state Charge {
 
 NotCharge: Close FLOW_VLV1
 NotCharge: Close FLOW_VLV2
-NotCharge: Set FLOW_CTL to 0%
+NotCharge: Set FLOW_CTL to 0
 
-OpenValves: Set FLOW_CTL to 15% in RCAS
+OpenValves: Set FLOW_CTL to valve_position in RCAS
 OpenValves: Open FLOW_VLV1
 
 OpenValves --> Diverge: Wait for FLOW_TOT >= (CHG_SP - 200)
@@ -50,7 +52,7 @@ ManMCA: Set FLOW_CTL to 0.5*OUT in ROUT
 ManMCA --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
 
 ChargeComplete: Close FLOW_VLV1
-ChargeComplete: Set FLOW_CTL to 0%
+ChargeComplete: Set FLOW_CTL to 0
 }
 
 ChargeComplete --> Blowdown: BLWDN_Needed = True

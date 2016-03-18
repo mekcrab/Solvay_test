@@ -23,10 +23,7 @@ StartEM: Set FLOW_TOT = 0
 StartEM: Set CHG_SP = 0
 StartEM: Set RX_TARE = 0
 
-StartEM --> RecipeCTRL: OWNER_ID = 'Recipe'
-RecipeCTRL: Set CHG_SP = RCP_TGT
-
-RecipeCTRL --> OpenValve
+StartEM --> OpenValve: OWNER_ID = 'Recipe'
 
 StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
 OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"
