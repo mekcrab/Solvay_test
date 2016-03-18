@@ -1,0 +1,57 @@
+
+Definitions for all of the instances in this EM class enclosed in the Definitions folder.
+Use a !include <instance path> to substitute Aliases/Parameter_path in this flowchart.
+i.e. copy this to the code:
+!include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
+
+@startuml
+
+
+state CLOSE_ALL{
+
+[*] --> CloseValve
+CloseValve: Close FLOW_VLV1
+CloseValve --> [*]
+
+}
+
+state CHARGE {
+
+[*] --> StartEM
+
+StartEM: Set FLOW_TOT = 0
+StartEM: Set CHG_SP = 0
+StartEM: Set RX_TARE = 0
+
+StartEM --> RecipeCTRL: OWNER_ID = 'Recipe'
+RecipeCTRL: Set CHG_SP = RCP_TGT
+
+RecipeCTRL --> OpenValve
+
+StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
+OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"
+
+OAR_ChargeTarget --> NotCharge: OAR Input is bad_charge_target
+OAR_ChargeTarget --> Set_Charge_TGT: OAR Input is good_charge_target
+
+Set_Charge_TGT: Set CHG_SP to good_charge_target
+Set_Charge_TGT --> OpenValve
+
+
+NotCharge: Close FLOW_VLV1
+
+OpenValve: Open FLOW_VLV1
+
+OpenValve --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
+
+ChargeComplete: Close FLOW_VLV1
+ChargeComplete --> [*]: Verify FLOW_VLV1 Closed
+NotCharge --> [*]
+
+}
+
+@enduml
+
+# CHG_TGT is an OP, it can be read/write with OtherAttribute
+# FLOW_TOT can be OtherAttribute too, or IndicationAttribute if declare tag = 'FQIC-####' and attr_path = 'TOTAL'
+# FLOW_VLV1 is PositionAttribute

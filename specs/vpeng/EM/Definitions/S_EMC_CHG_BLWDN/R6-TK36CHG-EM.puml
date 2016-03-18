@@ -1,0 +1,15 @@
+@startuml
+
+	!define	S_EMC_CHG_BLWDN	'R6-TK36CHG-EM'
+	!define	FLOW_TOT	'FQIC-4684/TOTAL'
+	!define	FLOW_VLV1	'CV-4685'
+	!define	FLOW_VLV2	'CV-4689'
+	!define	FLOW_CTL	'FIC-4684'
+	!define	CHG_SP	'R6-TK36CHG-EM/OP001'
+	!define	RX_TARE	'WI-2120'
+	!define	good_charge_target	1000
+	!define	bad_charge_target	0.5
+	!define blowdown_time	5
+	!define BLWDN_Needed	'R6-TK36CHG-EM/RP007'
+
+@enduml

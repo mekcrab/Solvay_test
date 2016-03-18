@@ -1,0 +1,12 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R6-TK50CHG-EM'
+	!define	FLOW_TOT	'FQIC-2208/TOTAL'
+	!define	FLOW_VLV1	'CV-2202'
+	!define	FLOW_CTL	'FIC-2208'
+	!define	CHG_SP	'R6-TK50CHG-EM/OP001'
+	!define	RX_TARE	'WI-2120'
+	!define	good_charge_target	1000
+	!define	bad_charge_target	0.5
+
+@enduml

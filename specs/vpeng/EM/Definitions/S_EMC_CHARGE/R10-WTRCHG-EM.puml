@@ -1,0 +1,12 @@
+@startuml
+
+!define	S_EMC_CHARGE	'R10-WTRCHG-EM'
+!define	FLOW	'FI-4289'
+!define	FLOW_VLV1	'CV-4289'
+!define	FLOW_TOT	'FQIC-4289/TOTAL'
+!define CHG_SP   'R10-WTRCHG-EM/OP001'
+!define RX_TARE		'ignore'
+!define good_charge_target		1000
+!define bad_charge_target		5
+
+@enduml

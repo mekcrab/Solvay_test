@@ -1,0 +1,12 @@
+@startuml
+
+!define	S_EMC_CHARGE	'R9-TK50CHG-EM'
+!define	FLOW_CTL	'FIC-2432'
+!define	FLOW_TOT	'FQIC-2432/TOTAL'
+!define	FLOW_VLV1	'CV-2432'
+!define CHG_SP     'R9-TK50CHG-EM/OP001'
+!define RX_TARE		'WI-2425'
+!define good_charge_target		1000
+!define bad_charge_target		0.5
+
+@enduml

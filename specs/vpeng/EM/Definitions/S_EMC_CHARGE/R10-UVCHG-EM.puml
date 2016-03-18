@@ -1,0 +1,12 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R10-UVCHG-EM'
+	!define	FLOW_TOT	'FQIC-4278/TOTAL'
+	!define	FLOW_VLV1	'CV-4278'
+	!define	FLOW	'FI-4278'
+	!define CHG_SP		'R10-UVCHG-EM/OP001'
+	!define RX_TARE		'ignore'
+	!define good_charge_target		1000
+	!define bad_charge_target		5
+
+@enduml

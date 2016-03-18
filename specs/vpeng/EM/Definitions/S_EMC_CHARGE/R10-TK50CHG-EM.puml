@@ -1,0 +1,12 @@
+@startuml
+
+	!define	S_EMC_CHARGE	'R10-TK50CHG-EM'
+	!define	FLOW_TOT	'FQIC-4270/TOTAL'
+	!define	FLOW_VLV1	'CV-4270'
+	!define	FLOW_CTL	'FIC-4270'
+	!define CHG_SP		'R10-TK50CHG-EM/OP001'
+	!define RX_TARE		'WI-4260'
+	!define good_charge_target		1000
+	!define bad_charge_target		0.5
+
+@enduml
