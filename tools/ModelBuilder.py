@@ -84,13 +84,14 @@ class StateModelBuilder(ModelBuilder):
     def __init__(self, *args, **kwargs):
 
         ModelBuilder.__init__(self, StateModel.StateDiagram)
+        self.logger = dlog.MakeChild('StateModelBuilder')
 
         # dictionary constructor - list of key,value pairs
         update_dict = dict( [
             (STATE, self.assign_state),
             (SALIAS, self.lookup_state),
             (SEND, self.end_superstate),
-            (TSOURCE, self.assign_trans)
+            (TSOURCE, self.assign_trans),
             ] )
 
         StateModelBuilder.action_tokens.update(update_dict)
@@ -99,6 +100,7 @@ class StateModelBuilder(ModelBuilder):
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
         self.diagram = self.model  # bind model instance to new name for code clarity
 
+        # set attribute builder only if assigned on instansiation, otherwise leave as NoneType
         self.attr_builder = kwargs.pop('attribute_builder', None)
         if self.attr_builder:
             self.set_attribute_builder(self.attr_builder)
@@ -109,7 +111,7 @@ class StateModelBuilder(ModelBuilder):
         :param attribute_builder:
         :return:
         '''
-        if not isinstance (attribute_builder, AttributeBuilder.AttributeBuilder):
+        if not isinstance(attribute_builder, AttributeBuilder.AttributeBuilder):
             raise TypeError
         else:
             self.attr_builder = attribute_builder
@@ -135,11 +137,7 @@ class StateModelBuilder(ModelBuilder):
         leave as raw string/unicode type.
         In either case the attribute is added to the state's attribute list.
         '''
-        if self.attr_builder and type(attribute_value) in [str, unicode]:
-            attribute_value = self.attr_builder.solve_attribute(attribute_value)
-        else:
-            pass
-        self.diagram.add_state_attr(state_name, attribute_value)
+        self.diagram.add_state_attr(state_name, self.create_attribute_instances(attribute_value))
 
     def start_superstate(self, state_name):
         self.q.popleft()[1]  # consume delimiter "{"
@@ -163,9 +161,28 @@ class StateModelBuilder(ModelBuilder):
         if len(self.q) > 0 and self.q[0][0] == TATTR:
             transition_attribute = self.q.popleft()[1]
             self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1],
-                                        attributes=transition_attribute)
+                                        attributes=self.create_attribute_instances(transition_attribute))
         else:
             self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
+
+    def create_attribute_instances(self, raw_value):
+        '''
+        Create an AttributeType instance if attribute builder is assigned to this StateModelBuilder instance
+        :param attribute_string:
+        :return:
+        '''
+
+        if self.attr_builder and type(raw_value) in [str, unicode]:
+            attribute_value = self.attr_builder.solve_attribute(raw_value)
+            if isinstance(attribute_value, AttributeBuilder.Attribute_Base):
+                self.logger.debug("Added attribute instance %s, as %s", attribute_value, type(attribute_value))
+
+            elif attribute_value == []:  # return raw string if not attribute value match
+                self.logger.warning("No attribute instance created for %s", raw_value)
+                attribute_value = raw_value
+
+        return attribute_value
+
 
 def build_state_diagram(fpath, attribute_builder=None, preprocess=True):
     '''
@@ -178,7 +195,7 @@ def build_state_diagram(fpath, attribute_builder=None, preprocess=True):
     from PlantUML_Lexer import get_tokens_from_file
 
     tkns = get_tokens_from_file(fpath, preprocess=preprocess)
-    builder = StateModelBuilder()
+    builder = StateModelBuilder(attribute_builder=attribute_builder)
     diagram = builder.parse(tkns)
 
     dlog.rootlog.info("New diagram parsed from ", fpath)
@@ -205,5 +222,7 @@ if __name__ == "__main__":
 
     print "Parsed", len(diagram.state_names.values()), "states"
     print "Parsed", len(diagram.get_transitions()), "transitions"
+
+    print "Attributes generated:", diagram.collect_attributes()
 
     print "=================== Testing Complete ==================="

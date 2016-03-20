@@ -5,6 +5,8 @@ i.e. copy this to the code:
 
 @startuml
 !include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
+!define OWNER_ID 'EM_NAME/OWNER_ID'
+
 
 state CLOSE_ALL{
     [*] --> CloseValve
@@ -19,6 +21,7 @@ state CHARGE {
     StartEM: Set FLOW_TOT = 0
     StartEM: Set CHG_SP = 0
     StartEM: Set RX_TARE = 0
+    StartEM: Close FLOW_VLV1
 
     StartEM --> Set_Charge_TGT: OWNER_ID != 'Operator'
     StartEM --> PromptCharge: OWNER_ID = 'Operator'
@@ -33,10 +36,10 @@ state CHARGE {
     }
 
     Set_Charge_TGT: Set CHG_SP to FLOW_TOT
-    Set_Charge_TGT --> Check_TGT : FLOW_TOT = \nCHG_SP
+    Set_Charge_TGT --> Check_TGT : FLOW_TOT = \n CHG_SP
 
-    Check_TGT --> ChargeComplete: CHG_SP < \nLOW_CHG_SP
-    Check_TGT --> OpenValve: CHG_SP >= \nLOW_CHG_SP
+    Check_TGT --> ChargeComplete: CHG_SP < \n LOW_CHG_SP
+    Check_TGT --> OpenValve: CHG_SP >= \n LOW_CHG_SP
 
     OpenValve: Open FLOW_VLV1
     OpenValve --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP

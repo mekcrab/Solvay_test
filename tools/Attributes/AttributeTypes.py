@@ -177,10 +177,13 @@ class Compare(Attribute_Base):
             self.lhs = lhs
             self.rhs = rhs
 
-        if opr not in ['<', '>', '<=', '>=', '!=']:
+        if opr not in ['<', '>', '<=', '>=', '!=', '=']:
             raise TypeError
         else:
-            self.opr = opr
+            if opr is '=':  # set to equivalency python operator
+                self.opr = '=='
+            else:
+                self.opr = opr
 
         self.deadband = deadband  # deadband applied to rhs of comparison
 
@@ -389,87 +392,62 @@ class PromptAttribute(Attribute_Base):
         #FP/INT, etc...
     }
 
-    OAR_Type_dict = {
-        'YES': 'YES/NO',
-        'NO': 'YES/NO',
-        'OK': 'OK'
-
-    }
-
-    Type_int_dict = {
-        'RESET': 0,
-        'NONE': 1,
-        'INT - NO LIMITS': 2,
-        'INT - WITH LIMITS': 3,
-        'FP - NO LIMITS': 4,
-        'FP - WITH LIMITS': 5,
-        'YES/NO': 6,
-        'OK': 7,
-        'STRING': 8
-
-    }
-    class_path_dict = {'PHASE': 'FAIL_MONITOR', 'EM': 'MONITOR'}
-
-    def __init__(self, Class, tag, attr_path =''):
+    def __init__(self, tag, target, message_string, message_path, response_path):
         '''
-
-        :param Class: define if it's a phase or EM
-        :param tag: should be the phase or EM instance name
-        :param attr_path:
+        :param target: target value of prompt response
+        :param message: string of the prompt message
         :return:
         '''
-        self.tag = tag
-        self.Class = Class.upper()
-        Attribute_Base.__init__(self, tag, attr_path=attr_path)
+        self.target = target
 
-    def write(self, input):
-        '''read prompt, define the prompt type, then write input (YES/NO/OK/FP/INT) to
-        '^/FAIL_MONITOR/OAR/INPUT' for phase classes and '^/MONITOR/OAR/INPUT' for EM classes
+        self.message_string = message_string
+
+        self.message = Attribute_Base.__init__(self, tag, attr_path=message_path)
+        self.response = Attribute_Base.__init__(self,tag, attr_path=response_path)
+
+    def set_read_hook(self, readhook):
+        '''Sets readhook for self.message only'''
+        self.message.set_read_hook(readhook)
+
+    def set_write_hook(self, writehook):
+        '''Sets the writehook for self.response only'''
+        self.response.set_write_hook(writehook)
+
+    def write(self, input=None):
+        '''
+        Writes the target response to the prompt path
         '''
 
-        if input in [str, unicode]: # If input is Yes/No or OK
-            self.input = input.upper()
-            input = PromptAttribute.OAR_int_dict[self.input]
+        if input:
+            self.response.write(input)
+        else:
+            self.resonse.write(self.target)
 
-        #TODO: Verify if it's answering the right question. Maybe do it in the generator?
-        #TODO: My thought was to pull out the OAR_MSG and OAR_Type with readprompt function and compare.
-        #if input_type == OAR_Type and keyword in OAR_MSG:
+    def read(self):
+        '''
+        Reads the message string for the prompt
+        :return: string of the OAR message
+        '''
+        read_tup = self.message.read(param='CVS')  # read message string
+        if read_tup[1] == "Good":
+            return read_tup[0]
+        else:
+            # bad read value, problem with path string or client
+            raise IOError
 
-        self.input_path = PromptAttribute.class_path_dict[self.Class] + 'OAR/INPUT'
-        return Attribute_Base(self.tag, attr_path = self.input_path).write(input)
+    def execute(self):
+        '''Reads prompt message, checking against message string'''
+        message_value = self.read()
 
-    def readprompt(self):
-        OAR_Type = 1
-        if self.Class in PromptAttribute.class_path_dict:
-            self.oar_path = PromptAttribute.class_path_dict[self.Class] + 'OAR/TYPE'
-            OAR_Type = Attribute_Base(self.tag, attr_path = self.oar_path).read()
-        MSG1 = Attribute_Base(self.tag, attr_path = 'P_MSG1').read()
-        MSG2 = Attribute_Base(self.tag, attr_path = 'P_MSG2').read()
+        if message_value == self.message_string:
+            self.set_complete(True)
 
-        return (OAR_Type, MSG1, MSG2)
-
-    def readinput(self):
-        return Attribute_Base(self.tag, attr_path = self.input_path).read()
-
-    def execute(self, command = 'write', **kwargs):
-        if command == 'write':
-            input = kwargs.pop('input', '')
-            input_type = kwargs.pop('input_type', '')
-            OAR_Type, MSG1, MSG2  = self.readprompt()
-            if input in [str, unicode]:
-                input = input.upper()
-                input_type = PromptAttribute.OAR_Type_dict[input]
-                input = PromptAttribute.OAR_int_dict[input]
-
-            if input_type in[str, unicode]:
-                input_type = PromptAttribute.Type_int_dict[input_type]
-
-            if input_type == OAR_Type:
-                self.write(input)
-
-            readinput = self.readinput()[0]
-            return readinput == input
-
+    def force(self, value=None):
+        '''Write prompt response self.target'''
+        if self.value:
+            self.write(input=value)
+        else:  # write self.target to response path
+            self.write()
 
 class InicationAttribute(Attribute_Base):
     '''

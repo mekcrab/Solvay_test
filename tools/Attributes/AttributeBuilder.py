@@ -16,21 +16,13 @@ __author__ = 'ekopache'
 
 
 from tools.Utilities.Logger import LogTools
-dlog = LogTools('ModelBuilder.log', 'AttributeBuilder')
+dlog = LogTools('AttributeBuilder.log', 'AttributeBuilder')
 dlog.rootlog.debug('Module initialized')
 
 
 class AttributeBuilder(object):
 
-    attr_dict = {
-        'condition': Compare,
-        'indicator': InicationAttribute,
-        'constant': Constant,
-        'mode': ModeAttribute,
-        'command': PositionAttribute,
-    }
-
-    def __init__(self, parser, client, ):
+    def __init__(self, parser, client, default_tag=''):
 
         if isinstance(parser, AttributeParser):
             self.parser = parser
@@ -43,17 +35,21 @@ class AttributeBuilder(object):
         else:
             raise TypeError
 
-        self.logger = dlog.rootlog
+        self.logger = dlog.MakeChild('AttributeBuilder')
+        self.default_tag = default_tag  # default tag for the diagram in question
 
     def connect_client(self):
         try:
             self.client.connect()
         except socket.error as err:
-            print 'Could not connect client on ', self.client.address + ':' + self.client.port
-            pass
+            self.logger.error('Could not connect client on %s:%s', self.client.address, self.client.port)
 
     def disconnect_client(self):
         self.client.disconnect()
+
+    def set_default_tag(self, tag):
+        '''Sets a default tag for this diagram'''
+        self.default_tag = tag
 
     def solve_attribute(self, raw_string):
         '''
@@ -64,29 +60,41 @@ class AttributeBuilder(object):
         attr_list = list()
         parse_results = self.parser.parse(raw_string)
 
+        if not parse_results:
+            self.logger.error("Attribute string:: %s :: not parseable", raw_string)
+            return attr_list
+
         if 'action_word' in parse_results:
-            action = parse_results['action_word']
+            action = parse_results['action_word'].lower()
 
             if action in ['open', 'close']:
-                self.logger.debug('Creating PositionAttribute ', action)
-                self.generate_attribute(parse_results, 'position')
+                self.logger.debug('Creating PositionAttribute %s', raw_string)
+                attr_list.append(self.generate_attribute(parse_results, 'position'))
+
+            elif action in ['wait']:
+                self.logger.debug("Adding wait action: %s", raw_string)
+                attr_list.append(self.generate_attribute(parse_results, 'compare'))
 
             elif action in ['write']:
-                self.logger.debug("Adding write action", action)
-                pass
+                self.logger.debug("Adding write action: %s", raw_string)
+                print parse_results.dump()
+                raise NotImplementedError
 
             elif action in ['read']:
-                self.logger.debug("Adding read action", action)
-                pass
+                self.logger.debug("Adding read action: %s", raw_string)
+                print parse_results.dump()
+                raise NotImplementedError
 
             elif action in ['prompt']:
-                self.logger.debug("Adding prompt action", action)
-                pass
+                self.logger.debug("Adding prompt action: %s", raw_string)
+                attr_list.append(self.generate_attribute(parse_results, 'prompt'))
 
             else:
-                self.logger.error('Unknown action word: %s', action)
+                self.logger.error('Unknown action word: %s', raw_string)
+                raise NameError
 
-        if 'expression' in parse_results:
+        # no action word found, check for attribute type by operator context
+        elif 'expression' in parse_results:
             expressions = parse_results['expression']
 
             if 'condition' in expressions:
@@ -101,6 +109,9 @@ class AttributeBuilder(object):
                 for cmd in command_list:
                     attr_list.append(self.generate_attribute(cmd), 'command')
 
+        else:
+            self.logger.error("No attribute types found in %s", raw_string)
+
         return attr_list
 
     def generate_attribute(self, parse_dict, attribute_type):
@@ -109,8 +120,11 @@ class AttributeBuilder(object):
         :param raw_string: raw attribute string from plantUML diagram
         :return: AttributeType instance as required
         '''
-
-        tag = self.parser.get_tag(parse_dict)
+        try:
+            tag = self.parser.get_tag(parse_dict)
+        except:
+            self.logger.warning("Falling back to default tag to generate %s attribute", attribute_type)
+            tag = self.default_tag
 
         # ===create no attribute if the tag is ignored===
         if tag == 'ignore':
@@ -119,35 +133,50 @@ class AttributeBuilder(object):
             module_info = self.get_module_info(tag)
 
         # ===== Attribute types by string name <attribute_type>======
-        # todo: clean up - use separate method for generating each attribute type
-        if attribute_type == 'condition':
-            # check if discrete module
-            if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                lhs = DiscreteAttribute(tag, 'PV_D.CV')
+        if attribute_type == 'path':
+            # check for path
+            if 'path' in parse_dict:
+                return OtherAttribute(tag, parse_dict['path'])
+            # no path found, assume PV
+            elif '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
+                return DiscreteAttribute(tag, 'PV_D.CV')
+            elif '/'.join(['/', tag, 'PV']) in module_info['attribute_paths']:
+                return InicationAttribute(tag, 'PV.CV')
             else:
-                lhs = InicationAttribute(tag, 'PV.CV')
+                self.logger.error("No path found in parsed expression %s", parse_dict)
 
-            value = parse_dict['value']
-            try:
-                rhs = Constant(float(value))
-            # todo: handle secondary tag value
-            except Exception as err:
-                print str(err)
-                raise
+        elif attribute_type == 'prompt':
+            # get target from diagram
+            if 'value' in parse_dict: target = parse_dict['value']
+            else: self.logger.warning("No target found in prompt, defaulting to 0"); target = 0;
+            # look for message in diagram
+            message_string = parse_dict.asList()[1]
+            # determine if tag is for EM or phase
+            if 'EM' in tag[0:1]:
+                message_path = 'MSG2'
+                response_path = 'MONITOR/OAR/DATA_IN'
+            elif 'PH' in tag[0:1]:
+                raise NotImplementedError
+            else:
+                self.logger.error("Undefined prompt from parsed expression ", parse_dict)
 
-            return Compare(lhs, parse_dict['compare'], rhs)
-
-        elif attribute_type == 'command':
-            pass
+            return PromptAttribute(tag, target, message_string, message_path, response_path)
 
         elif attribute_type == 'position':
             # check if discrete module
             if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                attr_list.append(PositionAttribute(tag, 'PV_D.CV'))
+                return PositionAttribute(tag, 'PV_D.CV')
+            # otherwise return analog type
             else:
-                attr_list.append(PositionAttribute(tag, 'PV.CV'))
+                return PositionAttribute(tag, 'PV.CV')
 
+        elif attribute_type == 'condition':
+            lhs = self.generate_attribute(parse_dict['lhs'], 'path')
+            rhs = self.generate_attribute(parse_dict['rhs'], 'path')
+            return Compare(lhs, parse_dict['compare'], rhs)
 
+        elif attribute_type == 'command':
+            raise NotImplementedError
 
     def get_module_info(self, tag):
         '''returns a dictionary of info for the module reference by tag'''

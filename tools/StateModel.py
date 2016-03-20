@@ -186,8 +186,8 @@ class StateDiagram(DiGraph):
         :return: dictionary
         '''
         attr_dict = dict()
-        for state in self.states.values():
-            attr_dict[state.id] = state.attrs
+        for state in self.state_names.values():
+            attr_dict[state.name] = state.attrs
         return attr_dict
 
 

@@ -110,6 +110,9 @@ class AttributeParser(object):
         :param attribute_string: string for a given state or transition attribute
         :return: AttributeType.Attribute_Base instance
         '''
+        # remove line returns
+        attribute_string = ''.join(attribute_string.split('\\n'))
+
         # Determine if keyword in first position
         self.logger.debug('Attempting to parse: \" %s \"', attribute_string)
         try:
@@ -124,8 +127,9 @@ class AttributeParser(object):
             try:
                 parse_result = compound_exp.parseString(attribute_string)
                 self.logger.debug(parse_result.dump())
-            except ParseException:
+            except ParseException as err:
                 self.logger.error('Unable to parse %s', attribute_string)
+                self.logger.error(str(err))
                 parse_result = None
 
         return parse_result
@@ -167,7 +171,9 @@ if __name__ == "__main__":
         "Wait 30 minutes",
         "'PIC-1899' := 100 in AUTO",
         "Read OPC '/TK15-CHG-EM/OP001.CV' '/TK50-CHG-EM/OP002'",
-        "Verify 'PIC-1978' is remote out"
+        "Verify 'PIC-1978' is remote out",
+        "'R10-WTRCHG-EM/OWNER_ID' != \"Operator\"",
+        "'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'",
     ]
 
     parser = AttributeParser(); parser.log2stdout()

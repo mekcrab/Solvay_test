@@ -24,3 +24,522 @@
 2016-03-20 14:11:16,762 :: WARNING::    ModelBuilder:: Module initialized
 2016-03-20 14:11:25,078 :: WARNING::    ModelBuilder:: Module initialized
 2016-03-20 14:12:47,856 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:29:07,352 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:30:43,225 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:35:11,786 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:35:51,978 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:36:23,833 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:37:52,229 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:42:24,554 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:44:25,009 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:44:26,657 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 14:44:26,664 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 14:44:26,665 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 14:44:26,666 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OWNER_ID != 'Operator'
+2016-03-20 14:44:26,668 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OWNER_ID = 'Operator'
+2016-03-20 14:44:26,670 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 14:44:26,671 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 14:44:26,672 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 14:44:26,673 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 14:44:26,675 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 14:44:26,676 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 14:44:26,677 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \nCHG_SP
+2016-03-20 14:44:26,678 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \nLOW_CHG_SP
+2016-03-20 14:44:26,680 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \nLOW_CHG_SP
+2016-03-20 14:44:26,681 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 14:44:26,682 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 14:44:26,683 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 14:44:26,684 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 14:44:54,710 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:44:58,292 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 14:44:58,299 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 14:44:58,300 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 14:44:58,301 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OWNER_ID != 'Operator'
+2016-03-20 14:44:58,303 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OWNER_ID = 'Operator'
+2016-03-20 14:44:58,306 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 14:44:58,307 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 14:44:58,308 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 14:44:58,309 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 14:44:58,311 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 14:44:58,312 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 14:44:58,313 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \nCHG_SP
+2016-03-20 14:44:58,314 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \nLOW_CHG_SP
+2016-03-20 14:44:58,316 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \nLOW_CHG_SP
+2016-03-20 14:44:58,317 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 14:44:58,318 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 14:44:58,319 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 14:44:58,320 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 14:45:03,161 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:45:32,776 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:45:58,993 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:47:31,500 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:47:45,887 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:48:29,090 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:48:39,637 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:48:44,464 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:49:04,865 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:49:26,752 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:51:08,728 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:51:52,120 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:51:52,233 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:51:52,322 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:53:35,269 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:53:37,553 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:53:37,672 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:53:37,762 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:42,328 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:57:44,521 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:44,637 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:44,726 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:44,759 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:44,800 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:57:44,810 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:30,981 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 14:58:33,183 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:33,291 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:33,377 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:33,410 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:33,446 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 14:58:33,457 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:06,789 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:01:09,082 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:09,202 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:09,300 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:09,330 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:09,364 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:09,387 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:23,796 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:01:25,973 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,086 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,174 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,211 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,249 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,261 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,273 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,287 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,300 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,314 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:01:26,479 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:05,615 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:04:07,886 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:07,991 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,075 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,107 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,144 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,155 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,166 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,177 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,190 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,203 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:04:08,377 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:16,425 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:06:18,735 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:18,851 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:18,931 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:18,974 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,014 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,028 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,040 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,055 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,068 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,081 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:06:19,258 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:49,751 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:20:52,077 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,201 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,289 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,324 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,365 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,376 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,388 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,402 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,416 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,429 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:20:52,600 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:34,595 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:24:36,906 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:37,022 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:37,118 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:37,137 ::   ERROR:: AttributeBuilder:: Attribute string: 'R10-WTRCHG-EM/OWNER_ID' !=  not parseable
+2016-03-20 15:24:56,776 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:24:59,011 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:59,139 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:59,232 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:24:59,249 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' !=  :: not parseable
+2016-03-20 15:26:03,993 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:26:06,229 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:26:06,348 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:26:06,439 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:26:06,457 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' !=  :: not parseable
+2016-03-20 15:27:42,896 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:27:45,136 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:27:45,249 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:27:45,342 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:27:45,362 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' !=  :: not parseable
+2016-03-20 15:28:59,350 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:29:01,571 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:29:01,684 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:29:01,777 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:29:01,793 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' !=  :: not parseable
+2016-03-20 15:32:05,818 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:32:08,016 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:32:08,131 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:32:08,225 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:32:08,242 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' != ''Operator'' :: not parseable
+2016-03-20 15:33:00,218 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:33:02,497 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,623 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,709 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,737 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,764 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,776 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,786 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,797 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,808 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,819 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:02,995 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:03,009 ::   ERROR:: AttributeBuilder:: Attribute string:: 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001' :: not parseable
+2016-03-20 15:33:17,214 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:33:19,480 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:19,593 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:19,686 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:19,701 ::   ERROR:: AttributeBuilder:: Attribute string:: 'R10-WTRCHG-EM/OWNER_ID' !=  :: not parseable
+2016-03-20 15:33:33,481 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:33:35,707 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:35,822 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:35,909 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:35,942 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:35,979 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:35,993 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,004 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,015 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,026 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,037 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,213 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:33:36,229 ::   ERROR:: AttributeBuilder:: Attribute string:: 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001' :: not parseable
+2016-03-20 15:35:00,919 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:35:03,184 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,301 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,396 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,429 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,467 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,478 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,489 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,499 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,511 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,525 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:03,685 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:26,834 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:35:29,027 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,143 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,230 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,269 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,309 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,324 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,335 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,349 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,362 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,374 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,550 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:35:29,567 ::   ERROR:: AttributeBuilder:: Attribute string:: 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001' :: not parseable
+2016-03-20 15:36:54,054 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:37:06,006 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:13,073 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:14,782 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:22,769 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:25,385 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:27,821 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:29,874 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:31,207 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:32,472 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:33,125 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:37:38,841 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:21,569 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:38:26,288 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:27,053 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:27,751 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:28,299 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:28,837 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:29,020 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:29,285 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:29,786 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:30,847 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:31,572 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:32,292 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:38:33,325 ::   ERROR:: AttributeBuilder:: Attribute string:: 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001' :: not parseable
+2016-03-20 15:38:54,178 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:39:00,831 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:00,947 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,051 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,088 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,127 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,139 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,152 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,166 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,178 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,190 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,360 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:01,379 ::   ERROR:: AttributeBuilder:: Attribute string:: 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001' :: not parseable
+2016-03-20 15:39:54,628 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:39:56,888 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,004 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,088 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,124 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,165 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,178 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,192 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,205 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,216 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,227 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:39:57,397 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:49,654 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:41:52,009 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,135 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,228 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,266 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,304 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,317 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,331 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,343 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,354 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,365 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,538 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,587 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,629 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:52,669 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:41:53,200 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:17,706 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:43:19,971 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,081 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,174 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,209 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,246 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,259 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,270 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,283 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,296 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,308 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,477 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,528 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,568 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:20,608 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:21,138 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:21,278 ::   ERROR:: AttributeBuilder:: Unknown action word: wait
+2016-03-20 15:43:21,279 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:21,815 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:21,846 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:37,924 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:43:40,129 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:40,244 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:43:40,333 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:38,532 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:44:40,841 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:40,949 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,038 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,072 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,115 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,130 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,142 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,154 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,164 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,175 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,341 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,390 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,424 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,461 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:41,988 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:42,133 ::   ERROR:: AttributeBuilder:: Unknown action word: wait
+2016-03-20 15:44:42,133 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:42,663 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:44:42,695 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:44,721 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:45:46,967 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,082 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,170 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,205 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,241 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,255 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,268 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,282 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,294 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,306 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,483 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,532 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,568 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:47,608 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:48,137 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:48,273 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:48,800 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:45:48,838 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:42,592 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:47:44,892 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,014 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,095 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,129 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,164 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,175 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,187 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,200 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,213 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,225 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,392 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,436 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,478 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:45,519 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:46,046 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:46,190 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:46,716 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:46,749 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:47:58,772 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:48:00,983 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,105 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,199 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,234 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,274 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,286 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,299 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,313 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,326 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,339 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,517 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,567 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,609 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:01,644 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:02,175 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:02,310 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:02,836 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:48:02,866 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:45,948 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:49:48,270 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,393 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,490 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,524 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,564 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,575 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,589 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,600 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,614 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,629 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,807 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,856 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,899 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:48,942 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:49,473 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:49,623 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:50,151 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:49:50,175 ::   DEBUG:: ModelBuilder.StateModelBuilder:: Added attribute instance []
+2016-03-20 15:53:30,200 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:53:32,506 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 15:53:32,627 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 15:53:32,713 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 15:53:32,748 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 15:53:32,789 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 15:53:32,800 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 15:53:32,813 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 15:53:32,827 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 15:53:32,840 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 15:53:32,852 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 15:53:33,024 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 15:53:33,074 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 15:53:33,116 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 15:53:33,159 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 15:53:33,689 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 15:53:33,823 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 15:53:34,360 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 15:53:34,389 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 15:54:04,127 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 15:54:06,399 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 15:54:06,508 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 15:54:06,600 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 15:54:06,632 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 15:54:06,665 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 15:54:06,676 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 15:54:06,690 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 15:54:06,701 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 15:54:06,712 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 15:54:06,724 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 15:54:06,895 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 15:54:06,939 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 15:54:06,977 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 15:54:07,017 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 15:54:07,543 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 15:54:07,677 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 15:54:08,208 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 15:54:08,245 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 16:17:35,434 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 16:17:37,777 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 16:17:37,900 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 16:17:37,989 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 16:17:38,021 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 16:17:38,059 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 16:17:38,073 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 16:17:38,084 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 16:17:38,096 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 16:17:38,109 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 16:17:38,123 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 16:17:38,292 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 16:17:38,343 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 16:17:38,386 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 16:17:38,427 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 16:17:38,956 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 16:17:39,100 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 16:17:39,631 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 16:17:39,665 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 18:25:42,087 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 18:26:25,851 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 18:26:28,102 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 18:26:28,224 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 18:26:28,323 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 18:26:28,855 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 18:26:28,900 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 18:26:28,937 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 18:26:28,950 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 18:26:28,963 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 18:26:28,977 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 18:26:28,989 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 18:26:29,002 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 18:26:29,173 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 18:26:29,223 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 18:26:29,269 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:26:29,313 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:26:29,842 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 18:26:29,999 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 18:26:30,530 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 18:26:30,563 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 18:27:45,826 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 18:27:48,094 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'FI-4289' in MAN
+2016-03-20 18:27:48,211 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 18:27:48,303 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 18:27:48,835 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 18:27:48,872 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 18:27:48,906 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 18:27:48,922 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 18:27:48,935 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 18:27:48,948 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 18:27:48,959 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 18:27:48,974 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 18:27:49,162 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 18:27:49,212 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 18:27:49,251 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:27:49,297 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:27:49,830 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Open 'CV-4289'
+2016-03-20 18:27:49,970 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Wait for 'FQIC-4289/TOTAL' >= 'R10-WTRCHG-EM/OP001'
+2016-03-20 18:27:50,495 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Close 'CV-4289'
+2016-03-20 18:27:50,531 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 18:32:33,210 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 18:32:35,555 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' = 0
+2016-03-20 18:32:35,643 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'ignore' = 0
+2016-03-20 18:32:36,205 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' != 'Operator'
+2016-03-20 18:32:36,240 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OWNER_ID' = 'Operator'
+2016-03-20 18:32:36,252 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Enter Charge Amount in lbs"
+2016-03-20 18:32:36,265 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: VALUE
+2016-03-20 18:32:36,281 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR Message: "Charge"
+2016-03-20 18:32:36,295 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: YES
+2016-03-20 18:32:36,309 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for OAR response: NO
+2016-03-20 18:32:36,487 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Set 'R10-WTRCHG-EM/OP001' to 'FQIC-4289/TOTAL'
+2016-03-20 18:32:36,537 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'
+2016-03-20 18:32:36,580 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' < \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:32:36,620 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for 'R10-WTRCHG-EM/OP001' >= \n 'R10-WTRCHG-EM/OP001_MIN'
+2016-03-20 18:32:38,369 :: WARNING:: ModelBuilder.StateModelBuilder:: No attribute instance created for Verify 'CV-4289' Closed
+2016-03-20 18:35:07,221 :: WARNING::    ModelBuilder:: Module initialized
+2016-03-20 18:35:44,233 :: WARNING::    ModelBuilder:: Module initialized

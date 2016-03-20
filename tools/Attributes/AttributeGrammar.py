@@ -62,7 +62,7 @@ opc_path = pp.Group(
 
 # OPC tag
 tick = pp.Literal('\'')
-tag =   (pp.Suppress(tick + pp.Optional('/')) +
+tag = (pp.Suppress(tick + pp.Optional('/')) +
             (pp.Word(pp.alphanums+'-_$') ^ opc_path) +
             pp.Suppress(tick)). \
             setResultsName('tag')
@@ -90,12 +90,13 @@ ramp = pp.CaselessKeyword('ramp').setResultsName('ramp')
 
 # ===read keywords===
 read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify']).setParseAction(normalize('read'))
-wait_keyword = keyword_list(['wait', 'wait until', 'delay']).setParseAction(normalize('wait'))
+wait_keyword = keyword_list(['wait', 'wait until', 'wait for', 'delay']).setParseAction(normalize('wait'))
 wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResultsName('units')).setResultsName('wait_time')
 
 # ===OAR prompt keywords===
 prompt = (keyword_list(['prompt', 'oar', 'ack', 'ack', 'ask', 'message']) +
-          pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':'])))) + STRING)
+          pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':', 'response'])))) +
+          (STRING ^ keyword_list(['VALUE', 'YES', 'NO'])))
 prompt = prompt.setParseAction(normalize('prompt'))
 
 # ===Report parameters for batch===
@@ -118,10 +119,10 @@ action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ read_keyword ^ wait_k
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
 # ===========Expressions=================
-value = ((tag ^ NUMBER ^ BOOL ^ modes) + pp.Optional(pp.Suppress(eng_units))). \
+value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING) + pp.Optional(pp.Suppress(eng_units))). \
     setResultsName('value', listAllMatches=True)
 
-condition = (tag + compare + value).setResultsName('condition', listAllMatches=True)
+condition = (tag.setResultsName('lhs') + compare + value.setResultsName('rhs')).setResultsName('condition', listAllMatches=True)
 
 command = (tag + pp.Optional(EQUALS ^ ASSIGN) + pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress()) + value +
             pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress() + value)).\
