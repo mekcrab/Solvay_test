@@ -5,6 +5,7 @@ i.e. copy this to the code:
 !include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
 
 @startuml
+!include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
 
 
 state CLOSE_ALL{
@@ -27,6 +28,8 @@ StartEM --> RecipeCTRL: OWNER_ID = 'Recipe'
 RecipeCTRL: Set CHG_SP = RCP_TGT
 
 RecipeCTRL --> OpenValve
+
+Note right of RecipeCTRL : This action will be completed by the phase,\n it cannot be in the EM diagram \n we can remove this state entirely
 
 StartEM --> OAR_ChargeTarget: OWNER_ID = 'Operator'
 OAR_ChargeTarget: OAR Message: "enter charge amount in lbs"

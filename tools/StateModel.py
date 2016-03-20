@@ -180,6 +180,16 @@ class StateDiagram(DiGraph):
             labeled_graph.add_edge(source.name, destination.name)
         return labeled_graph
 
+    def collect_attributes(self):
+        '''
+        Provides a dictionary of state_id: attribute list
+        :return: dictionary
+        '''
+        attr_dict = dict()
+        for state in self.states.values():
+            attr_dict[state.id] = state.attrs
+        return attr_dict
+
 
 class State(object):
 
@@ -192,6 +202,7 @@ class State(object):
 
         self.name = name
         self.attrs = list()
+        self.attributes = self.attrs  # overload
         self.substates = StateDiagram()
         self.num_substates = 0
         self.source = list()
@@ -260,6 +271,11 @@ class State(object):
         else:
             self.destination.append(destination)
 
+    def print_attributes(self):
+        '''Prints out attributes for this state'''
+        from pprint import pprint as pp
+        pp([(attr, attr.__dict__) for attr in self.attrs])
+
 
 class Transition(object):
     def __init__(self, source, dest, attrs=None):
@@ -267,7 +283,8 @@ class Transition(object):
         Constructor
         :return: new Transition with source and destination
         '''
-        self.attrs = list() #List of transition attributes
+        self.attrs = list()  #List of transition attributes
+        self.attributes = self.attrs  # overload
         self.source = list() # list of states
         self.dest = list() # list of states with transitions originating in this state
 

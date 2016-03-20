@@ -69,7 +69,7 @@ if __name__ == "__main__":
     client = DVConfigClient()
 
     client.connect()
-    # while 1:
+
     client.get_module_info('CV-4148')
     time.sleep(1)
     client.get_alias('R3-PRES-EM', 'ATM_VENT_VLV')

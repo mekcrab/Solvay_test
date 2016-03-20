@@ -52,19 +52,15 @@ class AST(object):
 
         self.datatypes = {
             'discrete'  : [AT.DiscreteAttribute,
-                           AT.DiscreteCondition,
                            AT.PositionAttribute,
-                           AT.StatusAttribute,
                            AT.ModeAttribute],
             'namedset'  : [AT.NamedDiscrete,
                            AT.EMCMDAttribute,
                            AT.PhaseCMDAttribute,
-                           AT.StatusAttribute],
+                           ],
             'analog'    : [AT.AnalogAttribute,
-                           AT.AnalogCondition,
                            AT.InicationAttribute,
                            AT.PositionAttribute,
-                           AT.StatusAttribute,
                            AT.ModeAttribute],
             'prompt'    : [AT.PromptAttribute],
             'other'     : [AT.OtherAttribute]
@@ -128,7 +124,7 @@ class AttributeParser(object):
             try:
                 parse_result = compound_exp.parseString(attribute_string)
                 self.logger.debug(parse_result.dump())
-            except:
+            except ParseException:
                 self.logger.error('Unable to parse %s', attribute_string)
                 parse_result = None
 
@@ -143,6 +139,18 @@ class AttributeParser(object):
     def log2stdout(self):
         '''methods redirects all logging statements to stout'''
         self.logger.addHandler(Logger.logging.StreamHandler(Logger.stdout))
+
+    @staticmethod
+    def get_tag(parse_results):
+        '''
+        :param parse_results:
+        :return: string tag of parse results
+        '''
+        tag = parse_results.get('tag').asList()[0]
+        # check if tag is actually a full path ['<tag>/<block>/<attr>']
+        if type(tag) is list and '/' in tag[0]:
+            tag = tag[0].split('/')[0]
+        return tag
 
 
 if __name__ == "__main__":

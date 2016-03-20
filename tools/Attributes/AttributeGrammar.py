@@ -95,7 +95,7 @@ wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResul
 
 # ===OAR prompt keywords===
 prompt = (keyword_list(['prompt', 'oar', 'ack', 'ack', 'ask', 'message']) +
-          pp.Optional(pp.Suppress('operator'))) + STRING
+          pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':'])))) + STRING)
 prompt = prompt.setParseAction(normalize('prompt'))
 
 # ===Report parameters for batch===

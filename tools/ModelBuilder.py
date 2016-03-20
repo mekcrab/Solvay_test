@@ -10,6 +10,7 @@ import pygments.token as Token
 import collections
 # imports for StateModelBuilder
 import StateModel
+import Attributes.AttributeBuilder as AttributeBuilder
 from PlantUML_Lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
 
 from Utilities.Logger import LogTools
@@ -98,9 +99,20 @@ class StateModelBuilder(ModelBuilder):
         self.state_aliases = {}  # dictionary of {state_alias: state_name}
         self.diagram = self.model  # bind model instance to new name for code clarity
 
-    def lookup_state(self):
-        '''Will be implemented later'''
-        raise NotImplementedError
+        self.attr_builder = kwargs.pop('attribute_builder', None)
+        if self.attr_builder:
+            self.set_attribute_builder(self.attr_builder)
+
+    def set_attribute_builder(self, attribute_builder):
+        '''
+        Sets an AttributeBuilder instance that creates attribute instances from raw strings
+        :param attribute_builder:
+        :return:
+        '''
+        if not isinstance (attribute_builder, AttributeBuilder.AttributeBuilder):
+            raise TypeError
+        else:
+            self.attr_builder = attribute_builder
 
     def assign_state(self):
         '''All state names are unique and required for assignment.
@@ -114,7 +126,19 @@ class StateModelBuilder(ModelBuilder):
         if self.q[0][0] == SATTR:
             self.add_state_attr(state_name, self.q.popleft()[1])
 
+    def lookup_state(self, state_alias):
+        return self.diagram.states[state_alias]
+
     def add_state_attr(self, state_name, attribute_value):
+        '''
+        Solves for the attribute object instance if attribute builder available, otherwise
+        leave as raw string/unicode type.
+        In either case the attribute is added to the state's attribute list.
+        '''
+        if self.attr_builder and type(attribute_value) in [str, unicode]:
+            attribute_value = self.attr_builder.solve_attribute(attribute_value)
+        else:
+            pass
         self.diagram.add_state_attr(state_name, attribute_value)
 
     def start_superstate(self, state_name):
@@ -143,15 +167,17 @@ class StateModelBuilder(ModelBuilder):
         else:
             self.diagram.add_transition(source, dest, parent_state=self.superstate_stack[-1])
 
-def build_state_diagram(fpath):
+def build_state_diagram(fpath, attribute_builder=None, preprocess=True):
     '''
     Returns a state diagram lexed from the given plantUML model
     :param fpath: path to state diagram *.puml file
+    :param preprocess: run plantUML preprocessor on diagram
+    :param attribute_builder: attribute builder instance for defining attribute logic
     :return: StateModel.StateDiagram
     '''
     from PlantUML_Lexer import get_tokens_from_file
 
-    tkns = get_tokens_from_file(fpath)
+    tkns = get_tokens_from_file(fpath, preprocess=preprocess)
     builder = StateModelBuilder()
     diagram = builder.parse(tkns)
 
@@ -168,12 +194,14 @@ if __name__ == "__main__":
 
     config.sys_utils.set_pp_on()
 
-    input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_2.0.puml')
+    # define input path to diagram
+    input_path = os.path.join(config.specs_path, 'vpeng', 'EM', 'S_EMC_CHARGE_V2.puml')
 
-    tkns = get_tokens_from_file(input_path)
+    # create attribute builder instance for solving attributes
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
 
-    builder = StateModelBuilder()
-    diagram = builder.parse(tkns)
+    # ==Build diagram, preprocessor optional==:
+    diagram = build_state_diagram(input_path, attribute_builder=abuilder, preprocess=True)
 
     print "Parsed", len(diagram.state_names.values()), "states"
     print "Parsed", len(diagram.get_transitions()), "transitions"

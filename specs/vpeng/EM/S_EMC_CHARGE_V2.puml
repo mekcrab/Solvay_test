@@ -1,0 +1,49 @@
+Definitions for all of the instances in this EM class enclosed in the Definitions folder.
+Use a !include <instance path> to substitute Aliases/Parameter_path in this flowchart.
+i.e. copy this to the code:
+!include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
+
+@startuml
+!include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
+
+state CLOSE_ALL{
+    [*] --> CloseValve
+    CloseValve: Close FLOW_VLV1
+    CloseValve: Close FLOW in MAN
+    CloseValve --> [*]
+}
+
+state CHARGE {
+    [*] --> StartEM
+
+    StartEM: Set FLOW_TOT = 0
+    StartEM: Set CHG_SP = 0
+    StartEM: Set RX_TARE = 0
+
+    StartEM --> Set_Charge_TGT: OWNER_ID != 'Operator'
+    StartEM --> PromptCharge: OWNER_ID = 'Operator'
+
+    state PromptCharge {
+        OAR_ChargeTarget: OAR Message: "Enter Charge Amount in lbs"
+        OAR_ChargeTarget --> OAR_Verify: OAR response: VALUE
+
+        OAR_Verify: OAR Message: "Charge"
+        OAR_Verify --> Set_Charge_TGT: OAR response: YES
+        OAR_Verify --> OAR_ChargeTarget: OAR response: NO
+    }
+
+    Set_Charge_TGT: Set CHG_SP to FLOW_TOT
+    Set_Charge_TGT --> Check_TGT : FLOW_TOT = \nCHG_SP
+
+    Check_TGT --> ChargeComplete: CHG_SP < \nLOW_CHG_SP
+    Check_TGT --> OpenValve: CHG_SP >= \nLOW_CHG_SP
+
+    OpenValve: Open FLOW_VLV1
+    OpenValve --> ChargeComplete: Wait for FLOW_TOT >= CHG_SP
+
+    ChargeComplete: Close FLOW_VLV1
+    ChargeComplete --> [*]: Verify FLOW_VLV1 Closed
+}
+
+@enduml
+

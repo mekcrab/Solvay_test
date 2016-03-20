@@ -339,7 +339,7 @@ class PositionAttribute(ModeAttribute):
             print "Mode must be a mode attribute type"
             raise TypeError
 
-        ModeAttribute.__init__(self.tag, self.attr_path)
+        ModeAttribute.__init__(self, self.tag, self.attr_path)
 
     def write(self, target_value, **kwargs):
         '''
