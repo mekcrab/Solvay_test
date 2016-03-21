@@ -75,15 +75,9 @@ class AttributeBuilder(object):
                 self.logger.debug("Adding wait action: %s", raw_string)
                 attr_list.append(self.generate_attribute(parse_results, 'compare'))
 
-            elif action in ['write']:
-                self.logger.debug("Adding write action: %s", raw_string)
-                print parse_results.dump()
-                raise NotImplementedError
-
-            elif action in ['read']:
-                self.logger.debug("Adding read action: %s", raw_string)
-                print parse_results.dump()
-                raise NotImplementedError
+            elif action in ['read', 'write']:
+                self.logger.debug("Adding read/write action: %s", raw_string)
+                attr_list.append(self.generate_attribute(parse_results, 'compare'))
 
             elif action in ['prompt']:
                 self.logger.debug("Adding prompt action: %s", raw_string)
@@ -98,10 +92,14 @@ class AttributeBuilder(object):
             expressions = parse_results['expression']
 
             if 'condition' in expressions:
-                self.logger.debug("Adding condition")
+                self.logger.debug("Adding one or more conditions")
                 condition_list = expressions['condition']
                 for cnd in condition_list:
                     attr_list.append(self.generate_attribute(cnd), 'condition')
+
+            elif 'condition' in parse_results:
+                self.logger.debug("Adding single condition")
+                attr_list.append(self.generate_attribute(parse_results.condition, 'condition'))
 
             if 'command' in expressions:
                 command_list = expressions['command']

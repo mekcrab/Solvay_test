@@ -84,8 +84,8 @@ modes = (LO ^ MAN ^ IMAN ^ AUTO ^ CAS ^ RCAS ^ ROUT)
 # ===write keywords===
 write_keyword = keyword_list(['set', 'write', 'force']).setParseAction(normalize('write'))
 # some shorthand write commands
-open_vlv = keyword_list(['open', 'start', 'turn on']).setParseAction(normalize('open'))   # data type based on control module tag
-close_vlv = keyword_list(['close', 'stop', 'turn off']).setParseAction(normalize('close'))
+open_vlv = keyword_list(['open', 'start', 'turn on', 'on']).setParseAction(normalize('open'))   # data type based on control module tag
+close_vlv = keyword_list(['close', 'stop', 'turn off', 'off']).setParseAction(normalize('close'))
 ramp = pp.CaselessKeyword('ramp').setResultsName('ramp')
 
 # ===read keywords===
@@ -119,7 +119,7 @@ action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ read_keyword ^ wait_k
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
 # ===========Expressions=================
-value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING) + pp.Optional(pp.Suppress(eng_units))). \
+value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv) + pp.Optional(pp.Suppress(eng_units))). \
     setResultsName('value', listAllMatches=True)
 
 condition = (tag.setResultsName('lhs') + compare + value.setResultsName('rhs')).setResultsName('condition', listAllMatches=True)
@@ -133,5 +133,6 @@ command = (tag + pp.Optional(EQUALS ^ ASSIGN) + pp.Optional(keyword_list(['in', 
 compound_exp = ((condition ^ command) + pp.ZeroOrMore(logical + (condition ^ command))).setResultsName('expression', listAllMatches=True)
 
 # =========keyword-based actions=========
-action = (action_word.setResultsName('action_word') + (compound_exp ^ tag)) ^ action_phrase.setResultsName('action_phrase')
+action = (action_word.setResultsName('action_word') + (compound_exp ^ tag + pp.Optional(value))) ^ \
+                action_phrase.setResultsName('action_phrase')
 

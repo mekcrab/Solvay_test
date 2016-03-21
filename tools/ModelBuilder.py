@@ -176,8 +176,9 @@ class StateModelBuilder(ModelBuilder):
             attribute_value = self.attr_builder.solve_attribute(raw_value)
             if isinstance(attribute_value, AttributeBuilder.Attribute_Base):
                 self.logger.debug("Added attribute instance %s, as %s", attribute_value, type(attribute_value))
-
-            elif attribute_value == []:  # return raw string if not attribute value match
+            # return raw string if no attribute value match
+            # (will be empty list from attr_builder.solver_attribute)
+            elif not attribute_value:
                 self.logger.warning("No attribute instance created for %s", raw_value)
                 attribute_value = raw_value
 
@@ -207,7 +208,7 @@ def build_state_diagram(fpath, attribute_builder=None, preprocess=True):
 
 if __name__ == "__main__":
     import config, os
-    from PlantUML_Lexer import get_tokens_from_file
+    from pprint import pprint as pp
 
     config.sys_utils.set_pp_on()
 
@@ -223,6 +224,7 @@ if __name__ == "__main__":
     print "Parsed", len(diagram.state_names.values()), "states"
     print "Parsed", len(diagram.get_transitions()), "transitions"
 
-    print "Attributes generated:", diagram.collect_attributes()
+    print "Attributes generated:"
+    pp(diagram.collect_attributes())
 
     print "=================== Testing Complete ==================="
