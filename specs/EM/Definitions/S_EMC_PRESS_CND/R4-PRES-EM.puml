@@ -1,0 +1,21 @@
+@startuml
+
+!define S_EMC_PRESS_CND 'R4-PRES-EM'
+!define	DECANT_VENT_VLV	'CV-4083B'
+!define	PRESS_GAP_CTL	'PIC-4083'
+!define	SCRUB_VENT_VLV	'CV-4177'
+!define	VAC_CTL	'PIC-2295'
+!define	VAC_KO_SCRUB	'CV-4085'
+!define	VAC_PMP	'HS-2231'
+!define	VAC_RAMP	'PIC-2295_RAMP'
+!define	VAC_STM_VLV	'CV-2295'
+
+!define pressure_setpoint 'R4-PRES-EM/OP001_VALUE'
+!define nitrogen_valve  'CV-2302'
+!define control_valve_position 30%
+!define ramp_target 100 mmHg
+!define ramp_rate 0.16 %/second
+!define target_pressure 'R4-PRES-EM/OP002_VALUE'
+
+
+@enduml
