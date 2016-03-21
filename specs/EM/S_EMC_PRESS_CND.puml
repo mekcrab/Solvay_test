@@ -98,6 +98,9 @@ Start_VAC: Start VAC_PMP
 Start_VAC: Set VAC_CTL to control_valve_position in ROUT
 
 Start_VAC --> Ramp_VAC
+Ramp_VAC: Set VAC_RAMP/RAMP_RATE to ramp_rate
+Ramp_VAC: Set VAC_RAMP/RAMP_PAUSE to False
+Ramp_VAC: Set VAC_RAMP/RAMP_ENABLE to True
 
 Ramp_VAC --> STOP_VAC: PRESS_GAP_CTL < ramp_target
 STOP_VAC: Stop VAC_PMP

@@ -14,6 +14,7 @@
 !define nitrogen_valve  'CV-2302'
 !define control_valve_position 30%
 !define ramp_target 100 mmHg
+!define ramp_rate 0.16 %/second
 !define target_pressure 'R4-PRES-EM/OP002_VALUE'
 
 
