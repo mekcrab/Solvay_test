@@ -472,11 +472,42 @@ class InicationAttribute(Attribute_Base):
                 return False
 
 
+class LoopAttribute(Attribute_Base):
+    '''
+    Attribute for handling feedback controls.
+    Includes:
+        indicator attribute for field value
+        analog attribute for setpoint
+        position attribute for actuator position
+    '''
+    def __init__(self, tag, indicator, setpoint, position):
+        '''
+        :param tag:
+        :param indicator: attribute type for process value
+        :param setpoint: attribute type for setpoint
+        :param position: attribute type for final control
+        :return:
+        '''
+        for sub_attr in [indicator, setpoint, position]:
+            if not isinstance(sub_attr, Attribute_Base):
+                raise TypeError
+
+        self.pv = indicator
+        self.sp = setpoint
+        self.out = position
+        Attribute_Base.__init__(self, tag)
+
+    def execute(self):
+        '''verify a match between indicator value and setpoint'''
+        pass
+
+    def force(self):
+        '''sets the vavle position in manual'''
+        pass
+
 class EMCMDAttribute(Attribute_Base):
     #TODO: import EMCMD dictionary to EMCMD_int_dict
-    EMCMD_int_dict = {
-
-    }
+    EMCMD_int_dict = {}
 
     def __int__(self, tag, attr_path = ''):
         ''' :param: tag: the name of EM class
@@ -582,7 +613,7 @@ class ComparisonAttributes(object):
         if self.op not in ComparisonAttributes.operator_dict:
             raise TypeError
 
-        leftval = self.lhs.read()[0] # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+        leftval = self.lhs.read()[0]  # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
         rightval = self.rhs.read()[0]
         op = ComparisonAttributes.operator_dict[self.op]
         return op(leftval, rightval)
