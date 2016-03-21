@@ -1,0 +1,6 @@
+@startuml
+
+[*] --> state0
+state0: Open 'CV-2394'
+
+@enduml
