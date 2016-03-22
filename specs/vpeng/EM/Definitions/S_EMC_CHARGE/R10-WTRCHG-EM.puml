@@ -1,5 +1,7 @@
 @startuml
 
+title R10-WTRCHG-EM
+
 !define EM_NAME R10-WTRCHG-EM
 
 !define OAR_RESPONSE 'EM_NAME/MONITOR/OAR/INPUT'

@@ -3,6 +3,8 @@ Use a !include <instance path> to substitute Aliases/Parameter_path in this flow
 i.e. copy this to the code:
 !include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
 
+TITLE of the diagram should be the tag of the module under test
+
 @startuml
 !include Definitions/S_EMC_CHARGE/R10-WTRCHG-EM.puml
 !define OWNER_ID 'EM_NAME/OWNER_ID'
@@ -23,8 +25,8 @@ state CHARGE {
     StartEM: Set RX_TARE = 0
     StartEM: Close FLOW_VLV1
 
-    StartEM --> Set_Charge_TGT: OWNER_ID != 'Operator'
-    StartEM --> PromptCharge: OWNER_ID = 'Operator'
+    StartEM --> Set_Charge_TGT: OWNER_ID != "Operator"
+    StartEM --> PromptCharge: OWNER_ID = "Operator"
 
     state PromptCharge {
         OAR_ChargeTarget: OAR Message: "Enter Charge Amount in lbs"

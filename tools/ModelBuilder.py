@@ -11,7 +11,7 @@ import collections
 # imports for StateModelBuilder
 import StateModel
 import Attributes.AttributeBuilder as AttributeBuilder
-from PlantUML_Lexer import STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
+from PlantUML_Lexer import TITLE, STATE, SALIAS, SATTR, SSTART, SEND, TSOURCE, TDEST, TATTR
 
 from Utilities.Logger import LogTools
 dlog = LogTools('ModelBuilder.log', 'ModelBuilder')
@@ -88,6 +88,7 @@ class StateModelBuilder(ModelBuilder):
 
         # dictionary constructor - list of key,value pairs
         update_dict = dict( [
+            (TITLE, self.set_default_tag),  # TITLE should always be the tag name of the module under test
             (STATE, self.assign_state),
             (SALIAS, self.lookup_state),
             (SEND, self.end_superstate),
@@ -115,6 +116,12 @@ class StateModelBuilder(ModelBuilder):
             raise TypeError
         else:
             self.attr_builder = attribute_builder
+
+    def set_default_tag(self):
+        '''Sets the diagramid and attribute_builder.default_tag to TITLE'''
+        diagram_title = self.q.popleft()[1].lstrip('title ')
+        self.diagram.id = diagram_title
+        self.attr_builder.set_default_tag(diagram_title)
 
     def assign_state(self):
         '''All state names are unique and required for assignment.

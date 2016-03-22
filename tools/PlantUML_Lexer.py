@@ -12,6 +12,7 @@ from pygments import lex
 # token definitions
 # fixme: define custom token types so the names make sense
 Token = _TokenType()
+TITLE = Token.Title  # diagram title, also defines default tag
 STATE = Token.State  # state definition
 SALIAS = Token.StateAlias  # state alias
 SATTR = Token.StateAttr  # state attribute
@@ -101,7 +102,7 @@ class puml_state_lexer(RegexLexer):
              # hash words IGNORE
              '(?:(#\w+)?[\s]*)'\
              # TATTR
-             '(?::\s*([^"\n]+))?',
+             '(?::\s*(.+))?$',
                                  bygroups(TSOURCE,
                                           IGNORE,
                                           IGNORE, IGNORE, IGNORE,
@@ -174,7 +175,7 @@ class puml_state_lexer(RegexLexer):
             # START Comment
             (r"(?i)^[\s]*/['].*$", IGNORE, 'comment'),
             (r'(?i)^!pragma[\s]+([A-Za-z_][A-Za-z_0-9]*)(?:[\s]+(.*))?$', IGNORE, ), # pre-processor definitions
-            (r'(?i)^title(?:[\s]*:[\s]*|[\s]+)(.*[\w\.].*)$', IGNORE, ), # diagram title
+            (r'(?i)^title(?:[\s]*:[\s]*|[\s]+)(.*[\w\.].*)$', TITLE, ), # diagram title
             # START title
             (r'(?i)^title$', IGNORE, 'title'),
             # START legend state

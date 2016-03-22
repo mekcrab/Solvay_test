@@ -449,7 +449,8 @@ class PromptAttribute(Attribute_Base):
         else:  # write self.target to response path
             self.write()
 
-class InicationAttribute(Attribute_Base):
+
+class IndicationAttribute(Attribute_Base):
     '''
     Unique class of attribute for PV indication.
     Ex: Flow Rate (FIC), Tank Level, PH, Pressure (PIC), Temperature (TI), Tank Weight, etc.
@@ -464,12 +465,19 @@ class InicationAttribute(Attribute_Base):
     def read(self):
         Attribute_Base(self.tag, self.attr_path).read()
 
-    def execute(self, command = 'read'):
+    def execute(self, command='read'):
         if command == 'read':
             if (self.read()[0]) and (self.read()[1] == 'Good'):
                 return True
             else:
                 return False
+
+    def force(self):
+        '''
+        Force a simulation value for this indicator
+        either through MiMiC or DeltaV simulate parameters
+        '''
+        raise NotImplementedError
 
 
 class LoopAttribute(Attribute_Base):
@@ -498,15 +506,22 @@ class LoopAttribute(Attribute_Base):
         Attribute_Base.__init__(self, tag)
 
     def execute(self):
-        '''verify a match between indicator value and setpoint'''
+        '''
+        verify a match between indicator value and setpoint
+        '''
         pass
 
     def force(self):
-        '''sets the vavle position in manual'''
+        '''
+        Sets the valve position in manual
+        '''
         pass
 
+
 class EMCMDAttribute(Attribute_Base):
-    #TODO: import EMCMD dictionary to EMCMD_int_dict
+    # TODO: import EMCMD dictionary to EMCMD_int_dict
+    # could this attribute type just be a NamedDiscrete with the correct
+    # command integer value for a self.force(target)?
     EMCMD_int_dict = {}
 
     def __int__(self, tag, attr_path = ''):
@@ -543,7 +558,8 @@ class EMCMDAttribute(Attribute_Base):
 
 class PhaseCMDAttribute(NamedDiscrete):
     #TODO: import Phase Command dictionary to PhaseCMD_int_dict
-    #TODO: Which attr_path are we using to run a phase???
+    #TODO: Which attr_path are we using to run a phase??? - XCOMMAND
+    #TODO:      --> However the phase will need to be loaded to a given unit before execution
 
     def __int__(self):
         pass
@@ -551,7 +567,7 @@ class PhaseCMDAttribute(NamedDiscrete):
 
 class OtherAttribute(Attribute_Base):
     '''
-    class for all other kind of attribute
+    Catch-all class for other attributes, based on absolute OPC path
     '''
     def __init__(self, tag, attr_path, param = 'CV'):
         self.param = param
@@ -579,16 +595,26 @@ class OtherAttribute(Attribute_Base):
                 raise TypeError
 
 class AttributeDummy(Attribute_Base):
+    '''Dummy attribute for testing and as a placeholder'''
+
     def __init__(self):
-        Attribute_Base.__init__(self, tag = '')
+        '''Constructor'''
+        Attribute_Base.__init__(self, tag='dummy')
 
     def read(self):
-        pass
+        print 'Dummy read ', self.tag
 
-    def write(self):
-        pass
+    def write(self, val=0):
+        print 'Dummy write', self.tag, 'as ', val
 
     def execute(self):
+        if not self.complete:
+            self.set_complete(True)
+            self.deactivate()
+        else:
+            pass
+
+    def force(self):
         pass
 
 #####################Transition Attribute Types (use read functions and compare) #########################

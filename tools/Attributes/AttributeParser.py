@@ -59,7 +59,7 @@ class AST(object):
                            AT.PhaseCMDAttribute,
                            ],
             'analog'    : [AT.AnalogAttribute,
-                           AT.InicationAttribute,
+                           AT.IndicationAttribute,
                            AT.PositionAttribute,
                            AT.ModeAttribute],
             'prompt'    : [AT.PromptAttribute],
@@ -150,11 +150,17 @@ class AttributeParser(object):
         :param parse_results:
         :return: string tag of parse results
         '''
-        tag = parse_results.get('tag').asList()[0]
-        # check if tag is actually a full path ['<tag>/<block>/<attr>']
-        if type(tag) is list and '/' in tag[0]:
-            tag = tag[0].split('/')[0]
-        return tag
+        if 'tag' in parse_results:
+            return parse_results['tag']
+        elif 'path' in parse_results:
+            path = parse_results['path']
+            if '/' in path:
+                tag = path.split('/')[0].strip('/')
+                return tag
+            else:
+                return path
+        else:
+            raise AttributeError
 
 
 if __name__ == "__main__":

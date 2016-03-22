@@ -56,16 +56,14 @@ time_units = keyword_list(['minutes', 'mintue', 'min', 'm',
 
 
 # OPC path, forward slash delimited
-opc_path = pp.Group(
-    pp.delimitedList(pp.Word(pp.alphanums+'-_$'), delim='/', combine=True).setResultsName('path') + \
+opc_path = (pp.delimitedList(pp.Word(pp.alphanums+'-_$'), delim='/', combine=True).setResultsName('path') +
     pp.Optional(pp.Literal('.') + keyword_list(['CV', 'ST', 'CVI', 'CST'])).setResultsName('datatype'))
 
 # OPC tag
 tick = pp.Literal('\'')
 tag = (pp.Suppress(tick + pp.Optional('/')) +
-            (pp.Word(pp.alphanums+'-_$') ^ opc_path) +
-            pp.Suppress(tick)). \
-            setResultsName('tag')
+            (pp.Word(pp.alphanums+'-_$').setResultsName('tag') ^ opc_path) +
+            pp.Suppress(tick))
 
 # Mode keywords
 LO = keyword_list(['LO', 'local_override', 'interlocked']).setParseAction(normalize('LO'))
@@ -96,7 +94,7 @@ wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResul
 # ===OAR prompt keywords===
 prompt = (keyword_list(['prompt', 'oar', 'ack', 'ack', 'ask', 'message']) +
           pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':', 'response'])))) +
-          (STRING ^ keyword_list(['VALUE', 'YES', 'NO'])))
+          (STRING.setResultsName('message') ^ keyword_list(['VALUE', 'YES', 'NO']).setResultsName('target')))
 prompt = prompt.setParseAction(normalize('prompt'))
 
 # ===Report parameters for batch===
@@ -120,13 +118,13 @@ action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
 # ===========Expressions=================
 value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv) + pp.Optional(pp.Suppress(eng_units))). \
-    setResultsName('value', listAllMatches=True)
+    setResultsName('value')
 
-condition = (tag.setResultsName('lhs') + compare + value.setResultsName('rhs')).setResultsName('condition', listAllMatches=True)
+condition = (pp.Group(tag).setResultsName('lhs') + compare + pp.Group(value).setResultsName('rhs')).setResultsName('condition')
 
 command = (tag + pp.Optional(EQUALS ^ ASSIGN) + pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress()) + value +
             pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress() + value)).\
-            setResultsName('command', listAllMatches=True)
+            setResultsName('command')
 
 
 # ==========Compound Expressions=========
