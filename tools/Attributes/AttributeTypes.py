@@ -314,9 +314,6 @@ class ModeAttribute(Attribute_Base):
                 current_mode = self.readmode()[0]
                 return ModeAttribute.actual_int_dict[self.target_mode] == current_mode
 
-    def read_Mode(self):
-        return self.readmode()
-
 
 class PositionAttribute(ModeAttribute):
     '''
@@ -335,9 +332,10 @@ class PositionAttribute(ModeAttribute):
     # mode: attr_path dictionary--> used for reads by default
     mode_confim_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUTP', 'RCAS': 'PV_D'}
 
-    def __init__(self, tag, attr_path ='', mode_attr=None):
+    def __init__(self, tag, attr_path ='', mode_attr=None, **kwargs):
         self.tag = tag
         self.attr_path = attr_path
+        self.target_value = kwargs.pop('target_value', None)
 
         if not mode_attr:
             self.mode = mode_attr
@@ -345,9 +343,9 @@ class PositionAttribute(ModeAttribute):
             print "Mode must be a mode attribute type"
             raise TypeError
 
-        ModeAttribute.__init__(self, self.tag, self.attr_path)
+        ModeAttribute.__init__(self, self.tag)
 
-    def write(self, target_value, **kwargs):
+    def setvalve(self, target_value, **kwargs):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
@@ -358,28 +356,26 @@ class PositionAttribute(ModeAttribute):
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
 
-        if not mode:
-            mode = self.read_Mode()[0]
+        if mode == None:
+            mode = self.readmode()[0]
 
         if type(mode) in [str, unicode]:
             mode = mode.upper()
-        elif type(mode) in [int]:
+        elif type(mode) in [int, float]:
             mode = PositionAttribute.modenum_str_dict[mode]
 
         self.attr_path = PositionAttribute.mode_act_dict[mode]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(target_value)
+        return self.write(target_value)
 
-    def read(self):
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+    def readposition(self):
+        return self.read()
 
     def execute(self, command = 'write', **kwargs):
-        mode = kwargs.pop('mode','')
-        target_value = kwargs.pop('target_value', '')
         if command == 'write':
-            if target_value:
-                self.write(target_value, mode = mode)
-                current_value = self.read()[0]
-                return target_value == current_value
+            if self.target_value:
+                self.setvalve(self.target_value, mode = self.mode)
+                current_value = self.readposition()[0]
+                return self.target_value == current_value
             else:
                 raise TypeError
 
