@@ -1,0 +1,53 @@
+File outlines general thoughts and design goals for attribute types.
+
+1. General:
+
+    An attribute is an allocation of memory for binding a specific data type within a control system. This means
+    attributes themselves do not execute control logic put are used as inputs/outputs (reads/writes) during control
+    logic execution.
+    Attributes may be entirely for control system internal use or can represent physical signals
+    representing an engineering process. Either way attributes must have some type of interface outside the control
+    system such that they may be queried and manipulated as required for testing. If there is not external interface,
+    it is not an attribute.
+
+    Ideally all testing would ultimately be traceable to the engineering units, target values and tolerances bands
+    as dictated by the process. However, the utility of system information derived from testing increases
+    with the granularity of test checkpoints, to a point. Tautological or trivial tests introduce noise into the
+    testing results and dilute useful information. That is to say it is possible to test too much, and each test itself
+    introduces a chance of inaccuracy into test outputs from specification, test generation, or transcription errors.
+
+2. Attribute relations to test execution
+
+    The attributes included in specification and generation of high-level control system testing will be those that
+    directly interact with the physical world: IO, human interfacing, and communications between control logic execution
+    elements (i.e. modules). This approach limits the data types and variations in manipulation of what we consider
+    "testable" attribute as a subset of all possible attributes within the system. To facilitate analysis of testing
+    results, attributes will be bundled by related, common logical execution logic whenever possible. In this way
+    we attempt to leverage intuition by mirroring common engineering paradigms within the abstract realm of attributes.
+
+    A relation will always be unambiguously established between the system specifications, the attribute type, and a
+    subset of the possible attribute values that is required to control the process at a single point in time. Thus
+    time is an intrinsic property of every attribute. If each attribute in a test is independent from the
+    others except from the execution module under test, the testing space is R^(n+1), where n is the number of
+    independent attributes, in addition to time. Realistically attribute will have relations to each other, and strongly
+    related attributes should be combined into composites attribute whenever these relations are strong enough
+    to make it practical.
+
+3. Functionality encapsulated by attribute
+
+    To provide adequate layers of abstraction for automation of test setup, execution, and reporting ("test framework")
+    it is ideal that the attribute under test itself should contain all functionality required of the test framework,
+    accessible through a common nomenclature. This greatly simplifies the testing framework as it becomes agnostic to
+    the number, type, order, grouping or relations between attributes that encompass a single test. We merely check
+    if the attribute is or is not within specification. Thus the results of a test is the boolean conjunction of each
+    attribute exposed to the testing framework, giving both an overall "pass" or "fail" result for the entire test
+    but also providing for clues to the root causes of failure via the timestamp of specific attribute failures.
+
+
+3. Attribute type descriptions
+
+    See AttributeTypes.py within this repository.
+
+4. Potential extensions and future work
+
+    TBD
