@@ -291,11 +291,11 @@ class ModeAttribute(Attribute_Base):
         {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
     def __init__(self, tag, attr_path='MODE', **kwargs):
-        Attribute_Base.__init__(self, tag, attr_path = attr_path)
         #NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
         self.target_mode = kwargs.pop('target_mode', '')
         self.tag = tag
         self.attr_path = attr_path
+        Attribute_Base.__init__(self, self.tag, attr_path = self.attr_path)
 
     def setmode(self, mode):
         '''Writes are directed to MODE.TARGET '''
@@ -313,6 +313,8 @@ class ModeAttribute(Attribute_Base):
                 self.setmode(mode = self.target_mode)
                 current_mode = self.readmode()[0]
                 return ModeAttribute.actual_int_dict[self.target_mode] == current_mode
+        elif command == 'read':
+            return self.readmode()[0]
 
 
 class PositionAttribute(ModeAttribute):
@@ -338,7 +340,7 @@ class PositionAttribute(ModeAttribute):
         self.target_value = kwargs.pop('target_value', None)
 
         if not mode_attr:
-            self.mode = mode_attr
+            self.mode = kwargs.pop('mode', None)
         elif not isinstance(mode_attr, ModeAttribute):
             print "Mode must be a mode attribute type"
             raise TypeError
@@ -356,7 +358,9 @@ class PositionAttribute(ModeAttribute):
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
 
-        if mode == None:
+        if mode != None:
+            self.setmode(mode=mode)
+        else:
             mode = self.readmode()[0]
 
         if type(mode) in [str, unicode]:
@@ -370,7 +374,7 @@ class PositionAttribute(ModeAttribute):
     def readposition(self):
         return self.read()
 
-    def execute(self, command = 'write', **kwargs):
+    def execute(self, command = 'write'):
         if command == 'write':
             if self.target_value:
                 self.setvalve(self.target_value, mode = self.mode)
@@ -378,6 +382,10 @@ class PositionAttribute(ModeAttribute):
                 return self.target_value == current_value
             else:
                 raise TypeError
+        elif command == 'read':
+            mode = PositionAttribute.modenum_str_dict[self.readmode()[0]]
+            self.attr_path = PositionAttribute.mode_act_dict[mode]
+            return self.readposition()[0]
 
 
 class PromptAttribute(Attribute_Base):
@@ -448,27 +456,29 @@ class PromptAttribute(Attribute_Base):
         else:  # write self.target to response path
             self.write()
 
-class InicationAttribute(Attribute_Base):
+class IndicationAttribute(Attribute_Base):
     '''
     Unique class of attribute for PV indication.
     Ex: Flow Rate (FIC), Tank Level, PH, Pressure (PIC), Temperature (TI), Tank Weight, etc.
     Indicators use AI1 or INT1 functional blocks
     '''
 
-    def __init__(self, tag, attr_path):
+    def __init__(self, tag, attr_path = 'PV'):
         self.tag = tag
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def read(self):
-        Attribute_Base(self.tag, self.attr_path).read()
+    def readindicator(self):
+        return self.read()
 
-    def execute(self, command = 'read'):
-        if command == 'read':
-            if (self.read()[0]) and (self.read()[1] == 'Good'):
+    def execute(self, command = 'readindicator'):
+        if command == 'readindicator':
+            if (self.readindicator()[0]) and (self.readindicator()[1] == 'Good'):
                 return True
             else:
                 return False
+        if command == 'read':
+            return self.readindicator()[0]
 
 
 class LoopAttribute(Attribute_Base):
@@ -508,36 +518,37 @@ class EMCMDAttribute(Attribute_Base):
     #TODO: import EMCMD dictionary to EMCMD_int_dict
     EMCMD_int_dict = {}
 
-    def __int__(self, tag, attr_path = ''):
+    def __int__(self, tag, attr_path = '', **kwargs):
         ''' :param: tag: the name of EM class
         '''
         self.attr_path = attr_path
         self.tag = tag
+        self.target = kwargs.pop('target', '')
         Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
 
-    def write(self, target):
+    def setEM(self):
         self.attr_path = 'A_COMMAND'
-        self.target = target
-        if target in [str, unicode]:
-            self.target = EMCMDAttribute.EMCMD_int_dict[target]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(self.target)
+        if self.target in [str, unicode]:
+            self.target = EMCMDAttribute.EMCMD_int_dict[self.target]
+        return self.write(self.target)
 
     def readtarget(self):
         self.attr_path = 'A_TARGET'
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+        return self.read()
 
     def readPV(self):
         self.attr_path = 'A_PV'
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+        return self.read()
 
-    def execute(self, command = 'write', **kwargs):
+    def execute(self, command = 'write'):
         if command == 'write':
-            target = kwargs.pop('target', '')
-            self.write(target)
+            self.setEM()
             readtarget = self.readtarget()[0]
             readPV = self.readPV()[0]
             #TODO: confirm below:
             return readtarget == self.target or readPV == self.target
+        if command == 'read':
+            return self.readPV()[0]
 
 
 class PhaseCMDAttribute(NamedDiscrete):
@@ -552,28 +563,25 @@ class OtherAttribute(Attribute_Base):
     '''
     class for all other kind of attribute
     '''
-    def __init__(self, tag, attr_path, param = 'CV'):
+    def __init__(self, tag, attr_path, param = 'CV', **kwargs):
         self.param = param
-        Attribute_Base.__init__(self, tag, attr_path)
+        self.target_value = kwargs.pop('target_value',None)
+        Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
-    def read(self):
-        return Attribute_Base.read(self, param = self.param)
+    def readvalue(self):
+        return self.read(param = self.param)
 
-    def write(self, target_value):
-        return Attribute_Base.write(self, value = target_value, param = self.param)
+    def writevalue(self, target_value):
+        return self.write(value = target_value, param = self.param)
 
-    def execute(self, command = 'read', **kwargs):
+    def execute(self, command = 'write', **kwargs):
         if command == 'read':
-            if (self.read()[0]) and (self.read()[1] == 'Good'):
-                return True
-            else:
-                return False
+            return self.readvalue()[0]
         elif command == 'write':
-            target_value = kwargs.pop('target_value', '')
-            if target_value:
-                self.write(target_value)
-                current_value = self.read()[0]
-                return target_value == current_value
+            if self.target_value:
+                self.writevalue(self.target_value)
+                current_value = self.readvalue()[0]
+                return self.target_value == current_value
             else:
                 raise TypeError
 
@@ -587,7 +595,7 @@ class AttributeDummy(Attribute_Base):
     def write(self):
         pass
 
-    def execute(self):
+    def execute(self, command = 'read'):
         pass
 
 #####################Transition Attribute Types (use read functions and compare) #########################
@@ -612,8 +620,8 @@ class ComparisonAttributes(object):
         if self.op not in ComparisonAttributes.operator_dict:
             raise TypeError
 
-        leftval = self.lhs.read()[0]  # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-        rightval = self.rhs.read()[0]
+        leftval = self.lhs.execute(command='read')  # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+        rightval = self.rhs.execute(command='read')
         op = ComparisonAttributes.operator_dict[self.op]
         return op(leftval, rightval)
 

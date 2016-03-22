@@ -5,9 +5,11 @@ import Attributes.AttributeTypes as AttributeTypes
 import random
 
 def rtag():
+    #return random.choice(['PI-4206', 'PIC-2295'])
     return random.choice(['CV-2151', 'HS-4092'])
 
 def rpath():
+    #return 'AI1/OUT'
     return 'PV_D'
 
 def rten():
@@ -22,7 +24,10 @@ def ropr():
 
 def make_attribute(val=None):
     '''makes a discrete attribute'''
-    return AttributeTypes.DiscreteAttribute(rtag(), attr_path = rpath())
+    #return AttributeTypes.IndicationAttribute(rtag(), rpath())
+    return AttributeTypes.PositionAttribute(rtag(), target_value = 1, mode='AUTO')
+    #return AttributeTypes.ModeAttribute(rtag(), target_mode = 'CAS')
+    #return AttributeTypes.DiscreteAttribute(rtag(), attr_path = rpath())
     #'''makes a random constant attribute'''
     #return AttributeTypes.Constant(rten())
 
@@ -50,6 +55,9 @@ def make_fail_condition():
 
     return AttributeTypes.Compare(AttributeTypes.Constant(lhs), opr, AttributeTypes.Constant(rhs))
 
+def make_test_condition():
+    return AttributeTypes.ComparisonAttributes(lhs=AttributeTypes.PositionAttribute('CV-2151'), op='==',
+                                               rhs=AttributeTypes.PositionAttribute('HS-4092'))
 
 def make_state_diagram(s=1):
     '''makes a single-path diagram of random states and transitions'''
@@ -62,7 +70,7 @@ def make_state_diagram(s=1):
         [new_diagram.add_state_attr(sname, make_attribute()) for x in range(random.randint(1,2))]
 
         if snum > 0 and snum != s:  #add transition between states
-            new_diagram.add_transition('state'+str(snum-1), sname, attributes=make_pass_condition())
+            new_diagram.add_transition('state'+str(snum-1), sname, attributes=make_test_condition())
 
     return new_diagram
 
