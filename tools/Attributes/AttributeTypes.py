@@ -82,7 +82,7 @@ class Attribute_Base(object):
         '''Stub for writing to this attribute's value.
         :return: sucess of write'''
         write_path = self.OPC_path() + '.' + param
-        return self.writehook( (write_path, value) )
+        return self.writehook(write_path, value)
 
     def set_write_hook(self, writehook):
         self.writehook = writehook
@@ -241,13 +241,13 @@ class DiscreteAttribute(Attribute_Base):
             if op == '=':
                 return readleft[0] == rhs
 
-    def set_read_hook(self, readhook):
-        self.lhs.set_read_hook(readhook)
-        self.rhs.set_read_hook(readhook)
-
-    def set_write_hook(self, writehook):
-        self.lhs.set_write_hook(writehook)
-        self.rhs.set_write_hook(writehook)
+    # def set_read_hook(self, readhook):
+    #     self.lhs.set_read_hook(readhook)
+    #     self.rhs.set_read_hook(readhook)
+    #
+    # def set_write_hook(self, writehook):
+    #     self.lhs.set_write_hook(writehook)
+    #     self.rhs.set_write_hook(writehook)
 
 
 class NamedDiscrete(DiscreteAttribute):
@@ -277,7 +277,7 @@ class AnalogAttribute(Attribute_Base):
 
 ############################# State Attribute Types (Set Values) ##############################
 
-class ModeAttribute(NamedDiscrete):
+class ModeAttribute(Attribute_Base):
     '''
     Unique class of attribute for evaluation of DeltaV modes
     '''
@@ -290,29 +290,32 @@ class ModeAttribute(NamedDiscrete):
     actual_int_dict = \
         {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
-    def __init__(self, tag, attr_path='MODE'):
-        NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+    def __init__(self, tag, attr_path='MODE', **kwargs):
+        Attribute_Base.__init__(self, tag, attr_path = attr_path)
+        #NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+        self.target_mode = kwargs.pop('target_mode', '')
+        self.tag = tag
+        self.attr_path = attr_path
 
-    def write(self, mode):
+    def setmode(self, mode):
         '''Writes are directed to MODE.TARGET '''
         if type(mode) in [str, unicode]:
             mode = ModeAttribute.target_int_dict[mode]
-        return Attribute_Base.write(mode, param='TARGET')
+        return self.write(value=mode, param='TARGET')
 
-    def read(self):
+    def readmode(self):
         '''Reads are directed to MODE.ACTUAL'''
-        return Attribute_Base.read(self, param='ACTUAL')
+        return self.read(param='ACTUAL')
 
-    def execute(self, command = 'write', **kwargs):
-        target_mode = kwargs.pop('mode', '')
+    def execute(self, command = 'write'):
         if command == 'write':
-            if target_mode:
-                self.write(mode = target_mode)
-                current_mode = self.read()[0]
-                return ModeAttribute.actual_int_dict[target_mode] == current_mode
+            if self.target_mode:
+                self.setmode(mode = self.target_mode)
+                current_mode = self.readmode()[0]
+                return ModeAttribute.actual_int_dict[self.target_mode] == current_mode
 
     def read_Mode(self):
-        return self.read()
+        return self.readmode()
 
 
 class PositionAttribute(ModeAttribute):
