@@ -136,93 +136,6 @@ class Attribute_Base(object):
         '''
         self.data.append((time.time(), self.read()))
 
-
-class Constant(Attribute_Base):
-    '''Attribute wrapper for constant values like numbers, strings, etc'''
-
-    def __init__(self, value, *args, **kwargs):
-
-        if type(value) in [int, float, str, unicode]:
-            self.val = value
-        else:
-            raise TypeError
-        Attribute_Base.__init__(self, 'Constant', path=value)
-
-    def read(self):
-        return (self.val, 'Good', time.ctime())
-
-    def write(self, value):
-        self.val = value
-        return 'Success'
-
-
-class Compare(Attribute_Base):
-
-    def __init__(self, lhs, opr, rhs, deadband=0):
-        '''
-        Comparison between two sub-attributes in the form of:
-            (left hand side) (operator) (right hand side)
-        Ex: PI-1783 > 65
-        Both rhs and lhs must be sub classes of Attribute Base
-
-        :param rhs: right hand (value to compare)
-        :param opr: operator - one of (<, >, <=, >=, =, !=)
-        :param lhs: left hand side (value to check, most likely read from system)
-        :return: Compare instance
-        '''
-
-        if not isinstance(lhs, Attribute_Base) and not isinstance(rhs, Attribute_Base):
-            raise TypeError
-        else:
-            self.lhs = lhs
-            self.rhs = rhs
-
-        if opr not in ['<', '>', '<=', '>=', '!=', '=']:
-            raise TypeError
-        else:
-            if opr is '=':  # set to equivalency python operator
-                self.opr = '=='
-            else:
-                self.opr = opr
-
-        self.deadband = deadband  # deadband applied to rhs of comparison
-
-        self.id = self.lhs.tag+self.opr+self.rhs.tag
-
-        Attribute_Base.__init__(self, self.id)
-
-        self.logger = dlog.MakeChild(self.id)
-
-    def read(self):
-        raise NotImplementedError
-
-    def write(self):
-        '''Automatically set lhs equal to rhs read value'''
-        return self.lhs.write(self.rhs.read()[0])
-
-    def execute(self):
-        '''Executes comparison logic'''
-        if self.exe_cnt < 1:
-            self.start_timer()
-
-        self.exe_cnt += 1
-
-        return self.comp_eval()
-
-    def comp_eval(self):
-        '''
-        Evaluates comparison:  (rhs) - (lhs) (opr) (deadband)
-
-        Ex. /PI-1875/PV.CV - 65 > 0.1
-        '''
-        cmp_val = str(self.rhs.read()[0]) +'-'+str(self.lhs.read()[0])+self.opr+str(self.deadband)
-        print cmp_val
-
-        self.logger.debug('Evaluating: %s', cmp_val)
-
-        return eval(cmp_val)
-
-
 # =============================================================
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
@@ -276,6 +189,31 @@ class AnalogAttribute(Attribute_Base):
 
 
 ############################# State Attribute Types (Set Values) ##############################
+
+class Constant(Attribute_Base):
+    '''Attribute wrapper for constant values like numbers, strings, etc'''
+
+    def __init__(self, value, *args, **kwargs):
+
+        if type(value) in [int, float, str, unicode]:
+            self.val = value
+        else:
+            raise TypeError
+        Attribute_Base.__init__(self, 'Constant', path=value)
+
+    def readval(self):
+        return (self.val, 'Good', time.ctime())
+
+    def writeval(self, value):
+        self.val = value
+        return 'Success'
+
+    def execute(self, command = 'write'):
+        if command == 'write':
+            self.writeval(self.val)
+            return True
+        elif command == 'read':
+            return self.readval()[0]
 
 class ModeAttribute(Attribute_Base):
     '''
@@ -442,12 +380,16 @@ class PromptAttribute(Attribute_Base):
             # bad read value, problem with path string or client
             raise IOError
 
-    def execute(self):
+    def execute(self, command = 'write'):
         '''Reads prompt message, checking against message string'''
-        message_value = self.read()
+        if command == 'write':
+            message_value = self.read()
 
-        if message_value == self.message_string:
-            self.set_complete(True)
+            if message_value == self.message_string:
+                self.set_complete(True)
+
+        if command == 'read':
+            return self.response.read()
 
     def force(self, value=None):
         '''Write prompt response self.target'''
@@ -598,8 +540,34 @@ class AttributeDummy(Attribute_Base):
     def execute(self, command = 'read'):
         pass
 
+
+class Calculate(Attribute_Base):
+    def __init__(self, function):
+        '''
+
+        :param function: must be a list of instances and operators in the function right now.
+        E.x. function = ['PI-1783', '-', 65] or [PositionAttribute(), '-', Constant()]
+        :return: Result from calculation
+        '''
+        self.function = function
+        tags = list()
+        for x in range(0, len(self.function)):
+            if isinstance(self.function[x], Attribute_Base):
+                tags.append(self.function[x].tag)
+                self.function[x] = 'float(%r)' %self.function[x].execute(command='read')
+        self.id = tags
+        s = ''
+        self.calc_str = s.join(self.function)
+        Attribute_Base.__init__(self, self.id)
+
+    def execute(self, command='write'):
+        if command == 'write':
+            raise NotImplementedError
+        if command == 'read':
+            return eval(self.calc_str)
+
 #####################Transition Attribute Types (use read functions and compare) #########################
-class ComparisonAttributes(object):
+class Compare(Attribute_Base):
 
     operator_dict = {'>': operator.gt,
                      '>=': operator.ge,
@@ -609,21 +577,61 @@ class ComparisonAttributes(object):
                      '<=': operator.le,
                      '!=': operator.ne}
 
-    #TODO: Get system values with the read functions above
-    def __init__(self, **kwargs):
-        # just a string
+    def __init__(self, deadband=0, **kwargs):
+        '''
+        Comparison between two sub-attributes in the form of:
+            (left hand side) (operator) (right hand side)
+        Ex: PI-1783 > 65
+        Both rhs and lhs must be sub classes of Attribute Base
+
+        :param rhs: right hand (value to compare)
+        :param opr: operator - one of (<, >, <=, >=, =, !=)
+        :param lhs: left hand side (value to check, most likely read from system)
+        :return: Compare instance
+        '''
+
         self.op = kwargs.pop('op', '')
         self.lhs = kwargs.pop('lhs', AttributeDummy())
         self.rhs = kwargs.pop('rhs', AttributeDummy())
 
-    def execute(self, **kwargs):
-        if self.op not in ComparisonAttributes.operator_dict:
-            raise TypeError
+        self.deadband = deadband  # deadband applied to rhs of comparison
 
-        leftval = self.lhs.execute(command='read')  # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-        rightval = self.rhs.execute(command='read')
-        op = ComparisonAttributes.operator_dict[self.op]
-        return op(leftval, rightval)
+        self.id = self.lhs.tag+self.op+self.rhs.tag
+
+        Attribute_Base.__init__(self, self.id)
+
+        self.logger = dlog.MakeChild(self.id)
+
+        if self.op not in Compare.operator_dict:
+            raise TypeError
+        else:
+            self.leftval = self.lhs.execute(command='read')
+            self.rightval = self.rhs.execute(command='read')
+
+    def execute(self):
+
+        if self.exe_cnt < 1:
+            self.start_timer()
+
+        self.exe_cnt += 1
+
+        return self.comp_eval()
+
+    def comp_eval(self):
+        '''
+        Evaluates comparison:  (lhs) - (rhs) (opr) (deadband)
+
+        Ex. /PI-1875/PV.CV - 65 > 0.1
+        '''
+        cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
+        print cmp_val
+
+        self.logger.debug('Evaluating: %s', cmp_val)
+
+        return eval(cmp_val)
+
+        # op = ComparisonAttributes.operator_dict[self.op]
+        # return op(self.leftval, self.rightval)
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)
