@@ -24,10 +24,7 @@ StartEM: Set FLOW_TOT = 0
 StartEM: Set CHG_SP = 0
 StartEM: Set RX_TARE = 0
 
-StartEM --> RecipeCTRL: OWNER_ID = 'Recipe'
-RecipeCTRL: Set CHG_SP = RCP_TGT
-
-RecipeCTRL --> OpenValve
+StartEM --> OpenValve: OWNER_ID = 'Recipe'
 
 Note right of RecipeCTRL : This action will be completed by the phase,\n it cannot be in the EM diagram \n we can remove this state entirely
 

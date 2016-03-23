@@ -1,8 +1,6 @@
 @startuml
 scale 350 width
 
-!pragma svek_trace on
-
 state START_VACUUM {
 
     state startset as "START_VACUUM Setup" {
@@ -21,7 +19,6 @@ state START_VACUUM {
         StartSteam --> [*] : Wait 30 (TP002) seconds
     }
 }
-
 
 state STOP_VACUUM {
     state stopset as "STOP_VACUUM Setup" {

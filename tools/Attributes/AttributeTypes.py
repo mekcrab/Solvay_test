@@ -82,7 +82,7 @@ class Attribute_Base(object):
         '''Stub for writing to this attribute's value.
         :return: sucess of write'''
         write_path = self.OPC_path() + '.' + param
-        return self.writehook( (write_path, value) )
+        return self.writehook(write_path, value)
 
     def set_write_hook(self, writehook):
         self.writehook = writehook
@@ -136,93 +136,6 @@ class Attribute_Base(object):
         '''
         self.data.append((time.time(), self.read()))
 
-
-class Constant(Attribute_Base):
-    '''Attribute wrapper for constant values like numbers, strings, etc'''
-
-    def __init__(self, value, *args, **kwargs):
-
-        if type(value) in [int, float, str, unicode]:
-            self.val = value
-        else:
-            raise TypeError
-        Attribute_Base.__init__(self, 'Constant', path=value)
-
-    def read(self):
-        return (self.val, 'Good', time.ctime())
-
-    def write(self, value):
-        self.val = value
-        return 'Success'
-
-
-class Compare(Attribute_Base):
-
-    def __init__(self, lhs, opr, rhs, deadband=0):
-        '''
-        Comparison between two sub-attributes in the form of:
-            (left hand side) (operator) (right hand side)
-        Ex: PI-1783 > 65
-        Both rhs and lhs must be sub classes of Attribute Base
-
-        :param rhs: right hand (value to compare)
-        :param opr: operator - one of (<, >, <=, >=, =, !=)
-        :param lhs: left hand side (value to check, most likely read from system)
-        :return: Compare instance
-        '''
-
-        if not isinstance(lhs, Attribute_Base) and not isinstance(rhs, Attribute_Base):
-            raise TypeError
-        else:
-            self.lhs = lhs
-            self.rhs = rhs
-
-        if opr not in ['<', '>', '<=', '>=', '!=', '=']:
-            raise TypeError
-        else:
-            if opr is '=':  # set to equivalency python operator
-                self.opr = '=='
-            else:
-                self.opr = opr
-
-        self.deadband = deadband  # deadband applied to rhs of comparison
-
-        self.id = self.lhs.tag+self.opr+self.rhs.tag
-
-        Attribute_Base.__init__(self, self.id)
-
-        self.logger = dlog.MakeChild(self.id)
-
-    def read(self):
-        raise NotImplementedError
-
-    def write(self):
-        '''Automatically set lhs equal to rhs read value'''
-        return self.lhs.write(self.rhs.read()[0])
-
-    def execute(self):
-        '''Executes comparison logic'''
-        if self.exe_cnt < 1:
-            self.start_timer()
-
-        self.exe_cnt += 1
-
-        return self.comp_eval()
-
-    def comp_eval(self):
-        '''
-        Evaluates comparison:  (rhs) - (lhs) (opr) (deadband)
-
-        Ex. /PI-1875/PV.CV - 65 > 0.1
-        '''
-        cmp_val = str(self.rhs.read()[0]) +'-'+str(self.lhs.read()[0])+self.opr+str(self.deadband)
-        print cmp_val
-
-        self.logger.debug('Evaluating: %s', cmp_val)
-
-        return eval(cmp_val)
-
-
 # =============================================================
 class DiscreteAttribute(Attribute_Base):
     '''Base class for discrete attributes
@@ -241,13 +154,13 @@ class DiscreteAttribute(Attribute_Base):
             if op == '=':
                 return readleft[0] == rhs
 
-    def set_read_hook(self, readhook):
-        self.lhs.set_read_hook(readhook)
-        self.rhs.set_read_hook(readhook)
-
-    def set_write_hook(self, writehook):
-        self.lhs.set_write_hook(writehook)
-        self.rhs.set_write_hook(writehook)
+    # def set_read_hook(self, readhook):
+    #     self.lhs.set_read_hook(readhook)
+    #     self.rhs.set_read_hook(readhook)
+    #
+    # def set_write_hook(self, writehook):
+    #     self.lhs.set_write_hook(writehook)
+    #     self.rhs.set_write_hook(writehook)
 
 
 class NamedDiscrete(DiscreteAttribute):
@@ -277,7 +190,32 @@ class AnalogAttribute(Attribute_Base):
 
 ############################# State Attribute Types (Set Values) ##############################
 
-class ModeAttribute(NamedDiscrete):
+class Constant(Attribute_Base):
+    '''Attribute wrapper for constant values like numbers, strings, etc'''
+
+    def __init__(self, value, *args, **kwargs):
+
+        if type(value) in [int, float, str, unicode]:
+            self.val = value
+        else:
+            raise TypeError
+        Attribute_Base.__init__(self, 'Constant', path=value)
+
+    def readval(self):
+        return (self.val, 'Good', time.ctime())
+
+    def writeval(self, value):
+        self.val = value
+        return 'Success'
+
+    def execute(self, command = 'write'):
+        if command == 'write':
+            self.writeval(self.val)
+            return True
+        elif command == 'read':
+            return self.readval()[0]
+
+class ModeAttribute(Attribute_Base):
     '''
     Unique class of attribute for evaluation of DeltaV modes
     '''
@@ -290,29 +228,31 @@ class ModeAttribute(NamedDiscrete):
     actual_int_dict = \
         {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
-    def __init__(self, tag, attr_path='MODE'):
-        NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+    def __init__(self, tag, attr_path='MODE', **kwargs):
+        #NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
+        self.target_mode = kwargs.pop('target_mode', '')
+        self.tag = tag
+        self.attr_path = attr_path
+        Attribute_Base.__init__(self, self.tag, attr_path = self.attr_path)
 
-    def write(self, mode):
+    def setmode(self, mode):
         '''Writes are directed to MODE.TARGET '''
         if type(mode) in [str, unicode]:
             mode = ModeAttribute.target_int_dict[mode]
-        return Attribute_Base.write(mode, param='TARGET')
+        return self.write(value=mode, param='TARGET')
 
-    def read(self):
+    def readmode(self):
         '''Reads are directed to MODE.ACTUAL'''
-        return Attribute_Base.read(self, param='ACTUAL')
+        return self.read(param='ACTUAL')
 
-    def execute(self, command = 'write', **kwargs):
-        target_mode = kwargs.pop('mode', '')
+    def execute(self, command = 'write'):
         if command == 'write':
-            if target_mode:
-                self.write(mode = target_mode)
-                current_mode = self.read()[0]
-                return ModeAttribute.actual_int_dict[target_mode] == current_mode
-
-    def read_Mode(self):
-        return self.read()
+            if self.target_mode:
+                self.setmode(mode = self.target_mode)
+                current_mode = self.readmode()[0]
+                return ModeAttribute.actual_int_dict[self.target_mode] == current_mode
+        elif command == 'read':
+            return self.readmode()[0]
 
 
 class PositionAttribute(ModeAttribute):
@@ -332,19 +272,20 @@ class PositionAttribute(ModeAttribute):
     # mode: attr_path dictionary--> used for reads by default
     mode_confim_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUTP', 'RCAS': 'PV_D'}
 
-    def __init__(self, tag, attr_path ='', mode_attr=None):
+    def __init__(self, tag, attr_path ='', mode_attr=None, **kwargs):
         self.tag = tag
         self.attr_path = attr_path
+        self.target_value = kwargs.pop('target_value', None)
 
         if not mode_attr:
-            self.mode = mode_attr
+            self.mode = kwargs.pop('mode', None)
         elif not isinstance(mode_attr, ModeAttribute):
             print "Mode must be a mode attribute type"
             raise TypeError
 
-        ModeAttribute.__init__(self, self.tag, self.attr_path)
+        ModeAttribute.__init__(self, self.tag)
 
-    def write(self, target_value, **kwargs):
+    def setvalve(self, target_value, **kwargs):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
@@ -355,30 +296,34 @@ class PositionAttribute(ModeAttribute):
             target_value = target_value.upper()
             target_value = PositionAttribute.bool_position_dict[target_value]
 
-        if not mode:
-            mode = self.read_Mode()[0]
+        if mode != None:
+            self.setmode(mode=mode)
+        else:
+            mode = self.readmode()[0]
 
         if type(mode) in [str, unicode]:
             mode = mode.upper()
-        elif type(mode) in [int]:
+        elif type(mode) in [int, float]:
             mode = PositionAttribute.modenum_str_dict[mode]
 
         self.attr_path = PositionAttribute.mode_act_dict[mode]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(target_value)
+        return self.write(target_value)
 
-    def read(self):
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+    def readposition(self):
+        return self.read()
 
-    def execute(self, command = 'write', **kwargs):
-        mode = kwargs.pop('mode','')
-        target_value = kwargs.pop('target_value', '')
+    def execute(self, command = 'write'):
         if command == 'write':
-            if target_value:
-                self.write(target_value, mode = mode)
-                current_value = self.read()[0]
-                return target_value == current_value
+            if self.target_value:
+                self.setvalve(self.target_value, mode = self.mode)
+                current_value = self.readposition()[0]
+                return self.target_value == current_value
             else:
                 raise TypeError
+        elif command == 'read':
+            mode = PositionAttribute.modenum_str_dict[self.readmode()[0]]
+            self.attr_path = PositionAttribute.mode_act_dict[mode]
+            return self.readposition()[0]
 
 
 class PromptAttribute(Attribute_Base):
@@ -435,12 +380,16 @@ class PromptAttribute(Attribute_Base):
             # bad read value, problem with path string or client
             raise IOError
 
-    def execute(self):
+    def execute(self, command = 'write'):
         '''Reads prompt message, checking against message string'''
-        message_value = self.read()
+        if command == 'write':
+            message_value = self.read()
 
-        if message_value == self.message_string:
-            self.set_complete(True)
+            if message_value == self.message_string:
+                self.set_complete(True)
+
+        if command == 'read':
+            return self.response.read()
 
     def force(self, value=None):
         '''Write prompt response self.target'''
@@ -457,20 +406,22 @@ class IndicationAttribute(Attribute_Base):
     Indicators use AI1 or INT1 functional blocks
     '''
 
-    def __init__(self, tag, attr_path):
+    def __init__(self, tag, attr_path = 'PV'):
         self.tag = tag
         self.attr_path = attr_path
         Attribute_Base.__init__(self, tag, attr_path = attr_path)
 
-    def read(self):
-        Attribute_Base(self.tag, self.attr_path).read()
+    def readindicator(self):
+        return self.read()
 
-    def execute(self, command='read'):
-        if command == 'read':
-            if (self.read()[0]) and (self.read()[1] == 'Good'):
+    def execute(self, command = 'readindicator'):
+        if command == 'readindicator':
+            if (self.readindicator()[0]) and (self.readindicator()[1] == 'Good'):
                 return True
             else:
                 return False
+        if command == 'read':
+            return self.readindicator()[0]
 
     def force(self):
         '''
@@ -524,36 +475,37 @@ class EMCMDAttribute(Attribute_Base):
     # command integer value for a self.force(target)?
     EMCMD_int_dict = {}
 
-    def __int__(self, tag, attr_path = ''):
+    def __int__(self, tag, attr_path = '', **kwargs):
         ''' :param: tag: the name of EM class
         '''
         self.attr_path = attr_path
         self.tag = tag
+        self.target = kwargs.pop('target', '')
         Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
 
-    def write(self, target):
+    def setEM(self):
         self.attr_path = 'A_COMMAND'
-        self.target = target
-        if target in [str, unicode]:
-            self.target = EMCMDAttribute.EMCMD_int_dict[target]
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).write(self.target)
+        if self.target in [str, unicode]:
+            self.target = EMCMDAttribute.EMCMD_int_dict[self.target]
+        return self.write(self.target)
 
     def readtarget(self):
         self.attr_path = 'A_TARGET'
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+        return self.read()
 
     def readPV(self):
         self.attr_path = 'A_PV'
-        return Attribute_Base(tag = self.tag, attr_path = self.attr_path).read()
+        return self.read()
 
-    def execute(self, command = 'write', **kwargs):
+    def execute(self, command = 'write'):
         if command == 'write':
-            target = kwargs.pop('target', '')
-            self.write(target)
+            self.setEM()
             readtarget = self.readtarget()[0]
             readPV = self.readPV()[0]
             #TODO: confirm below:
             return readtarget == self.target or readPV == self.target
+        if command == 'read':
+            return self.readPV()[0]
 
 
 class PhaseCMDAttribute(NamedDiscrete):
@@ -569,28 +521,25 @@ class OtherAttribute(Attribute_Base):
     '''
     Catch-all class for other attributes, based on absolute OPC path
     '''
-    def __init__(self, tag, attr_path, param = 'CV'):
+    def __init__(self, tag, attr_path, param = 'CV', **kwargs):
         self.param = param
-        Attribute_Base.__init__(self, tag, attr_path)
+        self.target_value = kwargs.pop('target_value',None)
+        Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
-    def read(self):
-        return Attribute_Base.read(self, param = self.param)
+    def readvalue(self):
+        return self.read(param = self.param)
 
-    def write(self, target_value):
-        return Attribute_Base.write(self, value = target_value, param = self.param)
+    def writevalue(self, target_value):
+        return self.write(value = target_value, param = self.param)
 
-    def execute(self, command = 'read', **kwargs):
+    def execute(self, command = 'write', **kwargs):
         if command == 'read':
-            if (self.read()[0]) and (self.read()[1] == 'Good'):
-                return True
-            else:
-                return False
+            return self.readvalue()[0]
         elif command == 'write':
-            target_value = kwargs.pop('target_value', '')
-            if target_value:
-                self.write(target_value)
-                current_value = self.read()[0]
-                return target_value == current_value
+            if self.target_value:
+                self.writevalue(self.target_value)
+                current_value = self.readvalue()[0]
+                return self.target_value == current_value
             else:
                 raise TypeError
 
@@ -617,8 +566,34 @@ class AttributeDummy(Attribute_Base):
     def force(self):
         pass
 
+
+class Calculate(Attribute_Base):
+    def __init__(self, function):
+        '''
+
+        :param function: must be a list of instances and operators in the function right now.
+        E.x. function = ['PI-1783', '-', 65] or [PositionAttribute(), '-', Constant()]
+        :return: Result from calculation
+        '''
+        self.function = function
+        tags = list()
+        for x in range(0, len(self.function)):
+            if isinstance(self.function[x], Attribute_Base):
+                tags.append(self.function[x].tag)
+                self.function[x] = 'float(%r)' %self.function[x].execute(command='read')
+        self.id = tags
+        s = ''
+        self.calc_str = s.join(self.function)
+        Attribute_Base.__init__(self, self.id)
+
+    def execute(self, command='write'):
+        if command == 'write':
+            raise NotImplementedError
+        if command == 'read':
+            return eval(self.calc_str)
+
 #####################Transition Attribute Types (use read functions and compare) #########################
-class ComparisonAttributes(object):
+class Compare(Attribute_Base):
 
     operator_dict = {'>': operator.gt,
                      '>=': operator.ge,
@@ -628,21 +603,61 @@ class ComparisonAttributes(object):
                      '<=': operator.le,
                      '!=': operator.ne}
 
-    #TODO: Get system values with the read functions above
-    def __init__(self, **kwargs):
-        # just a string
+    def __init__(self, deadband=0, **kwargs):
+        '''
+        Comparison between two sub-attributes in the form of:
+            (left hand side) (operator) (right hand side)
+        Ex: PI-1783 > 65
+        Both rhs and lhs must be sub classes of Attribute Base
+
+        :param rhs: right hand (value to compare)
+        :param opr: operator - one of (<, >, <=, >=, =, !=)
+        :param lhs: left hand side (value to check, most likely read from system)
+        :return: Compare instance
+        '''
+
         self.op = kwargs.pop('op', '')
         self.lhs = kwargs.pop('lhs', AttributeDummy())
         self.rhs = kwargs.pop('rhs', AttributeDummy())
 
-    def execute(self, **kwargs):
-        if self.op not in ComparisonAttributes.operator_dict:
-            raise TypeError
+        self.deadband = deadband  # deadband applied to rhs of comparison
 
-        leftval = self.lhs.read()[0]  # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
-        rightval = self.rhs.read()[0]
-        op = ComparisonAttributes.operator_dict[self.op]
-        return op(leftval, rightval)
+        self.id = self.lhs.tag+self.op+self.rhs.tag
+
+        Attribute_Base.__init__(self, self.id)
+
+        self.logger = dlog.MakeChild(self.id)
+
+        if self.op not in Compare.operator_dict:
+            raise TypeError
+        else:
+            self.leftval = self.lhs.execute(command='read')
+            self.rightval = self.rhs.execute(command='read')
+
+    def execute(self):
+
+        if self.exe_cnt < 1:
+            self.start_timer()
+
+        self.exe_cnt += 1
+
+        return self.comp_eval()
+
+    def comp_eval(self):
+        '''
+        Evaluates comparison:  (lhs) - (rhs) (opr) (deadband)
+
+        Ex. /PI-1875/PV.CV - 65 > 0.1
+        '''
+        cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
+        print cmp_val
+
+        self.logger.debug('Evaluating: %s', cmp_val)
+
+        return eval(cmp_val)
+
+        # op = ComparisonAttributes.operator_dict[self.op]
+        # return op(self.leftval, self.rightval)
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)

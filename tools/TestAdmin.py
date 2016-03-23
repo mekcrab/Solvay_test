@@ -51,6 +51,8 @@ class TestAdmin():
             for transition in transitions:
                 for tran_attr in transition.attrs:
                     # TODO: tran_attr.set_read_hook(connection.read)
+                    tran_attr.set_read_hook(connection.read)
+                    tran_attr.set_write_hook(connection.write)
                     is_complete = tran_attr.execute()
                     while not is_complete:
                         print "Executing Transition:", tran_attr
