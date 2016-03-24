@@ -114,7 +114,7 @@ STOP_VAC --> Press_Up
 
 state Press_Up {
 
-[*] --> OpenN2VLV
+
 OpenN2VLV: Open nitrogen_valve
 
 OpenN2VLV --> CloseN2VLV: PRESS_GAP_CTL  > target_pressure

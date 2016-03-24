@@ -22,7 +22,11 @@ class GraphSolver(object):
         else:
             self.graph = new_graph
 
-    def generate_paths(self, start_node, end_node):
+    def check_path(self, start_node, end_node):
+        '''Returns boolean value if path available between given nodes'''
+        return nx.has_path(self.graph, start_node, end_node)
+
+    def generate_path_lists(self, start_node, end_node):
         '''method returns a list of all simple paths
                 between start_node and end_node'''
         if start_node in self.graph and end_node in self.graph:
@@ -30,6 +34,33 @@ class GraphSolver(object):
         else:
             print "ERROR: Specified nodes: start", start_node.name, "end, ", end_node.name, "not found in graph."
             raise NameError
+
+    def generate_path_graphs(self, start_node, end_node):
+        '''
+        Method returns a subgraph (will be an instance of the same class as current self.graph)
+        of all simple paths between start_node and end_node. Note subgraph nodes/edges still reference
+        original objects - so changes propegate through all referenced paths!!!
+        '''
+        subgraphs = list()
+        path_list = self.generate_path_lists(start_node, end_node)
+        for path in path_list:
+            subgraph = self.graph.subgraph(list(path))
+            subgraph.remove_edges_from(self.graph.edges())
+            # add back only path_edges to cleared subgraph
+            subgraph.add_edges_from(self.edges_in_path(path))
+            subgraphs.append(subgraph)
+        return subgraphs
+
+    @staticmethod
+    def edges_in_path(path):
+        '''
+        Generates a list of edges from a given path. Utility function to produce subgraphs from generate_path_lists.
+        :param path:
+        :return:
+        '''
+        # path is topologically ordered as list (start --> end)
+        e = [(path[n], path[n+1]) for n in range(len(path) - 1)]
+        return e
 
     def calculate_complexity(self):
         '''
@@ -49,9 +80,10 @@ class GraphSolver(object):
         return self.graph.number_of_edges() - self.graph.number_of_nodes() + \
                                                 nx.number_weakly_connected_components(self.graph)
 
-
     def draw_graph(self, output='solver_graph.svg'):
         '''Draws the solver's current graph via pygraphviz using dot layout'''
+        if output.split('.')[-1] != 'svg':
+            output = '.'.join([output, 'svg'])
         A = nx.nx_agraph.to_agraph(self.graph)
         A.layout(prog='dot')
         A.draw(output)

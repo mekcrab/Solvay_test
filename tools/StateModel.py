@@ -34,7 +34,7 @@ class StateDiagram(DiGraph):
         # Initialize parent class
         DiGraph.__init__(self, *args, **kwargs)
 
-    def get_state(self, state_id):
+    def get_state(self, state_id, supress_error=False):
         if isinstance(state_id, State):
             return state_id
         else:  # string name of state passed as arg
@@ -43,7 +43,8 @@ class StateDiagram(DiGraph):
         if state_name in self.state_names:
             return self.state_names[state_name]
         else:
-            self.logger.error("No state named " + state_name + "exists in diagram")
+            if not supress_error:
+                self.logger.error("No state named %s exists in diagram", state_name)
             raise NameError
 
     def print_nodes(self):
@@ -86,6 +87,9 @@ class StateDiagram(DiGraph):
         is defined.
         '''
 
+        if parent_state:
+            parent_state = self.get_state(parent_state)
+
         if self.check_state_exists(state_name):
             new_state = self.get_state(state_name)
         else:
@@ -106,12 +110,25 @@ class StateDiagram(DiGraph):
         state.add_attribute(attribute)
 
     def add_transition(self, source, dest, parent_state=None, attributes=None):
-        # make start and ending states [*] unique
-        if source in ['[*]', u'[*]']: source = u'START'
-        if dest in ['[*]', u'[*]']: dest = u'END'
+        if parent_state:
+            parent_state = self.get_state(parent_state)
+
+        # make start and ending states [*] unique for each they are in
+        if source in ['[*]', u'[*]']:
+            if parent_state:
+                source = ' '.join([u'START', parent_state.name])
+            else:
+                source = u'START'
+        if dest in ['[*]', u'[*]']:
+            if parent_state:
+                dest = ' '.join([u'END', parent_state.name])
+            else:
+                dest = u'END'
 
         for state in [source, dest]:
-            if not self.check_state_exists(state):
+            try:
+                self.get_state(state, supress_error=True)
+            except NameError:
                 self.add_state(state, parent_state=parent_state)
 
         # get references to state object as required
@@ -121,30 +138,30 @@ class StateDiagram(DiGraph):
         new_transition = Transition(source, dest)
         self.transitions.append(new_transition)
 
-        # fixme: make into Attribute_Base instance
+        # add attributes if applicable
         if attributes:
             new_transition.add_attribute(attributes)
 
         # add transition to graph representation
         if parent_state:
-            self.get_state(parent_state).substates.add_edge(source, dest, attr_dict={'trans':new_transition})
+            self.get_state(parent_state).substates.add_transition(source, dest, parent_state=None, attributes=attributes)
         else:
             self.add_edge(source, dest, attr_dict={'trans':new_transition})
         # link require source/destination properties of the states
         source.add_destination(dest)
         dest.add_source(source)
 
-    def get_start_states(self):
+    def get_start_states(self, global_scope=False):
         start_states = list()
-        for state in self.top_level:
-            if state.is_start_state():
+        for state in self.nodes():
+            if state.is_start_state(global_scope):
                 start_states.append(state)
         return start_states
 
-    def get_end_states(self):
+    def get_end_states(self, global_scope=False):
         end_states = list()
-        for state in self.top_level:
-            if state.is_end_state():
+        for state in self.nodes():
+            if state.is_end_state(global_scope):
                 end_states.append(state)
         return end_states
 
@@ -153,20 +170,20 @@ class StateDiagram(DiGraph):
         Flattens recursive structure of State.substates to a single graph by eliminating all superstates
         :return: directed graph of flattened structure
         '''
-        flat_graph = self.subgraph(self.top_level)  # retains only nodes and edges in top-level graph - not a copy!!
+        flat_graph = self.subgraph(self.nodes())  # retains only nodes and edges in top-level graph - not a copy!!
         for state in flat_graph.nodes():
             # check for subgraph
             if state.num_substates > 0:
                 # recursively flatten subgraphs
                 subgraph = state.substates.flatten_graph()
+                # add resulting subgraph to newly flattened graph
+                flat_graph.add_edges_from(subgraph.edges())
                 # connect starting edges to superstate.source, ending edges to superstate.destination
                 for sub_state in subgraph.nodes():
                     if sub_state.is_start_state():
                         [flat_graph.add_edge(src, sub_state) for src in state.source]
                     if sub_state.is_end_state():
                         [flat_graph.add_edge(sub_state, dest) for dest in state.destination]
-                # add resulting subgraph to newly flattened graph
-                flat_graph.add_edges_from(subgraph.edges())
                 # remove superstate
                 flat_graph.remove_node(state)
         return flat_graph
@@ -208,7 +225,11 @@ class State(object):
         self.source = list()
         self.destination = list()
 
-        self.parent = parent_state
+        if isinstance(parent_state, State) or parent_state is None:
+            self.parent = parent_state
+        else:
+            dlog.rootlog.error("State parents must also be states - cannot bind parent to %", self.name)
+            raise TypeError
 
     def add_attribute(self, attribute):
         self.attrs.append(attribute)
@@ -233,7 +254,7 @@ class State(object):
         '''
         local_start = len(self.source) == 0
         if global_scope and self.parent:
-            return local_start or self.parent.is_start_state(gloabl_scope=True)
+            return local_start and self.parent.is_start_state(global_scope=True)
         else:
             return local_start
 
@@ -246,7 +267,7 @@ class State(object):
         '''
         local_end = len(self.destination) == 0
         if global_scope and self.parent:
-            return local_end or self.parent.is_end_state(global_scope=True)
+            return local_end and self.parent.is_end_state(global_scope=True)
         else:
             return local_end
 

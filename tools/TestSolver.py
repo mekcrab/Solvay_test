@@ -18,12 +18,13 @@ dlog.rootlog.warning('Module initialized')
 class TestCase(object):
     '''Single path through a specified state model which can be verified as Pass/Fail'''
     def __init__(self, *args, **kwargs):
-
-        self.name = kwargs.pop('name', None)
-
+        print args
+        print kwargs
+        self.name = kwargs.pop('name', 'test_case')
+        self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # list of ordered states that make up the test case path
         self.passed = None
-        self.timestamp = time.time()
-        self.path = kwargs.pop('state_list', list())  # list of ordered states that make up the test case path
+        self.created = time.time()  # generation timestamp
+        self.timestamp = time.time()  # testing activity timestamp
 
     def get_name(self):
         return self.name
@@ -60,7 +61,7 @@ class TestCaseGenerator(object):
             raise TypeError
 
         self.solver = kwargs.pop('test_solver', GraphSolver.GraphSolver(self.diagram))
-        self.test_cases = kwargs.pop('test_case_dict', dict())
+        self.test_cases = kwargs.pop('test_cases', dict())
 
     def generate_test_cases(self):
         '''
@@ -72,14 +73,19 @@ class TestCaseGenerator(object):
         flat_graph = self.diagram.flatten_graph()
         # generate linear state model for each path through graph from each possible starting state to each ending state
         self.solver.set_graph(flat_graph)
-        for start_state in self.diagram.get_start_states():
-            for end_state in self.diagram.get_end_states():
-                path_list.extend(self.solver.generate_paths(start_state, end_state))
-        # add a new test case for each case in path_list
-        for path in path_list:
-            self.test_cases[str(path)] = TestCase(state_list = path)
-
-        return path_list
+        test_number = 1
+        # iterate over all possible start/end combinations
+        for start_state in flat_graph.get_start_states(global_scope=True):
+            for end_state in flat_graph.get_end_states(global_scope=True):
+                if self.solver.check_path(start_state, end_state):
+                    # add a new test case for each subgraph in new_paths list
+                    for path_diagram in self.solver.generate_path_graphs(start_state, end_state):
+                        print path_diagram.nodes()
+                        case_name = start_state.name+'-'+end_state.name+'_'+str(test_number)
+                        self.logger.debug('Adding test case %s', case_name)
+                        self.test_cases[case_name] = TestCase(name=case_name, diagram=path_diagram)
+                        test_number += 1
+        return self.test_cases
 
     def calculate_complexity(self):
         '''
@@ -113,9 +119,9 @@ class TestCaseGenerator(object):
        Prints the generates paths for self.diagram
        :return:
        '''
-       print "Total test cases: " + str(len(self.test_cases.values()))
        for case in self.test_cases.values():
             print [state.name for state in case.path]
+       print "Total test cases: " + str(len(self.test_cases.values()))
 
     def draw_solved_graph(self, output_file='solver_graph.svg'):
         '''Draws the output of flattened graph via pygraphviz'''
@@ -124,25 +130,40 @@ class TestCaseGenerator(object):
         self.solver.set_graph(labeled_graph)
         self.solver.draw_graph(output=output_file)
 
+    def draw_test_paths(self, save_path=config.tests_path):
+        '''Draws all test case paths to svg files by test case name'''
+        for case in self.test_cases.values():
+            self.solver.set_graph(case.diagram.get_labeled_graph())
+            self.solver.draw_graph(output=os.path.join(save_path,case.name))
+
+
 if __name__ == "__main__":
     import os
     import config
     import ModelBuilder
+    from Attributes import AttributeBuilder
 
     config.sys_utils.set_pp_on()
 
     # specify file path to model
-    file_path = os.path.join(config.specs_path, 'vpeng', 'Demo_3.0.puml')
+    file_path = os.path.join(config.specs_path, 'EM', 'S_EMC_PRESS_CND.puml')
+
+    # create attribute builder instance for solving attributes
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
     # build StateDiagram instance
-    diagram = ModelBuilder.build_state_diagram(file_path)
+    diagram = ModelBuilder.build_state_diagram(file_path, attribute_builder=abuilder)
 
     # generate test cases from model
     test_gen = TestCaseGenerator(diagram)
-    print "State diagram complexity: " + str(test_gen.calculate_complexity())
     test_gen.generate_test_cases()
+
     # verify paths manually (for now)
-    print "Possible diagram paths: "
-    test_gen.print_test_cases()
+    print "Drawing possible diagram paths...",
+    test_gen.draw_test_paths()
+    print "complete."
+
+    print "State diagram complexity: " + str(test_gen.calculate_complexity())
+    print "Total test cases: ", len(test_gen.test_cases.keys())
 
     # generate drawing of flattened graph - will work on getting better syntax
     test_gen.draw_solved_graph()

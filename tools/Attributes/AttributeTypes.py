@@ -33,7 +33,7 @@ import operator
 
 __author__ = 'ekoapche'
 
-dlog = LogTools(config.log_path + 'AttributeTypes.log', config.log_level, 'AttributeTypes')
+dlog = LogTools('AttributeTypes.log', config.log_level, 'AttributeTypes')
 dlog.rootlog.warning('AttributeTypes initialized')
 
 

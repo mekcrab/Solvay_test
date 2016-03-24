@@ -87,13 +87,13 @@ class StateModelBuilder(ModelBuilder):
         self.logger = dlog.MakeChild('StateModelBuilder')
 
         # dictionary constructor - list of key,value pairs
-        update_dict = dict( [
+        update_dict = dict([
             (TITLE, self.set_default_tag),  # TITLE should always be the tag name of the module under test
             (STATE, self.assign_state),
             (SALIAS, self.lookup_state),
             (SEND, self.end_superstate),
             (TSOURCE, self.assign_trans),
-            ] )
+            ])
 
         StateModelBuilder.action_tokens.update(update_dict)
 
