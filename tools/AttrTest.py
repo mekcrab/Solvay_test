@@ -56,7 +56,7 @@ def make_fail_condition():
     return AttributeTypes.Compare(AttributeTypes.Constant(lhs), opr, AttributeTypes.Constant(rhs))
 
 def make_test_condition():
-    return AttributeTypes.ComparisonAttributes(lhs=AttributeTypes.PositionAttribute('CV-2151'), op='==',
+    return AttributeTypes.Compare(lhs=AttributeTypes.PositionAttribute('CV-2151'), op='==',
                                                rhs=AttributeTypes.PositionAttribute('HS-4092'))
 
 def make_state_diagram(s=1):

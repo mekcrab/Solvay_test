@@ -95,22 +95,26 @@ class Test(TestAdmin):
 
 if __name__ == "__main__":
 
-    #from ModelBuilder import StateModelBuilder
+    from ModelBuilder import build_state_diagram
     import config, os, time
-    #from PlantUML_Lexer import get_tokens_from_file
-    import AttrTest
+    from Attributes import AttributeBuilder
+    from pprint import pprint as pp
 
     connection = OPC_Connect()
     time.sleep(1)
 
-    #input_path = os.path.join(config.specs_path, 'vpeng', 'Demo_3.0.puml')
+    input_path = os.path.join(config.specs_path, 'vpeng', 'AttrTest_0.0.puml')
 
-    #tkns = get_tokens_from_file(input_path)
+    # create attribute builder instance for solving attributes
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
 
-    #builder = StateModelBuilder()
-    #diagram = builder.parse(tkns)
-    d = AttrTest.make_state_diagram(s = 2)
-    print "State Number:", len(d.state_names)
-    print "Transition Number:", len(d.transitions)
+    # ==Build diagram, preprocessor optional==:
+    diagram = build_state_diagram(input_path, attribute_builder=abuilder, preprocess=True)
 
-    Test(diagram = d, connection = connection).start()
+    print "Parsed", len(diagram.state_names.values()), "states"
+    print "Parsed", len(diagram.get_transitions()), "transitions"
+
+    print "Attributes generated:"
+    pp(diagram.collect_attributes())
+
+    Test(diagram = diagram, connection = connection).start()

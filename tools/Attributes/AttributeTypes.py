@@ -715,7 +715,6 @@ class Compare(Attribute_Base):
             (left hand side) (operator) (right hand side)
         Ex: PI-1783 > 65
         Both rhs and lhs must be sub classes of Attribute Base
-
         :param rhs: right hand (value to compare)
         :param opr: operator - one of (<, >, <=, >=, =, !=)
         :param lhs: left hand side (value to check, most likely read from system)
@@ -739,19 +738,23 @@ class Compare(Attribute_Base):
 
         self.id = self.lhs.tag+self.op+self.rhs.tag
 
+        self.logger = dlog.MakeChild(self.id)
+
         Attribute_Base.__init__(self, self.lhs.tag)
 
     def read(self):
         raise NotImplementedError
 
     def write(self):
-        return self.lhs._write(value=self.rhs.read())
+        return self.lhs._write(value=self.rhs.read()[0])
 
     def comp_eval(self):
         '''
         Evaluates comparison:  (lhs) - (rhs) (opr) (deadband)
         Ex. /PI-1875/PV.CV - 65 > 0.1
         '''
+        self.leftval = self.lhs.execute(command='read')
+        self.rightval = self.rhs.execute(command='read')
         cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
 
         self.logger.debug('Evaluating: %s', cmp_val)
