@@ -218,9 +218,10 @@ if __name__ == "__main__":
     from pprint import pprint as pp
 
     config.sys_utils.set_pp_on()
+    dlog.Output2Stdout(level='warning')
 
     # define input path to diagram
-    input_path = os.path.join(config.specs_path, 'vpeng', 'EM', 'S_EMC_CHARGE_V2.puml')
+    input_path = os.path.join(config.specs_path, 'EM', 'S_EMC_PRESS_CND.puml')
 
     # create attribute builder instance for solving attributes
     abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
@@ -233,5 +234,4 @@ if __name__ == "__main__":
 
     print "Attributes generated:"
     pp(diagram.collect_attributes())
-
     print "=================== Testing Complete ==================="

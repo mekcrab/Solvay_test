@@ -40,13 +40,13 @@ logical = (AND ^ OR ^ NOT)
 # ***Primitive data types for comparisons***
 NUMBER = pp.Regex(r'\d+(\.\d*)?')
 STRING = pp.dblQuotedString
-TRUE = pp.CaselessKeyword('TRUE')
-FALSE = pp.CaselessKeyword('FALSE')
+TRUE = pp.CaselessKeyword('TRUE').setParseAction(normalize(1))
+FALSE = pp.CaselessKeyword('FALSE').setParseAction(normalize(0))
 BOOL = (TRUE ^ FALSE)
 
 
 # Engineering units
-eng_units = keyword_list(['lbs', 'pounds', 'percent', '\%', 'psig', 'scfm', 'F', 'C'])
+eng_units = keyword_list(['lbs', 'pounds', 'percent', '\%', 'psig', 'scfm', 'F', 'C', '%/second'])
 
 # Time units
 time_units = keyword_list(['minutes', 'mintue', 'min', 'm',
@@ -82,19 +82,24 @@ modes = (LO ^ MAN ^ IMAN ^ AUTO ^ CAS ^ RCAS ^ ROUT)
 # ===write keywords===
 write_keyword = keyword_list(['set', 'write', 'force']).setParseAction(normalize('write'))
 # some shorthand write commands
-open_vlv = keyword_list(['open', 'start', 'turn on', 'on']).setParseAction(normalize('open'))   # data type based on control module tag
-close_vlv = keyword_list(['close', 'stop', 'turn off', 'off']).setParseAction(normalize('close'))
-ramp = pp.CaselessKeyword('ramp').setResultsName('ramp')
+open_vlv = keyword_list(['open', 'opened']).setParseAction(normalize('open'))   # check data type based on control module tag
+close_vlv = keyword_list(['close', 'closed', 'shut']).setParseAction(normalize('close'))
+start_mtr = keyword_list(['on', 'turn on', 'start', 'started', 'run', 'running']).setParseAction(normalize('start'))
+stop_mtr = keyword_list(['off', 'stop', 'shutdown', 'stopped']).setParseAction(normalize('stop'))
+ramp = pp.CaselessKeyword('ramp').setParseAction(normalize('ramp'))
+ilk_trip = keyword_list(['trip', 'tripped', 'interlock trip']).setParseAction(normalize('trip'))
+ilk_reset = keyword_list(['reset', 'interlock reset']).setParseAction(normalize('reset'))
 
 # ===read keywords===
 read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify']).setParseAction(normalize('read'))
 wait_keyword = keyword_list(['wait', 'wait until', 'wait for', 'delay']).setParseAction(normalize('wait'))
 wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResultsName('units')).setResultsName('wait_time')
 
+
 # ===OAR prompt keywords===
 prompt = (keyword_list(['prompt', 'oar', 'ack', 'ack', 'ask', 'message']) +
-          pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':', 'response'])))) +
-          (STRING.setResultsName('message') ^ keyword_list(['VALUE', 'YES', 'NO']).setResultsName('target')))
+          pp.Optional(pp.Suppress(pp.OneOrMore(keyword_list(['operator', 'message', ':', 'response', '='])))) +
+          (STRING.setResultsName('message') ^ keyword_list(['VALUE', 'YES', 'NO', 'INFO']).setResultsName('target')))
 prompt = prompt.setParseAction(normalize('prompt'))
 
 # ===Report parameters for batch===
@@ -111,21 +116,22 @@ get_opc = (pp.CaselessKeyword('Read OPC') +
            pp.Group(pp.OneOrMore(tag ^ opc_path)).setResultsName('paths')). \
     setResultsName('read_opc')
 
+# ============= Action Keywords and Action Phrases======
 # action words as the first part of an argument, followed by one or more expressions
-action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ read_keyword ^ wait_keyword)  # matches longest string in argument
+action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ wait_keyword)  # NOTE:: pp.Or matches longest string in argument - could introduce bug for overlapping lists
 # action phrases do not require expressions to correctly parse
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
-# ===========Expressions=================
-value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv) + pp.Optional(pp.Suppress(eng_units))). \
-    setResultsName('value')
+# ===========Expressions - each type below returns a ParseResult=================
+value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ ilk_trip ^ ilk_reset) +
+         pp.Suppress(pp.Optional(eng_units))).setResultsName('value')
 
-condition = (pp.Group(tag).setResultsName('lhs') + compare + pp.Group(value).setResultsName('rhs')).setResultsName('condition')
+condition = (pp.Group(tag).setResultsName('lhs') + compare + pp.Group(value).setResultsName('rhs')). \
+            setResultsName('condition')
 
 command = (tag + pp.Optional(EQUALS ^ ASSIGN) + pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress()) + value +
             pp.Optional(keyword_list(['in', 'at', ',', 'to']).suppress() + value)).\
             setResultsName('command')
-
 
 # ==========Compound Expressions=========
 compound_exp = ((condition ^ command) + pp.ZeroOrMore(logical + (condition ^ command))).setResultsName('expression', listAllMatches=True)

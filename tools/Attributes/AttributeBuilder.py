@@ -30,14 +30,20 @@ def isNumber(raw_string):
 
 def isString(raw_string):
     '''Checks if the raw string is surrounded by double quotes'''
-    if raw_string[0] == raw_string[-1] == '\"':
-        return True
+    if len(raw_string) > 1 and raw_string[0] == raw_string[-1] == '\"':
+            return True
     else:
         return False
 
+class AttributeIgnored(Exception):
+    '''Custom exception used when attributes (or attributes-within-attributes like comparisons) are ignored'''
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, args, kwargs)
+
+
 class AttributeBuilder(object):
 
-    def __init__(self, parser, client, default_tag=''):
+    def __init__(self, parser, client, default_tag='', abort_on_error=False):
 
         if isinstance(parser, AttributeParser):
             self.parser = parser
@@ -53,6 +59,9 @@ class AttributeBuilder(object):
         self.logger = dlog.MakeChild('AttributeBuilder')
         self.default_tag = default_tag  # default tag for the diagram in question
 
+        # parsing option flags
+        self.abort_on_error = abort_on_error  # fails program on parsing/instansiation errors
+
     def connect_client(self):
         try:
             self.client.connect()
@@ -66,11 +75,24 @@ class AttributeBuilder(object):
         '''Sets a default tag for this diagram'''
         self.default_tag = tag
 
+    def attribute_building_error(self, raw_string):
+        '''
+        :param raw_string: string definition of attribute from puml diagram
+        Raises error when unable to create an AttributeType instance.
+        Error passes silently if self.abort_on_error is True.
+        '''
+        self.logger.error("No attribute types found in %s", raw_string)
+        if self.abort_on_error:
+            raise TypeError
+        else:
+            print self.parser.parse(raw_string).dump()
+        return raw_string
+
     def solve_attribute(self, raw_string):
         '''
-        solves for what attributes should be generated from a raw string taken from the diagram
-        :param raw_string:
-        :return: AttributeType instance
+        Solves for what attributes should be generated from a raw string taken from the diagram
+        :param raw_string: attribute string definition from diagram
+        :return: new_attribute: AttributeType instance or raw_string on failure to produce attribute
         '''
         #TODO: expand to handle compound expressions and multiple attributes in a single raw string
 
@@ -79,11 +101,14 @@ class AttributeBuilder(object):
         if not parse_results:
             self.logger.error("Attribute string:: %s :: not parseable, return raw string", raw_string)
             return raw_string
+
+        new_attribute = None
+
         try:
             if 'action_word' in parse_results:
                 action = parse_results['action_word'].lower()
 
-                if action in ['open', 'close']:
+                if action in ['open', 'close', 'start', 'stop']:
                     self.logger.debug('Creating PositionAttribute %s', raw_string)
                     new_attribute = self.generate_attribute(parse_results, 'position')
 
@@ -112,27 +137,24 @@ class AttributeBuilder(object):
 
             # no action word found, check for attribute type by operator context
             elif 'expression' in parse_results:
-                expressions = parse_results['expression']
-
+                # TODO: expressions = parse_results['expression'] for multiple attributes in given string
                 if 'condition' in parse_results:
-                    self.logger.debug("Adding single condition")
+                    self.logger.debug("Adding single condition from %s", raw_string)
                     new_attribute = self.generate_attribute(parse_results.condition, 'condition')
 
-                elif 'command' in expressions:
-                    command_list = expressions['command']
+                elif 'command' in parse_results:
                     self.logger.debug("Adding command")
-                    for cmd in command_list:
-                        new_attribute=(self.generate_attribute(cmd), 'command')
+                    new_attribute = self.generate_attribute(parse_results.command, 'command')
 
-            else:
-                self.logger.error("No attribute types found in %s", raw_string)
-                raise TypeError
-
-        except StandardError:
+        except AttributeIgnored as err:  # AttributeIgnored raised when attribute is to be disregarded
             self.logger.debug("Attribute ignored: %s", raw_string)
-            new_attribute = AttributeDummy()
+            new_attribute = AttributeDummy(raw_string)
 
-        return new_attribute
+        # return new AttributeType if possible
+        if new_attribute:
+            return new_attribute
+        else:
+            return self.attribute_building_error(raw_string)
 
     def generate_attribute(self, parse_dict, attribute_type):
         '''
@@ -149,9 +171,11 @@ class AttributeBuilder(object):
                 return OtherAttribute(tag, parse_dict['path'])
             # no path found, assume PV
             elif '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                return DiscreteAttribute(tag, 'PV_D.CV')
+                return DiscreteAttribute(tag, 'PV_D')
             elif '/'.join(['/', tag, 'PV']) in module_info['attribute_paths']:
-                return IndicationAttribute(tag, 'PV.CV')
+                return IndicationAttribute(tag, 'PV')
+            elif 'value' in parse_dict:
+                return self.generate_attribute(parse_dict, 'value')
             else:
                 self.logger.error("No path found in parsed expression %s", parse_dict)
 
@@ -166,7 +190,7 @@ class AttributeBuilder(object):
 
             # determine if tag is for EM or phase - you cannot have prompts for another test in this unit
             tag = self.default_tag
-            if 'EM' in tag:  # fixme: this could be a nasty bug later
+            if 'EM' in tag:  # fixme: this could be a nasty bug later should EM naming conventions change...
                 message_path = 'MSG2'
                 response_path = 'MONITOR/OAR/DATA_IN'
             elif 'PH' in tag[0:1]:
@@ -186,20 +210,57 @@ class AttributeBuilder(object):
                 return PositionAttribute(tag, 'PV.CV')
 
         elif attribute_type in ['condition', 'compare']:
+            tag, module_info = self.get_module_info(parse_dict.lhs)
             lhs = self.generate_attribute(parse_dict['lhs'], 'path')
             # Check for string type
-            rhs = parse_dict['rhs'][0]
-            if isString(rhs):
-                rhs = Constant(rhs.strip('\"'))
-            elif isNumber(rhs):
-                rhs = Constant(float(rhs))
-            else:
+            rhs = parse_dict.rhs
+            if 'path' in rhs:
                 rhs = self.generate_attribute(parse_dict['rhs'], 'path')
+            elif 'value' in rhs:
+                rhs = rhs.value[0]
+                if type(rhs) in [str, unicode] and isString(rhs):
+                    rhs = Constant(rhs.strip('\"'))
+                elif isNumber(rhs):
+                    rhs = Constant(float(rhs))
+                else:  # path is based on lhs tag
+                    parse_dict['rhs']['tag'] = tag
+                    rhs = self.generate_attribute(parse_dict['rhs'], 'path')
 
             return Compare(lhs, parse_dict['compare'], rhs)
 
         elif attribute_type == 'command':
-            raise NotImplementedError  # note this is different from NotImplemented
+            if 'rhs' in parse_dict:  # path attribute in command,
+                raise NotImplementedError
+            elif 'value' in parse_dict:
+                return self.generate_attribute(parse_dict, 'value')
+
+        elif attribute_type == 'value':
+            command_vals = {'trip': InterlockAttribute,
+                            'reset': InterlockAttribute,
+                            'open': PositionAttribute,
+                            'close': PositionAttribute,
+                            'start': NamedDiscrete,
+                            'stop': NamedDiscrete
+                            }
+            if 'value' in parse_dict:
+
+                val = parse_dict.value[0]
+
+                self.logger.debug("Generating attribute from value: %s", val)
+
+                if val in ['open', 'close']:
+                    return self.generate_attribute(parse_dict, 'position')
+                elif val in ['trip', 'reset']:
+                    attr_class = command_vals[val]
+                    self.logger.debug("Creating %s from: %s", attr_class.__name__, ' '.join(parse_dict.asList()))
+                    return attr_class(parse_dict.tag, val)
+                elif val in ['start', 'stop']:
+                    self.logger.error("===>Need to implement motors for ", parse_dict.tag)
+                    return AttributeDummy
+                elif isString(val):
+                    return Constant(val.string('\"'))
+                elif isNumber(val):
+                    return Constant(float(val))
 
         else:
             self.logger.error("No attribute generated from %s", parse_dict)
@@ -210,25 +271,28 @@ class AttributeBuilder(object):
             tag = self.parser.get_tag(parse_dict)
             # ===create no attribute if the tag is ignored===
             if 'ignore' in tag:
-                self.logger.info("Ignoring %s", parse_dict)
-                raise StandardError
+                self.logger.debug("Ignoring %s", parse_dict)
+                raise AttributeIgnored
         except AttributeError: # tag not found in parse_dict
             self.logger.warning("Falling back to default tag to generate attribute from %s", parse_dict)
             tag = self.default_tag
 
         return tag, self.client.get_module_info(tag)
 
-
     def get_alias(self, tag, alias):
         '''Resolves aliases or shared module for the parent module defined by tag'''
         return self.client.get_alias(tag, alias)
 
+    def get_namedset(self, namedset):
+        '''Returns a dictionary of namedset {entry string: integer value}'''
+        return self.client.get_namedset(namedset)
+
     def check_tag_exists(self, tag):
-        pass
+        raise NotImplementedError
 
     def get_PV(self, tag):
-        '''returns tag to PV or PV_D as required'''
-        pass
+        '''Returns tag to PV or PV_D as required'''
+        raise NotImplementedError
 
 
 def create_attribute_builder(server_ip='127.0.0.1', server_port=5489):
@@ -264,5 +328,5 @@ if __name__ == "__main__":
     LogTools.Output2Stdout(dlog, 'debug')
 
     for attr_str in test_attrs:
-        new_attribute = abuilder.solve_attribute(attr_str)
-        pp([(attr, attr.__dict__) for attr in new_attribute])
+        attr_inst = abuilder.solve_attribute(attr_str)
+        pp([(attr, attr.__dict__) for attr in attr_inst])

@@ -4,10 +4,13 @@ Python module for lexing plantUML state diagrams.
 __author__ = 'ekopache'
 
 import re
+import subprocess
 from pygments.lexer import RegexLexer, bygroups, include
 from pygments.token import Text, Error, _TokenType
 from pygments.style import Style
 from pygments import lex
+
+import config
 
 # token definitions
 # fixme: define custom token types so the names make sense
@@ -349,59 +352,62 @@ def preprocess_puml(file_path):
     :param file_path: path to plantUML file for pre-processing
     :returns pre-processed text file
     """
-    import config
-    import subprocess
+
+    print "Preprocessing: \n" + file_path
 
     # generate plantUML diagram hash, f is used as file-like obj for system call stdout
     p = subprocess.Popen(config.java_path + ' -jar ' + config.plantUML_jar + ' -encodeurl ' + file_path,
                               shell=True, stdout=subprocess.PIPE)
     encoded_str = p.communicate()[0]
 
+    print "Encoded puml string: \n" + encoded_str
+
     # decompile text file from hash
     p = subprocess.Popen(config.java_path + ' -jar ' + config.plantUML_jar + ' -decodeurl ' + encoded_str,
                             shell=True, stdout=subprocess.PIPE)
     # return decompiled text
     decoded_str = p.communicate()[0]
-    return decoded_str
 
-def get_tokens_from_file(file_path, preprocess = False):
-    '''Returns token generator from lexer output'''
+    if decoded_str:
+        return decoded_str
+    else:
+        print "No string returned from preprocessor - check file path"
+        raise IOError
+
+
+def get_tokens_from_file(file_path, preprocess=False):
+    '''
+    Returns token generator from lexer output of puml
+    file specified by file_path
+    '''
     if preprocess:
-        test_text = preprocess_puml(file_path)
+        puml_text = preprocess_puml(file_path)
     else:
         with open(file_path) as f:
-            test_text = f.read()
-    return lex(test_text, puml_state_lexer())
+            puml_text = f.read()
+    return lex(puml_text, puml_state_lexer())
 
 
 if __name__ == "__main__":
-    import config
     from pygments.formatters import HtmlFormatter
-    from pygments import lex
     import glob, os
-    from config import sys_utils
 
-    sys_utils.set_pp_on()
+    config.sys_utils.set_pp_on()
 
-    # quick lexer test
-    selected_lexer = puml_state_lexer()
     formatter = HtmlFormatter(full=True, encoding='utf-8')
 
-    test_dir = os.path.join(config.specs_path, 'vpeng')
+    test_dir = os.path.join(config.specs_path, 'EM/')
 
-    for test_file in glob.glob1(test_dir, '*CVAS*.puml'):
+    for test_file in glob.glob1(test_dir, 'S_EMC_PRESS_CND.puml'):
         print 'File name ::::', test_file
 
-        test_text = preprocess_puml(os.path.join(test_dir, test_file))
+        tkns = get_tokens_from_file(test_dir + test_file, preprocess=True)
 
-        # with open(test_dir + test_file) as ftest:
-        #     test_text = ftest.read().encode('utf-8')
+        # with open('test_out.html', mode='w') as test_output:
+        #     formatter.format(tkns, test_output)
 
-        tkns = lex(test_text, selected_lexer)
-        with open('test_out.html', mode='w') as test_output:
-            formatter.format(tkns, test_output)
-
-        tkns = lex(test_text, selected_lexer)
+        # re-create token generator to print to console
+        # tkns = lex(test_text, )
         for (tkn, val) in tkns:
             if tkn not in [IGNORE]:
                 print tkn, '\t', val

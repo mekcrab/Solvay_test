@@ -54,6 +54,8 @@ class Attribute_Base(object):
         self.exe_cnt = 0  # number of times self.execute() has been called
         self.exe_start = 0  # internal timer, intended to be initiated on call to self.execute
 
+        self._default_test = None  # function hook to set default testing behavior of execute
+
     def __str__(self):
         '''String method for base attribute - can be overridden in subclasses'''
         return self.OPC_path()
@@ -138,21 +140,27 @@ class Attribute_Base(object):
 
 # =============================================================
 class DiscreteAttribute(Attribute_Base):
-    '''Base class for discrete attributes
-        Examples:   NamedSets, Binary/Boolean, Bitmask'''
-    def __init__(self, tag, attr_path):
+    '''
+    Base class for discrete attributes
+    Examples:   NamedSets, Binary/Boolean, Bitmask
+    '''
+
+    def __init__(self, tag, attr_path, target=0):
         self.tag = tag
         self.attr_path = attr_path
-        Attribute_Base.__init__(self, tag, attr_path = attr_path)
+        self.target = target
+        Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
-    def execute(self, command='compare', op='=', rhs=0):
+    def execute(self, command='compare', op='=', target=0):
         if command == 'compare':
-            #lhs = Attribute_Base(self.tag, self.attr_path)
-            #lhs.set_read_hook(connection.read)
             print "Reading:", self.tag
-            readleft = self._read() # this should return theh same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
+            readleft = self._read() # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
             if op == '=':
-                return readleft[0] == rhs
+                return readleft[0] == target
+
+    def force(self, value=1):
+        '''Attempts to force the value of this attribute'''
+        return self._write(value)
 
     # def set_read_hook(self, readhook):
     #     self.lhs.set_read_hook(readhook)
@@ -165,7 +173,7 @@ class DiscreteAttribute(Attribute_Base):
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
-    def __init__(self, tag, int_dict={}, attr_path=''):
+    def __init__(self, tag, int_dict={}, attr_path='', target=0):
         '''
 
         :param tag:
@@ -181,10 +189,11 @@ class NamedDiscrete(DiscreteAttribute):
 
 
 class AnalogAttribute(Attribute_Base):
-    '''Base class for analog/continuously valued attributes
-        Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values)
     '''
-    def execute(self):
+    Base class for analog/continuously valued attributes
+    Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values)
+    '''
+    def __init__(self):
         raise NotImplementedError
 
 
@@ -332,6 +341,83 @@ class PositionAttribute(ModeAttribute):
             return self.read()[0]
 
 
+class InterlockAttribute(Attribute_Base):
+    '''Interlock trip/resets in devices'''
+    # TODO: extend class to cover interlock masters
+    def __init__(self, tag, test_param='trip', **kwargs):
+        '''
+        Constructor
+        :param tag: Device tag
+        :param condition_no: condition number
+        :return:
+        '''
+        self.condition = kwargs.pop('condition', None)
+
+        if self.condition:
+            self.trip = DiscreteAttribute(tag, 'INTERLOCK/CND'+str(self.condition))
+        else:
+            self.trip = DiscreteAttribute(tag, '/INTERLOCK/INTERLOCK')
+        self.reset = DiscreteAttribute(tag, 'INTERLOCK/RESET_D')
+        self.bypass = DiscreteAttribute(tag, 'INTERLOCK/BYPASS_ILK')
+        Attribute_Base.__init__(self, tag)
+
+        self.set_test_param(test_param)
+
+    def set_test_param(self, param):
+        '''
+        Method hook for the interlock attribute instance
+        :param self:
+        :param param: name of param to test
+        :return:
+        '''
+        valid_params = {
+            'trip': self.test_trip,
+            'reset': self.test_reset,
+            'test_bypass': self.test_bypass
+        }
+        self._default_test = valid_params[param]
+
+    def test_trip(self):
+        '''
+        Tests if interlock is tripped
+        :param
+        :return:
+        '''
+        return self.trip.execute(target=1)
+
+    def test_reset(self):
+        '''
+        Tests if interlock is reset
+        :param self:
+        :return:
+        '''
+        return self.reset.execute(target=1)
+
+    def test_bypass(self):
+        '''
+        Tests if interlock is bypassed
+        :param self:
+        :return:
+        '''
+        return self.bypass.execute(target=1)
+
+    def execute(self):
+        '''
+        Checks specified parameter specified
+        :param test_param: name of parameters to test
+        :return:
+        '''
+        return self._default_test()
+
+    def force(self, param='reset'):
+        '''
+        Force reset or bypass of interlock.
+        :param self:
+        :return:
+        '''
+        # TODO: think of a more explicit way to make this flexible and dynamic based on embedded attributes
+        return getattr(self, param).force()
+
 class PromptAttribute(Attribute_Base):
     '''
     Unique class of attribute for OAR prompts
@@ -416,7 +502,7 @@ class IndicationAttribute(Attribute_Base):
     def __init__(self, tag, attr_path = 'PV'):
         self.tag = tag
         self.attr_path = attr_path
-        Attribute_Base.__init__(self, tag, attr_path = attr_path)
+        Attribute_Base.__init__(self, tag, attr_path=attr_path)
 
     def read(self):
         return self._read()
@@ -554,17 +640,20 @@ class OtherAttribute(Attribute_Base):
                 raise TypeError
 
 class AttributeDummy(Attribute_Base):
-    '''Dummy attribute for testing and as a placeholder'''
+    '''
+    Dummy attribute for:
+        testing, as a placeholder, or deferring attributes type differentiation'''
 
-    def __init__(self):
+    def __init__(self, id=''):
         '''Constructor'''
+        self.id = id
         Attribute_Base.__init__(self, tag='dummy')
 
     def read(self):
-        print 'Dummy read ', self.tag
+        print 'Dummy read ', self.id
 
     def write(self, val=0):
-        print 'Dummy write', self.tag, 'as ', val
+        print 'Dummy write', self.id, 'as ', val
 
     def execute(self):
         if not self.complete:
@@ -574,7 +663,7 @@ class AttributeDummy(Attribute_Base):
             pass
 
     def force(self):
-        pass
+        print 'Dummy force'
 
 
 class Calculate(Attribute_Base):
@@ -608,6 +697,7 @@ class Calculate(Attribute_Base):
         if command == 'read':
             return self.read()
 
+
 #####################Transition Attribute Types (use read functions and compare) #########################
 class Compare(Attribute_Base):
 
@@ -619,7 +709,7 @@ class Compare(Attribute_Base):
                      '<=': operator.le,
                      '!=': operator.ne}
 
-    def __init__(self, lhs = AttributeDummy(), op = '', rhs = AttributeDummy(), deadband=0):
+    def __init__(self, lhs=AttributeDummy(), op='', rhs=AttributeDummy(), deadband=0):
         '''
         Comparison between two sub-attributes in the form of:
             (left hand side) (operator) (right hand side)
@@ -629,50 +719,40 @@ class Compare(Attribute_Base):
         :param rhs: right hand (value to compare)
         :param opr: operator - one of (<, >, <=, >=, =, !=)
         :param lhs: left hand side (value to check, most likely read from system)
+        :param deadband: tolerance of comparison value
         :return: Compare instance
         '''
 
-        self.op = op
-        self.lhs = lhs
-        self.rhs = rhs
+        if op not in Compare.operator_dict:
+            self.logger.error("Comparison operator \"%s\" not valid", op)
+            raise NameError
+        else:
+            self.op = op
+
+        if isinstance(lhs, Attribute_Base) and isinstance(rhs, Attribute_Base):
+            self.lhs = lhs
+            self.rhs = rhs
+        else:
+            raise TypeError
 
         self.deadband = deadband  # deadband applied to rhs of comparison
 
         self.id = self.lhs.tag+self.op+self.rhs.tag
 
-        Attribute_Base.__init__(self, self.id)
-
-        self.logger = dlog.MakeChild(self.id)
-
-        if self.op not in Compare.operator_dict:
-            raise TypeError
-        else:
-            self.leftval = self.lhs.execute(command='read')
-            self.rightval = self.rhs.execute(command='read')
+        Attribute_Base.__init__(self, self.lhs.tag)
 
     def read(self):
         raise NotImplementedError
 
     def write(self):
-        return self.lhs._write(value=self.rightval)
-
-    def execute(self):
-
-        if self.exe_cnt < 1:
-            self.start_timer()
-
-        self.exe_cnt += 1
-
-        return self.comp_eval()
+        return self.lhs._write(value=self.rhs.read())
 
     def comp_eval(self):
         '''
         Evaluates comparison:  (lhs) - (rhs) (opr) (deadband)
-
         Ex. /PI-1875/PV.CV - 65 > 0.1
         '''
         cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
-        print cmp_val
 
         self.logger.debug('Evaluating: %s', cmp_val)
 
@@ -689,6 +769,16 @@ class Compare(Attribute_Base):
         self.lhs.set_write_hook(writehook)
         self.rhs.set_write_hook(writehook)
 
+    def execute(self):
+        if self.exe_cnt < 1:
+            self.start_timer()
+
+        self.exe_cnt += 1
+
+        if self.comp_eval():
+            self.set_complete()
+        else:
+            pass
 
 if __name__ == "__main__":
     from tools.serverside.OPCclient import OPC_Connect

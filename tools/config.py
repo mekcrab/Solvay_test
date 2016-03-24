@@ -10,11 +10,14 @@ import pprint
 # current path of tools folder
 tools_path = os.path.dirname(__file__)
 
+# project root in relation to tools path
+
+
 # specifications folder
-specs_path = os.path.join(tools_path, '..', 'specs')
+specs_path = os.path.abspath(os.path.join(tools_path, '..', 'specs'))
 
 # test output folder
-tests_path = os.path.join(tools_path, '..', 'tests_out')
+tests_path = os.path.abspath(os.path.join(tools_path, '..', 'tests_out'))
 
 # logging folder
 log_path = os.path.join(tools_path, 'Logs')

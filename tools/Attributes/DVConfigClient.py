@@ -40,9 +40,7 @@ class DVConfigClient(jsocket.JsonClient):
                    }
 
         self.send_obj(rpc_req)
-        time.sleep(0.5)
         info = self.read_obj()
-
         return info
 
     def get_alias(self, tag, alias):
@@ -59,11 +57,22 @@ class DVConfigClient(jsocket.JsonClient):
         }
 
         self.send_obj(rpc_req)
-        time.sleep(0.5)
         info = self.read_obj()
-
         return info
 
+    def get_namedset(self, namedset_name):
+        '''
+        Returns a dictionary of a namedset's entry {string value: integer value} map
+        :param namedset_name: string name of desired namedset
+        :return:
+        '''
+        rpc_req = {
+            "method": "get_namedset",
+            "namedset": "namedset_name"
+        }
+        self.send_obj(rpc_req)
+        info = self.read_obj()
+        return info
 
 if __name__ == "__main__":
     client = DVConfigClient()

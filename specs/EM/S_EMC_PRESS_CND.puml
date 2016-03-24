@@ -3,6 +3,9 @@
 
 @startuml
 
+!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+
+
 state PRESSURE_UP {
 
 [*] --> Check_RX_Pressure
@@ -12,7 +15,7 @@ Check_RX_Pressure --> Check_VAC_Pump: PRESS_GAP_CTL < pressure_setpoint
 Check_VAC_Pump --> OAR_TurnOff: VAC_PMP is running
 Check_VAC_Pump --> ValvePosition1: VAC_PMP is stopped
 
-OAR_TurnOff: OAR_Type = INFO
+OAR_TurnOff: OAR = INFO
 OAR_TurnOff --> ValvePosition1: VAC_PMP is stopped
 
 ValvePosition1: Close SCRUB_VENT_VLV
@@ -44,7 +47,7 @@ ResetLO: VAC_KO_SCRUB interlock reset
 
 ResetLO --> Open_VAC_CTRL_Valve
 
-Open_VAC_CTRL_Valve: Set VAC_CTL position to control_valve_position in ROUT
+Open_VAC_CTRL_Valve: Set VAC_CTL to control_valve_position in ROUT
 
 Open_VAC_CTRL_Valve --> [*]
 
@@ -53,7 +56,7 @@ Open_VAC_CTRL_Valve --> [*]
 state STOP_VACUUM {
 
 [*] --> Close_VAC_CTRL_Valve
-Close_VAC_CTRL_Valve: Set VAC_CTL position to 0
+Close_VAC_CTRL_Valve: Set VAC_CTL to 0%
 
 Close_VAC_CTRL_Valve --> Close_STM_Vlv
 Close_STM_Vlv: Close VAC_STM_VLV
@@ -78,7 +81,7 @@ Check_RX_Press --> ValvePosition3
 ValvePosition3: Close nitrogen_valve
 ValvePosition3: Open DECANT_VENT_VLV
 
-ValvePosition3 --> Close_Decant: Wait for PRESS_GAP_CTRL < target_pressure
+ValvePosition3 --> Close_Decant: Wait for PRESS_GAP_CTL < target_pressure
 
 Close_Decant: Close DECANT_VENT_VLV
 
@@ -98,14 +101,14 @@ Start_VAC: Start VAC_PMP
 Start_VAC: Set VAC_CTL to control_valve_position in ROUT
 
 Start_VAC --> Ramp_VAC
-Ramp_VAC: Set VAC_RAMP/RAMP_RATE to ramp_rate
-Ramp_VAC: Set VAC_RAMP/RAMP_PAUSE to False
-Ramp_VAC: Set VAC_RAMP/RAMP_ENABLE to True
+Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
+Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
+Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
 
 Ramp_VAC --> STOP_VAC: PRESS_GAP_CTL < ramp_target
 STOP_VAC: Stop VAC_PMP
 STOP_VAC: Close VAC_STM_VLV
-STOP_VAC: Set VAC_CTL position to 0
+STOP_VAC: Set VAC_CTL to 0
 
 STOP_VAC --> Press_Up
 
