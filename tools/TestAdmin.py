@@ -2,7 +2,6 @@ __author__ = 'vpeng'
 
 from serverside.OPCclient import OPC_Connect, OPCdummy
 
-
 from Utilities.Logger import LogTools
 dlog = LogTools('TestAdmin.log', 'TestAdmin')
 dlog.rootlog.warning('TestAdmin initialized')
@@ -75,7 +74,11 @@ class Test(TestAdmin):
         self.connection = connection
         TestAdmin.__init__(self, diagram, connection)
         #TODO: need to make the state_id constant.
-        self.start_state = diagram.get_state(state_id = 'state0')
+
+        for state in diagram.states:
+            if len(state.source) == 0:
+                self.start_state = state
+        # self.start_state = diagram.get_state(state_id = 'START')
 
     def start(self):
         #TODO: confirm diagram.title is callable

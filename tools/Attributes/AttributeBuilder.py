@@ -299,6 +299,8 @@ def create_attribute_builder(server_ip='127.0.0.1', server_port=5489):
     '''
     Returns a attribute builder pre-configured with parser and DVConfigClient
     '''
+    from DVConfigClient import DVConfigClient
+    from AttributeParser import AttributeParser
 
     parser = AttributeParser()
     config_client = DVConfigClient(address=server_ip, port=server_port)
