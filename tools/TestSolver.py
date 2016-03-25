@@ -7,7 +7,7 @@ solving test cases specified as a binary tree.
 
 from graph_utils import GraphSolver
 import StateModel
-import time
+import time, os
 
 import config
 from Utilities.Logger import LogTools
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # create attribute builder instance for solving attributes
     abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
     # build StateDiagram instance
-    diagram = ModelBuilder.build_state_diagram(file_path, attribute_builder=abuilder)
+    diagram = ModelBuilder.build_state_diagram(file_path, attribute_builder=abuilder, preprocess=True)
 
     # generate test cases from model
     test_gen = TestCaseGenerator(diagram)
@@ -168,4 +168,3 @@ if __name__ == "__main__":
     # generate drawing of flattened graph - will work on getting better syntax
     test_gen.draw_solved_graph()
     print "===============Testing Complete=================="
-

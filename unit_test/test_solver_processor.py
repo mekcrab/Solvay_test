@@ -1,5 +1,9 @@
 __author__ = 'vpeng'
 
+import os
+from tools import config, ModelBuilder, TestSolver
+from tools.Attributes import AttributeBuilder
+
 def S_EMC_PRESS_CND():
     return test_solver_processor(test_class='EM', test_spec='S_EMC_PRESS_CND.puml')
 
@@ -10,9 +14,6 @@ def S_EMC_CHG_BLWDN():
     return test_solver_processor(test_class='EM', test_spec='S_EMC_CHG_BLWDN.puml')
 
 def test_solver_processor(test_class, test_spec):
-    import os
-    from tools import config, ModelBuilder, TestSolver
-    from tools.Attributes import AttributeBuilder
 
     config.sys_utils.set_pp_on()
 

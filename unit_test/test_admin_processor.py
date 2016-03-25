@@ -1,6 +1,9 @@
 __author__ = 'vpeng'
 
 import test_solver_processor
+import time
+from tools.TestAdmin import Test
+from tools.serverside.OPCclient import OPC_Connect, OPCdummy
 
 def S_EMC_PRESS_CND():
     test_gen = test_solver_processor.S_EMC_PRESS_CND()
@@ -16,9 +19,6 @@ def S_EMC_CHG_BLWDN():
 
 
 def test_admin_processor(test_gen):
-    import time
-    from tools.TestAdmin import Test
-    from serverside.OPCclient import OPC_Connect, OPCdummy
 
     connection = OPC_Connect()
     time.sleep(1)

@@ -6,7 +6,7 @@
 !include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
 
 
-state PRESSURE_UP {
+state "PRESSURE UP" as pu {
 
 [*] --> Check_RX_Pressure
 Check_RX_Pressure --> [*]: PRESS_GAP_CTL > pressure_setpoint
