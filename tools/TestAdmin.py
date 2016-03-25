@@ -6,6 +6,11 @@ from Utilities.Logger import LogTools
 dlog = LogTools('TestAdmin.log', 'TestAdmin')
 dlog.rootlog.warning('TestAdmin initialized')
 
+def remove_duplicates(values):
+    cleanup = set(values)
+    return list(cleanup)
+
+
 class TestAdmin():
     def __init__(self, diagram, connection):
         self.diagram = diagram
@@ -75,7 +80,8 @@ class Test(TestAdmin):
         TestAdmin.__init__(self, diagram, connection)
         #TODO: need to make the state_id constant.
 
-        for state in diagram.states:
+        for state in diagram.state_names:
+            state = diagram.get_state(state)
             if len(state.source) == 0:
                 self.start_state = state
         # self.start_state = diagram.get_state(state_id = 'START')
@@ -85,16 +91,18 @@ class Test(TestAdmin):
         self.logger.debug("Start Testing Diagram: %r", diagram.title)
         in_state = self.start_state
         while in_state and TestAdmin(self.diagram, self.connection).recur(in_state):
-            next_states = in_state.destination # A List of Possible Destination
+            # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
+            next_states = remove_duplicates(in_state.destination) # A List of Possible Destination
             if next_states: # not empty
                 print "transiting..."
-                for next_state in next_states:
-                    print "next_state:", next_state.name
-                    if TestAdmin(self.diagram, self.connection).transit(source = in_state, destination = next_state):
-                        print "new state:", next_state.name
+                # FIXME: Get all transitions evaluate at the runtime because of multiple detinations. Maybe it can be solved in the TestSolver.
+                transition_pass = False
+                while transition_pass != True:
+                    for next_state in next_states:
+                        print "next_state:", next_state.name
+                        transition_pass = TestAdmin(self.diagram, self.connection).transit(source = in_state, destination = next_state)
                         in_state = next_state
             else:
-
                 print "==============================Test Complete========================="
                 in_state = next_states
 
