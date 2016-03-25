@@ -22,7 +22,7 @@ class TestCase(object):
         self.name = kwargs.pop('name', 'test_case')
         self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # list of ordered states that make up the test case path
         # repopulated diagram.state_names in the test_case
-        self.diagram.state_names = {s:s.name for s in self.diagram.nodes()}
+        self.diagram.state_names = {s.name:s for s in self.diagram.nodes()}
 
         self.passed = None
         self.created = time.time()  # generation timestamp
