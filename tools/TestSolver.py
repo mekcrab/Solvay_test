@@ -18,10 +18,12 @@ dlog.rootlog.warning('Module initialized')
 class TestCase(object):
     '''Single path through a specified state model which can be verified as Pass/Fail'''
     def __init__(self, *args, **kwargs):
-        print args
-        print kwargs
+
         self.name = kwargs.pop('name', 'test_case')
         self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # list of ordered states that make up the test case path
+        # repopulated diagram.state_names in the test_case
+        self.diagram.state_names = {s.name:s for s in self.diagram.nodes()}
+
         self.passed = None
         self.created = time.time()  # generation timestamp
         self.timestamp = time.time()  # testing activity timestamp
