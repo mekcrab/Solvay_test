@@ -11,7 +11,8 @@ class DVConfigClient(jsocket.JsonClient):
     def __init__(self, address='127.0.0.1', port=5489):
         self.address = address
         self.port = port
-        super(DVConfigClient, self).__init__()
+        super(DVConfigClient, self).__init__(address=address, port=port)
+        print address, port
 
         if address:
             self.address = address

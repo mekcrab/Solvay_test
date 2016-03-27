@@ -49,27 +49,33 @@ class TestAdmin():
 
         transitions = self.diagram.get_transitions(source = source.name, dest = destination.name)
         num_attributes = len(transitions)
+        print "Number of Transition Attributes:", num_attributes
 
         complete_count = 0
-        while complete_count != num_attributes:
-            self.logger.debug("Testing transition between source state %r and destination state %r",
-                              source.name, destination.name)
-            for transition in transitions:
-                for tran_attr in transition.attrs:
-                    # TODO: tran_attr.set_read_hook(connection.read)
-                    tran_attr.set_read_hook(connection.read)
-                    tran_attr.set_write_hook(connection.write)
-                    is_complete = tran_attr.execute()
-                    while not is_complete:
+        # FIXME: empty transition on the diagram is built as one item in the transition list as well.
+        if num_attributes == 1 and transitions[0].attrs == []:
+            return True
+        else:
+            while complete_count != num_attributes:
+                self.logger.debug("Testing transition between source state %r and destination state %r",
+                                  source.name, destination.name)
+                for transition in transitions:
+                    for tran_attr in transition.attrs:
+                        # TODO: tran_attr.set_read_hook(connection.read)
+                        tran_attr.set_read_hook(connection.read)
+                        tran_attr.set_write_hook(connection.write)
                         is_complete = tran_attr.execute()
-                    if is_complete:
-                        complete_count += 1
+                        while not is_complete:
+                            is_complete = tran_attr.execute()
+                        if is_complete:
+                            complete_count += 1
 
-                    if complete_count == num_attributes:
-                        #Activate all State Attributes in Destination State
-                        for dest_attr in destination.attrs:
-                            dest_attr.activate()
-                        return True
+                        if complete_count == num_attributes:
+                            #Activate all State Attributes in Destination State
+                            for dest_attr in destination.attrs:
+                                dest_attr.activate()
+                            return True
+
 
 
 class Test(TestAdmin):
@@ -88,7 +94,7 @@ class Test(TestAdmin):
 
     def start(self):
         #TODO: confirm diagram.title is callable
-        self.logger.debug("Start Testing Diagram: %r", diagram.title)
+        # self.logger.debug("Start Testing Diagram: %r", diagram.title)
         in_state = self.start_state
         while in_state and TestAdmin(self.diagram, self.connection).recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
@@ -120,7 +126,8 @@ if __name__ == "__main__":
     input_path = os.path.join(config.specs_path, 'vpeng', 'AttrTest_0.0.puml')
 
     # create attribute builder instance for solving attributes
-    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    #abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
 
     # ==Build diagram, preprocessor optional==:
     diagram = build_state_diagram(input_path, attribute_builder=abuilder, preprocess=True)
