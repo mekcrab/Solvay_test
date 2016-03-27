@@ -136,4 +136,4 @@ if __name__ == "__main__":
     print "Attributes generated:"
     pp(diagram.collect_attributes())
 
-    Test(diagram = diagram, connection = connection).start()
+    Test(diagram=diagram, connection=connection).start()

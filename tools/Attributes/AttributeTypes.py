@@ -45,6 +45,10 @@ class Attribute_Base(object):
         self.tag = tag  # root tag
         self.attr_path = kwargs.pop('attr_path', '')  # attribute path from tag designation, defaults to empty string
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
+        if hasattr(self, 'target_value'):
+            pass  # self.target_value inhereited from child class __init__()
+        else:
+            self.target_value = kwargs.pop('target_value', None)  # default target_value for testing
 
         self._complete = None  # value of attribute evaluation - set in self.evaluate method.
                                  # Nonetype means not yet evaluated
@@ -88,6 +92,12 @@ class Attribute_Base(object):
 
     def set_write_hook(self, writehook):
         self.writehook = writehook
+
+    def set_target_value(self, target_value):
+        '''
+        Sets default testing parameter self.target_value
+        '''
+        self.taget_value = target_value
 
     def set_complete(self, complete=False):
         '''Sets the self.complete parameter to be True or False depending on results of self.evaluate'''
@@ -145,18 +155,18 @@ class DiscreteAttribute(Attribute_Base):
     Examples:   NamedSets, Binary/Boolean, Bitmask
     '''
 
-    def __init__(self, tag, attr_path, target=0):
+    def __init__(self, tag, attr_path, target_value=0, **kwargs):
         self.tag = tag
         self.attr_path = attr_path
-        self.target = target
-        Attribute_Base.__init__(self, tag, attr_path=attr_path)
+        self.target_value = target_value
+        Attribute_Base.__init__(self, tag, attr_path=attr_path, **kwargs)
 
-    def execute(self, command='compare', op='=', target=0):
+    def execute(self, command='compare', op='=', target_value=0):
         if command == 'compare':
             print "Reading:", self.tag
             readleft = self._read() # this should return the same value as using OPC_Connect.read(): (0.0, 'Good', <timestamp>)
             if op == '=':
-                return readleft[0] == target
+                return readleft[0] == target_value
 
     def force(self, value=1):
         '''Attempts to force the value of this attribute'''
@@ -173,16 +183,16 @@ class DiscreteAttribute(Attribute_Base):
 
 class NamedDiscrete(DiscreteAttribute):
     '''Sublcass for attributes with string name mappings to integer values'''
-    def __init__(self, tag, int_dict={}, attr_path='', target=0):
+    def __init__(self, tag, int_dict={}, attr_path='', **kwargs):
         '''
-
+        Constructor
         :param tag:
         :param int_dict:
         :param attr_path:
         :return:
         '''
         self.int_dict = int_dict
-        Attribute_Base.__init__(self, tag, attr_path=attr_path)
+        Attribute_Base.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def execute(self):
         raise NotImplementedError
@@ -238,29 +248,40 @@ class ModeAttribute(Attribute_Base):
         {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
     def __init__(self, tag, attr_path='MODE', **kwargs):
-        #NamedDiscrete.__init__(self, tag, int_dict=ModeAttribute.target_int_dict, attr_path=attr_path)
-        self.target_mode = kwargs.pop('target_mode', '')
-        self.tag = tag
-        self.attr_path = attr_path
-        Attribute_Base.__init__(self, self.tag, attr_path = attr_path)
+        self.target_mode = kwargs.pop('target_mode', 'CAS')
+        target_int = ModeAttribute.actual_int_dict[self.target_mode]
+        Attribute_Base.__init__(self, tag, attr_path=attr_path, target_value=target_int, **kwargs)
 
-    def write_Mode(self, mode):
+    @staticmethod
+    def get_mode_target(mode_str):
+        '''Returns integer value of mode target given by mode_str'''
+        return ModeAttribute.target_int_dict[mode_str]
+
+    @staticmethod
+    def get_mode_actual(mode_str):
+        '''Returns integer value of mode actual given by mode_str'''
+        return ModeAttribute.actual_int_dict[mode_str]
+
+    def write_mode(self, mode_value):
         '''Writes are directed to MODE.TARGET '''
-        if type(mode) in [str, unicode]:
-            mode = ModeAttribute.target_int_dict[mode]
-        return self._write(value=mode, param='TARGET')
+        if type(mode_value) in [str, unicode]:
+            mode_int = ModeAttribute.target_int_dict[mode_value]
+        else:
+            print "Mode types must be string or integers"
+            raise
+        return self._write(value=mode_int, param='TARGET')
 
-    def read_Mode(self):
+    def read_mode(self):
         '''Reads are directed to MODE.ACTUAL'''
         return self._read(param='ACTUAL')
 
     def write(self, mode):
-        return self.write_Mode(mode=mode)
+        return self.write_Mode(mode=self.target_mode)
 
     def read(self):
         return self.read_Mode()
 
-    def execute(self, command = 'write'):
+    def execute(self, command='write'):
         if command == 'write':
             if self.target_mode:
                 self.write(mode = self.target_mode)
@@ -272,7 +293,8 @@ class ModeAttribute(Attribute_Base):
 
 class PositionAttribute(ModeAttribute):
     '''
-    Unique class of attribute for Valve/Pump position
+    Unique class of attribute for Valve/Pump position.
+    Every attribute with a position automatically inherits all mode attribute methods
     '''
     bool_position_dict = {'OPEN': 1, 'CLOSE': 0,
                      'OPENED': 1, 'CLOSED': 0,
@@ -287,57 +309,64 @@ class PositionAttribute(ModeAttribute):
     # mode: attr_path dictionary--> used for reads by default
     mode_confim_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUTP', 'RCAS': 'PV_D'}
 
-    def __init__(self, tag, attr_path ='', mode_attr=None, **kwargs):
-        self.tag = tag
-        self.attr_path = attr_path
+    def __init__(self, tag, mode_attr='CAS', **kwargs):
+
+        self.attr_path = kwargs.pop('attr_path', 'PV_D')
+        self.mode_path = kwargs.pop('mode_path', 'MODE')
         self.target_value = kwargs.pop('target_value', None)
+        self.mode = ModeAttribute.__init__(self, tag,
+                                           attr_path=self.mode_path,
+                                           target_mode=mode_attr,
+                                           **kwargs)
 
-        if not mode_attr:
-            self.mode = kwargs.pop('mode', None)
-        elif not isinstance(mode_attr, ModeAttribute):
-            print "Mode must be a mode attribute type"
-            raise TypeError
+        Attribute_Base.__init__(self, tag, target_value=self.target_value, **kwargs)
 
-        ModeAttribute.__init__(self, self.tag)
-
-    def write(self, target_value, **kwargs):
+    def write(self, target_value=None):
         '''
         :param: target_value can be a boolean number or str(Open/close/start/stop...)
         :param: mode can be int, str or unicode
         '''
-        mode = kwargs.pop('mode', '')
-
-        if target_value in [str, unicode]:
+        # target_value must be an interger or floating point to write
+        if target_value == None:
+            target_value = self.target_value
+        elif target_value in [str, unicode]:
             target_value = target_value.upper()
-            target_value = PositionAttribute.bool_position_dict[target_value]
+            if target_value in PositionAttribute.bool_position_dict:
+                target_value = PositionAttribute.bool_position_dict[target_value]
+            else:  # attempt to convert from string type to floating point
+                target_value = float(target_value)
+        elif type(target_value) not in [int, float]:
+            print "Position write target must be integer or floating point"
+            raise TypeError
 
-        if mode != None:
-            self.write_Mode(mode=mode)
-        else:
-            mode = self.read_Mode()[0]
-
-        if type(mode) in [str, unicode]:
-            mode = mode.upper()
-        elif type(mode) in [int, float]:
-            mode = PositionAttribute.modenum_str_dict[mode]
-
-        self.attr_path = PositionAttribute.mode_act_dict[mode]
+        # TODO: determine if we write out the target mode in this step
         return self._write(target_value)
 
     def read(self):
         return self._read()
 
-    def execute(self, command = 'write'):
+    def write_mode(self, target_mode=None):
+        '''Wrapper to write this position's mode attribute'''
+        if target_mode == None:
+            target_mode = self.mode.target_value
+
+        return self.mode.write(taget_value=target_mode)
+
+    def read_mode(self):
+        return self.mode.read()
+
+    def execute(self, command='write'):
         if command == 'write':
+            print "Position", self.tag, "taget_value: ", self.target_value
             if self.target_value != None:
-                self.write(self.target_value, mode = self.mode)
+                self.write(self.target_value)
                 current_value = self.read()[0]
                 return self.target_value == current_value
             else:
+                print "No target value in ", self.tag, "raising error"
                 raise TypeError
+
         elif command == 'read':
-            mode = PositionAttribute.modenum_str_dict[self.read_Mode()[0]]
-            self.attr_path = PositionAttribute.mode_act_dict[mode]
             return self.read()[0]
 
 
@@ -383,7 +412,7 @@ class InterlockAttribute(Attribute_Base):
         :param
         :return:
         '''
-        return self.trip.execute(target=1)
+        return self.trip.execute(target_valu=1)
 
     def test_reset(self):
         '''
@@ -391,7 +420,7 @@ class InterlockAttribute(Attribute_Base):
         :param self:
         :return:
         '''
-        return self.reset.execute(target=1)
+        return self.reset.execute(target_value=1)
 
     def test_bypass(self):
         '''
@@ -399,7 +428,7 @@ class InterlockAttribute(Attribute_Base):
         :param self:
         :return:
         '''
-        return self.bypass.execute(target=1)
+        return self.bypass.execute(target_value=1)
 
     def execute(self):
         '''
@@ -429,13 +458,13 @@ class PromptAttribute(Attribute_Base):
         #FP/INT, etc...
     }
 
-    def __init__(self, tag, target, message_string, message_path, response_path):
+    def __init__(self, tag, target_value, message_string, message_path, response_path):
         '''
-        :param target: target value of prompt response
+        :param target_value: target value of prompt response
         :param message: string of the prompt message
         :return:
         '''
-        self.target = target
+        self.target_value = target_value
 
         self.message_string = message_string
 
@@ -458,7 +487,7 @@ class PromptAttribute(Attribute_Base):
         if input:
             self.response._write(input)
         else:
-            self.response._write(self.target)
+            self.response._write(self.target_value)
 
     def read(self):
         '''
@@ -488,7 +517,7 @@ class PromptAttribute(Attribute_Base):
         self.value = value
         if self.value:
             self.write(input=value)
-        else:  # write self.target to response path
+        else:  # write self.target_value to response path
             self.write()
 
 
@@ -565,7 +594,7 @@ class LoopAttribute(Attribute_Base):
 class EMCMDAttribute(Attribute_Base):
     # TODO: import EMCMD dictionary to EMCMD_int_dict
     # could this attribute type just be a NamedDiscrete with the correct
-    # command integer value for a self.force(target)?
+    # command integer value for a self.force(target_value)?
     EMCMD_int_dict = {}
 
     def __int__(self, tag, attr_path = '', **kwargs):
@@ -573,14 +602,14 @@ class EMCMDAttribute(Attribute_Base):
         '''
         self.attr_path = attr_path
         self.tag = tag
-        self.target = kwargs.pop('target', '')
-        Attribute_Base.__init__(self, tag, attr_path=self.attr_path)
+        self.target_value = kwargs.pop('target_value', '')
+        Attribute_Base.__init__(self, tag, attr_path=self.attr_path, **kwargs)
 
     def write(self):
         self.attr_path = 'A_COMMAND'
-        if self.target in [str, unicode]:
-            self.target = EMCMDAttribute.EMCMD_int_dict[self.target]
-        return self._write(self.target)
+        if self.target_value in [str, unicode]:
+            self.target_value = EMCMDAttribute.EMCMD_int_dict[self.target_value]
+        return self._write(self.target_value)
 
     def read(self):
         return self.read_PV()
@@ -599,7 +628,7 @@ class EMCMDAttribute(Attribute_Base):
             readtarget = self.read_Target()[0]
             readPV = self.read_PV()[0]
             #TODO: confirm below:
-            return readtarget == self.target or readPV == self.target
+            return readtarget == self.target_value or readPV == self.target_value
         if command == 'read':
             return self.read()[0]
 
@@ -620,13 +649,16 @@ class OtherAttribute(Attribute_Base):
     def __init__(self, tag, attr_path, param = 'CV', **kwargs):
         self.param = param
         self.target_value = kwargs.pop('target_value',None)
-        Attribute_Base.__init__(self, tag, attr_path=attr_path)
+        Attribute_Base.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self):
-        return self._read(param = self.param)
+        return self._read(param=self.param)
 
-    def write(self, target_value):
-        return self._write(value = target_value, param = self.param)
+    def write(self, target_value=None):
+        if not target_value:
+            target_value = self.target_value
+
+        return self._write(value=target_value, param=self.param)
 
     def execute(self, command = 'write', **kwargs):
         if command == 'read':
@@ -644,10 +676,10 @@ class AttributeDummy(Attribute_Base):
     Dummy attribute for:
         testing, as a placeholder, or deferring attributes type differentiation'''
 
-    def __init__(self, id=''):
+    def __init__(self, id='', **kwargs):
         '''Constructor'''
         self.id = id
-        Attribute_Base.__init__(self, tag='dummy')
+        Attribute_Base.__init__(self, tag='dummy', **kwargs)
 
     def read(self):
         print 'Dummy read ', self.id

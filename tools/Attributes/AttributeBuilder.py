@@ -171,9 +171,9 @@ class AttributeBuilder(object):
                 return OtherAttribute(tag, parse_dict['path'])
             # no path found, assume PV
             elif '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                return DiscreteAttribute(tag, 'PV_D')
+                return DiscreteAttribute(tag, attr_path='PV_D')
             elif '/'.join(['/', tag, 'PV']) in module_info['attribute_paths']:
-                return IndicationAttribute(tag, 'PV')
+                return IndicationAttribute(tag, attr_path='PV')
             elif 'value' in parse_dict:
                 return self.generate_attribute(parse_dict, 'value')
             else:
@@ -204,10 +204,12 @@ class AttributeBuilder(object):
             tag, module_info = self.get_module_info(parse_dict)
             # check if discrete module
             if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                return PositionAttribute(tag, 'PV_D.CV')
+                # fixme: taget_value should be obtained from configuration
+                return PositionAttribute(tag, attr_path='PV_D.CV', target_value=0)
             # otherwise return analog type
             else:
-                return PositionAttribute(tag, 'PV.CV')
+                # fixme: taget_value should be obtained from from context of action word
+                return PositionAttribute(tag, attr_path='PV.CV', taget_value=0)
 
         elif attribute_type in ['condition', 'compare']:
             tag, module_info = self.get_module_info(parse_dict.lhs)
@@ -249,7 +251,15 @@ class AttributeBuilder(object):
                 self.logger.debug("Generating attribute from value: %s", val)
 
                 if val in ['open', 'close']:
-                    return self.generate_attribute(parse_dict, 'position')
+                    new_attr = self.generate_attribute(parse_dict, 'position')
+                    # fixme - dirty fix to get thing going
+                    if val == 'open':
+                        new_attr.set_target_value(1)
+                    elif val == 'close':
+                        new_attr.set_target_value(0)
+                    else:
+                        self.logger.error("No target value found, cannot set in %s", new_attr)
+                    return new_attr
                 elif val in ['trip', 'reset']:
                     attr_class = command_vals[val]
                     self.logger.debug("Creating %s from: %s", attr_class.__name__, ' '.join(parse_dict.asList()))
