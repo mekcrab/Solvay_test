@@ -48,12 +48,11 @@ class TestAdmin():
         destination = self.diagram.get_state(state_id = destination)
 
         transitions = self.diagram.get_transitions(source = source.name, dest = destination.name)
-        num_attributes = len(transitions)
-        print "Number of Transition Attributes:", num_attributes
+        num_attributes = len(transitions[0].attrs)
 
         complete_count = 0
         # FIXME: empty transition on the diagram is built as one item in the transition list as well.
-        if num_attributes == 1 and transitions[0].attrs == []:
+        if num_attributes == 0:
             return True
         else:
             while complete_count != num_attributes:
@@ -93,8 +92,7 @@ class Test(TestAdmin):
         # self.start_state = diagram.get_state(state_id = 'START')
 
     def start(self):
-        #TODO: confirm diagram.title is callable
-        # self.logger.debug("Start Testing Diagram: %r", diagram.title)
+        self.logger.debug("Start Testing Diagram::: %r", diagram.id)
         in_state = self.start_state
         while in_state and TestAdmin(self.diagram, self.connection).recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
