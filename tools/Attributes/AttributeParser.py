@@ -48,7 +48,7 @@ class AST(object):
 
     def __init__(self):
         self.logger = dlog.MakeChild('Attribute AST')
-        self.root = AT.Attribute_Base
+        self.root = AT.AttributeBase
 
         self.datatypes = {
             'discrete'  : [AT.DiscreteAttribute,

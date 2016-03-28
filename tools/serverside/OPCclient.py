@@ -46,16 +46,20 @@ class OPCdummy(object):
     def __init__(self, srv_name='OPC.DeltaV.1'):
         self.client = self.connect_local(srv_name)
 
+        self.paths = dict()  # dictionary of paths for write loopback testing
+
     def connect_local(self, srv_name, host='dummy'):
         return 'Dummy client connection'
 
-    def read(self, PV, dummy_val=-99):
-        print "Dummy write: ", PV
+    def read(self, path, dummy_val=-99):
+        print "Dummy read: ", path
+        if path in self.path_dict:
+            dummy_val = self.path_dict[path]
         return (dummy_val, 'Dummy', time.ctime(time.time()))
 
-
-    def write(self, PV, SP):
-        print "Dummy write: PV", PV, '\t', 'SP', SP
+    def write(self, path, value):
+        print "Dummy write: ", path, ' as ', value
+        self.path_dict[path] = value
         return 'Sucess'
 
 # Determine OPC client type from OpenOPC availability
