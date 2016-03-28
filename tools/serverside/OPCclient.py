@@ -15,6 +15,7 @@ except ImportError:
 
 import time
 
+
 class OPCconnect(object):
     '''
     OPC read/write client connection
@@ -45,7 +46,7 @@ class OPCdummy(object):
     def __init__(self, srv_name='OPC.DeltaV.1'):
         self.client = self.connect_local(srv_name)
 
-        self.paths = dict()  # dictionary of paths for write loopback testing
+        self.path_dict = dict()  # dictionary of paths for write loopback testing
 
     def connect_local(self, srv_name, host='dummy'):
         return 'Dummy client connection'

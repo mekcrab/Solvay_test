@@ -75,6 +75,26 @@ class DVConfigClient(jsocket.JsonClient):
         info = self.read_obj()
         return info
 
+    def get_config_values(self, list_of_paths):
+        '''
+        Returns the configuration values found for each of the paths in list_of_paths
+        :param list_of_paths:
+        :return:
+        '''
+
+        if type(list_of_paths) is not list:
+            print "Must pass a list of paths to query. Received type:", type(list_of_paths)
+            raise TypeError
+
+        rpc_req = {
+            "method": "get_config_values",
+            "path_values": list_of_paths,
+        }
+        self.send_obj(rpc_req)
+        info = self.read_obj()
+        return info
+
+
 if __name__ == "__main__":
     client = DVConfigClient()
 
