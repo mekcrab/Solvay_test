@@ -14,20 +14,21 @@ def remove_duplicates(values):
 
 
 class TestAdmin():
-    def __init__(self, diagram, connection, poll_interval=0.5, timeout=600):
+    def __init__(self, test_case, diagram, connection, poll_interval=0.5, timeout=600):
         self.diagram = diagram
+        self.test_case = test_case
         self.connection = connection
         self.logger = dlog.MakeChild('TestAdmin')
         self.poll_interval = poll_interval  # interval between calls to execute states or transitions
         self.global_timeout = timeout  # global timeout if all states not achieved
 
     def recur(self, in_state):
-        state = self.diagram.get_state(state_id=in_state)
+        state = self.test_case.get_state(state_id=in_state)
         num_attributes = len(state.attrs)
         complete_count = 0
 
         # set read/write hooks for all attributes
-        [(attr.set_read_hook(connection.read), attr.set_write_hook(connection.write)) for attr in state.attrs]
+        [(attr.set_read_hook(self.connection.read), attr.set_write_hook(self.connection.write)) for attr in state.attrs]
 
         self.logger.debug("Testing state::: %r, %r attribute(s) found", state.name, num_attributes)
 
@@ -60,8 +61,8 @@ class TestAdmin():
                     pass
 
     def transit(self, source, destination):
-        source = self.diagram.get_state(state_id=source)
-        destination = self.diagram.get_state(state_id=destination)
+        source = self.test_case.get_state(state_id=source)
+        destination = self.test_case.get_state(state_id=destination)
 
         transitions = self.diagram.get_transitions(source=source.name, dest=destination.name)
         num_attributes = len(transitions[0].attrs)
@@ -77,8 +78,8 @@ class TestAdmin():
                 for transition in transitions:
                     for tran_attr in transition.attrs:
                         # TODO: tran_attr.set_read_hook(connection.read)
-                        tran_attr.set_read_hook(connection.read)
-                        tran_attr.set_write_hook(connection.write)
+                        tran_attr.set_read_hook(self.connection.read)
+                        tran_attr.set_write_hook(self.connection.write)
                         is_complete = tran_attr.execute()
                         while not is_complete:
                             is_complete = tran_attr.execute()
@@ -94,22 +95,23 @@ class TestAdmin():
 
 class Test(TestAdmin):
 
-    def __init__(self, diagram, connection):
+    def __init__(self, test_case, diagram, connection):
+        self.test_case = test_case
         self.diagram = diagram
         self.connection = connection
-        TestAdmin.__init__(self, diagram, connection)
+        TestAdmin.__init__(self, test_case, diagram, connection)
         #TODO: need to make the state_id constant.
 
-        for state in diagram.state_names:
-            state = diagram.get_state(state)
+        for state in test_case.state_names:
+            state = test_case.get_state(state)
             if len(state.source) == 0:
                 self.start_state = state
         # self.start_state = diagram.get_state(state_id = 'START')
 
     def start(self):
-        self.logger.debug("Start Testing Diagram::: %r", diagram.id)
+        self.logger.debug("Start Testing Diagram::: %r", self.diagram.id)
         in_state = self.start_state
-        while in_state and TestAdmin(self.diagram, self.connection).recur(in_state):
+        while in_state and TestAdmin(self.test_case, self.diagram,  self.connection).recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
             next_states = remove_duplicates(in_state.destination) # A List of Possible Destination
             if next_states: # not empty
@@ -119,7 +121,7 @@ class Test(TestAdmin):
                 while transition_pass != True:
                     for next_state in next_states:
                         print "next_state:", next_state.name
-                        transition_pass = TestAdmin(self.diagram, self.connection).transit(source = in_state, destination = next_state)
+                        transition_pass = TestAdmin(self.test_case, self.diagram, self.connection).transit(source = in_state, destination = next_state)
                         in_state = next_state
             else:
                 print "==============================Test Complete========================="
@@ -139,8 +141,8 @@ if __name__ == "__main__":
     input_path = os.path.join(config.specs_path, 'vpeng', 'AttrTest_0.0.puml')
 
     # create attribute builder instance for solving attributes
-    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
-    # abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
+    # abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
 
     # ==Build diagram, preprocessor optional==:
     diagram = build_state_diagram(input_path, attribute_builder=abuilder, preprocess=True)
@@ -151,4 +153,4 @@ if __name__ == "__main__":
     print "Attributes generated:"
     pp(diagram.collect_attributes())
 
-    Test(diagram=diagram, connection=connection).start()
+    Test(test_case=diagram, diagram=diagram, connection=connection).start()

@@ -41,7 +41,7 @@ def test_solver_processor(test_class, test_spec):
     # generate drawing of flattened graph - will work on getting better syntax
     # test_gen.draw_solved_graph()
 
-    return test_gen
+    return test_gen, diagram
 
 if __name__ == "__main__":
     S_EMC_PRESS_CND()

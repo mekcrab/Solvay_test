@@ -273,6 +273,7 @@ class InterlockAttribute(AttributeBase):
         :return:
         '''
         self.condition = kwargs.pop('condition', None)
+        self.attr_path = ''
 
         if self.condition:
             self.trip = DiscreteAttribute(tag, 'INTERLOCK/CND'+str(self.condition))
@@ -672,6 +673,8 @@ class Compare(AttributeBase):
         self.id = self.lhs.tag+self.op+self.rhs.tag
 
         self.logger = dlog.MakeChild(self.id)
+
+        self.attr_path = ''
 
         AttributeBase.__init__(self, self.lhs.tag)
 
