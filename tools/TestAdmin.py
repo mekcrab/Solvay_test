@@ -1,6 +1,8 @@
 __author__ = 'vpeng'
 
-from serverside.OPCclient import OPC_Connect, OPCdummy
+from serverside.OPCclient import OPC_Connect
+import time
+
 
 from Utilities.Logger import LogTools
 dlog = LogTools('TestAdmin.log', 'TestAdmin')
@@ -12,42 +14,56 @@ def remove_duplicates(values):
 
 
 class TestAdmin():
-    def __init__(self, diagram, connection):
+    def __init__(self, diagram, connection, poll_interval=0.5, timeout=600):
         self.diagram = diagram
         self.connection = connection
         self.logger = dlog.MakeChild('TestAdmin')
+        self.poll_interval = poll_interval  # interval between calls to execute states or transitions
+        self.global_timeout = timeout  # global timeout if all states not achieved
 
     def recur(self, in_state):
-        state = self.diagram.get_state(state_id = in_state)
-        self.next_states = state.destination # List of Object
+        state = self.diagram.get_state(state_id=in_state)
         num_attributes = len(state.attrs)
-        self.logger.debug("Testing state::: %r, %r attribute(s) found", state.name, num_attributes)
         complete_count = 0
 
-        # As long as attributes in state not all complete, it will keep attempting to execute until all complete.
-        x = 0
-        complete = [False] * len(state.attrs)
-        while complete_count != num_attributes:
-            for x in range(0, len(state.attrs)):
-                state_attr = state.attrs[x]
-                state_attr.set_read_hook(connection.read)
-                state_attr.set_write_hook(connection.write)
-                if not complete[x]:
-                    #print "Executing Attribute:", state_attr
-                    complete[x] = state_attr.execute()
-                    #print "is_complete:", complete[x]
+        # set read/write hooks for all attributes
+        [(attr.set_read_hook(connection.read), attr.set_write_hook(connection.write)) for attr in state.attrs]
 
-                complete_count = complete.count(True)
+        self.logger.debug("Testing state::: %r, %r attribute(s) found", state.name, num_attributes)
 
-           # print "Complete Count:", complete_count
-        if complete_count == num_attributes:
-            return True
+        mark_timeout = time.time()
+        # As long as (not any state.attrs.complete), keep attempting attr.execute at specified polling interval
+        while 1:
+            poll_time = time.time() + self.poll_interval
+
+            # (1) execute test loop if all attributes are not complete
+            # each attribute is executed during every polling period -- in case the value changes!!
+            # TODO - find out how long attr.execute() method takes for each attribute type (see timeit)
+            for attr in state.attrs:
+                try:
+                    complete_count += attr.execute()
+                except TypeError:
+                    self.logger.error('Error in %r.execute()', attr)
+                    continue
+
+            # (2) look at results
+            #   (a) check if all attributes have passed,
+            if complete_count == num_attributes:
+                return True
+            #  (b)  or the state has timed out...
+            elif (time.time() - mark_timeout) > self.global_timeout:
+                return False  # or other timeout logic here!!
+            #  (c) otherwise wait for the next polling interval
+            else:
+                complete_count = 0
+                while time.time() < poll_time:
+                    pass
 
     def transit(self, source, destination):
-        source = self.diagram.get_state(state_id = source)
-        destination = self.diagram.get_state(state_id = destination)
+        source = self.diagram.get_state(state_id=source)
+        destination = self.diagram.get_state(state_id=destination)
 
-        transitions = self.diagram.get_transitions(source = source.name, dest = destination.name)
+        transitions = self.diagram.get_transitions(source=source.name, dest=destination.name)
         num_attributes = len(transitions[0].attrs)
 
         complete_count = 0
@@ -74,7 +90,6 @@ class TestAdmin():
                             for dest_attr in destination.attrs:
                                 dest_attr.activate()
                             return True
-
 
 
 class Test(TestAdmin):
@@ -124,8 +139,8 @@ if __name__ == "__main__":
     input_path = os.path.join(config.specs_path, 'vpeng', 'AttrTest_0.0.puml')
 
     # create attribute builder instance for solving attributes
-    #abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
-    abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    # abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
 
     # ==Build diagram, preprocessor optional==:
     diagram = build_state_diagram(input_path, attribute_builder=abuilder, preprocess=True)
@@ -136,4 +151,4 @@ if __name__ == "__main__":
     print "Attributes generated:"
     pp(diagram.collect_attributes())
 
-    Test(diagram = diagram, connection = connection).start()
+    Test(diagram=diagram, connection=connection).start()

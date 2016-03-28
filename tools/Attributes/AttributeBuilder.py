@@ -99,7 +99,7 @@ class AttributeBuilder(object):
         parse_results = self.parser.parse(raw_string)
 
         if not parse_results:
-            self.logger.error("Attribute string:: %s :: not parseable, return raw string", raw_string)
+            self.logger.error("Attribute string:: %s :: not parsed, returning raw string", raw_string)
             return raw_string
 
         new_attribute = None
@@ -118,7 +118,12 @@ class AttributeBuilder(object):
 
                 elif action in ['read', 'write']:
                     self.logger.debug("Adding read/write action: %s", raw_string)
-                    new_attribute = self.generate_attribute(parse_results, 'compare')
+                    if 'compare' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'compare')
+                    elif 'value' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'value')
+                    else:
+                        self.logger.error("Unknown attribute generation for %s", raw_string)
 
                 elif action in ['prompt']:
                     self.logger.debug("Adding prompt action: %s", raw_string)
@@ -171,9 +176,9 @@ class AttributeBuilder(object):
                 return OtherAttribute(tag, parse_dict['path'])
             # no path found, assume PV
             elif '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                return DiscreteAttribute(tag, 'PV_D')
+                return DiscreteAttribute(tag, attr_path='PV_D')
             elif '/'.join(['/', tag, 'PV']) in module_info['attribute_paths']:
-                return IndicationAttribute(tag, 'PV')
+                return IndicationAttribute(tag, attr_path='PV')
             elif 'value' in parse_dict:
                 return self.generate_attribute(parse_dict, 'value')
             else:
@@ -204,10 +209,17 @@ class AttributeBuilder(object):
             tag, module_info = self.get_module_info(parse_dict)
             # check if discrete module
             if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                return PositionAttribute(tag, 'PV_D.CV')
+                if '/'.join(['/', tag, 'OPEN']) in module_info['attribute_paths']:
+                    value_dict = self.get_target_value(tag, ['OPEN', 'CLOSE'])
+                    target_value = value_dict['/'.join([tag, parse_dict.action_word.upper()])]
+                else:
+                    value_dict = {'start':1, 'stop':0}  #fixme - get namedsets from configuration. this is _MTR2_PV
+                    target_value = value_dict[parse_dict.action_word]
+                return PositionAttribute(tag, attr_path='PV_D.CV', target_value=target_value)
             # otherwise return analog type
             else:
-                return PositionAttribute(tag, 'PV.CV')
+                # fixme: taget_value should be obtained from from context of action word
+                return PositionAttribute(tag, attr_path='PV.CV', taget_value=0)
 
         elif attribute_type in ['condition', 'compare']:
             tag, module_info = self.get_module_info(parse_dict.lhs)
@@ -249,7 +261,16 @@ class AttributeBuilder(object):
                 self.logger.debug("Generating attribute from value: %s", val)
 
                 if val in ['open', 'close']:
-                    return self.generate_attribute(parse_dict, 'position')
+                    parse_dict.action_word = val
+                    new_attr = self.generate_attribute(parse_dict, 'position')
+                    value_dict = self.get_target_value(new_attr.tag, ['OPEN', 'CLOSE'])
+                    if val == 'open':
+                        new_attr.set_target_value(value_dict[new_attr.tag + '/' + 'OPEN'])
+                    elif val == 'close':
+                        new_attr.set_target_value(value_dict[new_attr.tag+'/'+'CLOSE'])
+                    else:
+                        self.logger.error("No target value found, cannot set in %s", new_attr)
+                    return new_attr
                 elif val in ['trip', 'reset']:
                     attr_class = command_vals[val]
                     self.logger.debug("Creating %s from: %s", attr_class.__name__, ' '.join(parse_dict.asList()))
@@ -278,6 +299,11 @@ class AttributeBuilder(object):
             tag = self.default_tag
 
         return tag, self.client.get_module_info(tag)
+
+    def get_target_value(self, tag, path_list):
+        '''Obtains the target value from DeltaV configuration, if possible. Will return Nonetype on error'''
+        path_values = self.client.get_config_values(['/'.join([tag, attr_path]) for attr_path in path_list])['path_values']
+        return dict(path_values)
 
     def get_alias(self, tag, alias):
         '''Resolves aliases or shared module for the parent module defined by tag'''

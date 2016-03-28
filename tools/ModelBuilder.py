@@ -181,7 +181,7 @@ class StateModelBuilder(ModelBuilder):
 
         if self.attr_builder and type(raw_value) in [str, unicode]:
             attribute_value = self.attr_builder.solve_attribute(raw_value)
-            if isinstance(attribute_value, AttributeBuilder.Attribute_Base):
+            if isinstance(attribute_value, AttributeBuilder.AttributeBase):
                 self.logger.debug("Added attribute instance %s, as %s", attribute_value, type(attribute_value))
             # return raw string if no attribute value match
             # (will be empty list from attr_builder.solver_attribute)

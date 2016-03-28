@@ -56,8 +56,10 @@ def make_fail_condition():
     return AttributeTypes.Compare(AttributeTypes.Constant(lhs), opr, AttributeTypes.Constant(rhs))
 
 def make_test_condition():
-    return AttributeTypes.Compare(lhs=AttributeTypes.PositionAttribute('CV-2151'), op='==',
-                                               rhs=AttributeTypes.PositionAttribute('HS-4092'))
+    return AttributeTypes.Compare(
+        lhs=AttributeTypes.PositionAttribute('CV-2151', taget_value=0),
+        op='==',
+        rhs=AttributeTypes.PositionAttribute('HS-4092', target_value=0))
 
 def make_state_diagram(s=1):
     '''makes a single-path diagram of random states and transitions'''
@@ -77,7 +79,7 @@ def make_state_diagram(s=1):
 
 if __name__ == "__main__":
 
-    d = make_state_diagram(s = 2)
+    d = make_state_diagram(s=2)
     s = d.top_level[0]
     print d.state_names
 

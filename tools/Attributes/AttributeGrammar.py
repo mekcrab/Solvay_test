@@ -91,7 +91,8 @@ ilk_trip = keyword_list(['trip', 'tripped', 'interlock trip']).setParseAction(no
 ilk_reset = keyword_list(['reset', 'interlock reset']).setParseAction(normalize('reset'))
 
 # ===read keywords===
-read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify']).setParseAction(normalize('read'))
+read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify'])\
+    .setParseAction(normalize('read'))
 wait_keyword = keyword_list(['wait', 'wait until', 'wait for', 'delay']).setParseAction(normalize('wait'))
 wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResultsName('units')).setResultsName('wait_time')
 
@@ -118,7 +119,7 @@ get_opc = (pp.CaselessKeyword('Read OPC') +
 
 # ============= Action Keywords and Action Phrases======
 # action words as the first part of an argument, followed by one or more expressions
-action_word = pp.Or(write_keyword ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ wait_keyword)  # NOTE:: pp.Or matches longest string in argument - could introduce bug for overlapping lists
+action_word = pp.Or(write_keyword ^ read_keyword ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ wait_keyword)  # NOTE:: pp.Or matches longest string in argument - could introduce bug for overlapping lists
 # action phrases do not require expressions to correctly parse
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
@@ -137,6 +138,7 @@ command = (tag + pp.Optional(EQUALS ^ ASSIGN) + pp.Optional(keyword_list(['in', 
 compound_exp = ((condition ^ command) + pp.ZeroOrMore(logical + (condition ^ command))).setResultsName('expression', listAllMatches=True)
 
 # =========keyword-based actions=========
-action = (action_word.setResultsName('action_word') + (compound_exp ^ tag + pp.Optional(value))) ^ \
+action = (action_word.setResultsName('action_word') +
+         ((compound_exp ^ tag) + pp.Optional(value))) ^ \
                 action_phrase.setResultsName('action_phrase')
 
