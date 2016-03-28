@@ -68,29 +68,30 @@ class TestAdmin():
         num_attributes = len(transitions[0].attrs)
 
         complete_count = 0
+        self.logger.debug("Testing transition between source state %r and destination state %r",
+                  source.name, destination.name)
         # FIXME: empty transition on the diagram is built as one item in the transition list as well.
         if num_attributes == 0:
             return True
         else:
             while complete_count != num_attributes:
-                self.logger.debug("Testing transition between source state %r and destination state %r",
-                                  source.name, destination.name)
+
                 for transition in transitions:
                     for tran_attr in transition.attrs:
                         # TODO: tran_attr.set_read_hook(connection.read)
                         tran_attr.set_read_hook(self.connection.read)
                         tran_attr.set_write_hook(self.connection.write)
-                        is_complete = tran_attr.execute()
-                        while not is_complete:
-                            is_complete = tran_attr.execute()
-                        if is_complete:
-                            complete_count += 1
+                        try:
+                            complete_count += tran_attr.execute()
+                        except TypeError:
+                            self.logger.error('Error in %r.execute()', tran_attr)
+                            continue
 
-                        if complete_count == num_attributes:
-                            #Activate all State Attributes in Destination State
-                            for dest_attr in destination.attrs:
-                                dest_attr.activate()
-                            return True
+                if complete_count == num_attributes:
+                    #Activate all State Attributes in Destination State
+                    for dest_attr in destination.attrs:
+                        dest_attr.activate()
+                    return True
 
 
 class Test(TestAdmin):
