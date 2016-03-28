@@ -99,7 +99,7 @@ class AttributeBuilder(object):
         parse_results = self.parser.parse(raw_string)
 
         if not parse_results:
-            self.logger.error("Attribute string:: %s :: not parseable, return raw string", raw_string)
+            self.logger.error("Attribute string:: %s :: not parsed, returning raw string", raw_string)
             return raw_string
 
         new_attribute = None
@@ -118,7 +118,12 @@ class AttributeBuilder(object):
 
                 elif action in ['read', 'write']:
                     self.logger.debug("Adding read/write action: %s", raw_string)
-                    new_attribute = self.generate_attribute(parse_results, 'compare')
+                    if 'compare' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'compare')
+                    elif 'value' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'value')
+                    else:
+                        self.logger.error("Unknown attribute generation for %s", raw_string)
 
                 elif action in ['prompt']:
                     self.logger.debug("Adding prompt action: %s", raw_string)
@@ -256,6 +261,7 @@ class AttributeBuilder(object):
                 self.logger.debug("Generating attribute from value: %s", val)
 
                 if val in ['open', 'close']:
+                    parse_dict.action_word = val
                     new_attr = self.generate_attribute(parse_dict, 'position')
                     value_dict = self.get_target_value(new_attr.tag, ['OPEN', 'CLOSE'])
                     if val == 'open':

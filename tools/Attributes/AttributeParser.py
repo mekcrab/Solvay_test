@@ -180,6 +180,7 @@ if __name__ == "__main__":
         "Verify 'PIC-1978' is remote out",
         "'R10-WTRCHG-EM/OWNER_ID' != \"Operator\"",
         "'FQIC-4289/TOTAL' = \n 'R10-WTRCHG-EM/OP001'",
+        "Verify 'CV-2151' Opened",
     ]
 
     parser = AttributeParser(); parser.log2stdout()
