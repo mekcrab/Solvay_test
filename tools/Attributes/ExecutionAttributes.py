@@ -116,6 +116,14 @@ class ModeAttribute(AttributeBase):
         self.target_mode.set_target_value(target_value)
         self.actual_mode.set_target_value(target_value)
 
+    def set_read_hook(self, readhook):
+        self.target_mode.set_read_hook(readhook)
+        self.actual_mode.set_read_hook(readhook)
+
+    def set_write_hook(self, writehook):
+        self.target_mode.set_write_hook(writehook)
+        self.actual_mode.set_write_hook(writehook)
+
     @staticmethod
     def get_mode_target(mode_str):
         '''Returns integer value of mode target given by mode_str'''
@@ -142,10 +150,10 @@ class ModeAttribute(AttributeBase):
         return self.actual_mode.read(param='ACTUAL')
 
     def write(self, mode):
-        return self.write_Mode(mode_value=mode)
+        return self.write_mode(mode_value=mode)
 
     def read(self):
-        return self.read_Mode()
+        return self.read_mode()
 
     def execute(self):
         if not self.exe_start:
@@ -188,6 +196,14 @@ class PositionAttribute(AttributeBase):
 
         AttributeBase.__init__(self, tag, attr_path=attr_path, target_value=self.target_value, **kwargs)
 
+    def set_read_hook(self, readhook):
+        AttributeBase.set_read_hook(self, readhook)
+        self.mode.set_read_hook(readhook)
+
+    def set_write_hook(self, writehook):
+        AttributeBase.set_write_hook(self, writehook)
+        self.mode.set_write_hook(writehook)
+
     def write(self, target_value=None):
         '''
         Writes target value to the appropriate setpoint based on current mode
@@ -215,8 +231,8 @@ class PositionAttribute(AttributeBase):
             sp_path = PositionAttribute.mode_sp_dict[self.mode.mode_name]
         return self._write(target_value)
 
-    def read(self):
-        return self._read()
+    def read(self, param='CV'):
+        return self._read(param=param)[0]
 
     def write_mode(self, target_mode=None):
         '''Wrapper to write this position's mode attribute, defaults to required mode'''
@@ -233,11 +249,13 @@ class PositionAttribute(AttributeBase):
         if not self.exe_start:
             self.start_timer()
 
-        if self.read() == self.target_value:
+        # mode = self.read_mode()
+
+        val = self.read()
+        if val == self.target_value:
             return self.set_complete(True)
         else:
             return self.set_complete(False)
-
 
     def force(self):
         '''Forces target mode and writes to appropriate SP'''
