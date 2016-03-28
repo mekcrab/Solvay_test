@@ -2,7 +2,7 @@
 
 [*] --> state0
 state0: Open 'CV-2151'
-state0 --> state1: 'CV-2151' Opened
+state0 --> state1: Verify 'CV-2151' Opened
 state1: Start 'HS-4092'
 state1 --> [*]
 

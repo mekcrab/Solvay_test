@@ -204,8 +204,13 @@ class AttributeBuilder(object):
             tag, module_info = self.get_module_info(parse_dict)
             # check if discrete module
             if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                # fixme: taget_value should be obtained from configuration
-                return PositionAttribute(tag, attr_path='PV_D.CV', target_value=0)
+                if '/'.join(['/', tag, 'OPEN']) in module_info['attribute_paths']:
+                    value_dict = self.get_target_value(tag, ['OPEN', 'CLOSE'])
+                    target_value = value_dict['/'.join([tag, parse_dict.action_word.upper()])]
+                else:
+                    value_dict = {'start':1, 'stop':0}  #fixme - get namedsets from configuration. this is _MTR2_PV
+                    target_value = value_dict[parse_dict.action_word]
+                return PositionAttribute(tag, attr_path='PV_D.CV', target_value=target_value)
             # otherwise return analog type
             else:
                 # fixme: taget_value should be obtained from from context of action word
@@ -252,11 +257,11 @@ class AttributeBuilder(object):
 
                 if val in ['open', 'close']:
                     new_attr = self.generate_attribute(parse_dict, 'position')
-                    # fixme - dirty fix to get thing going
+                    value_dict = self.get_target_value(new_attr.tag, ['OPEN', 'CLOSE'])
                     if val == 'open':
-                        new_attr.set_target_value(1)
+                        new_attr.set_target_value(value_dict[new_attr.tag + '/' + 'OPEN'])
                     elif val == 'close':
-                        new_attr.set_target_value(0)
+                        new_attr.set_target_value(value_dict[new_attr.tag+'/'+'CLOSE'])
                     else:
                         self.logger.error("No target value found, cannot set in %s", new_attr)
                     return new_attr
@@ -288,6 +293,11 @@ class AttributeBuilder(object):
             tag = self.default_tag
 
         return tag, self.client.get_module_info(tag)
+
+    def get_target_value(self, tag, path_list):
+        '''Obtains the target value from DeltaV configuration, if possible. Will return Nonetype on error'''
+        path_values = self.client.get_config_values(['/'.join([tag, attr_path]) for attr_path in path_list])['path_values']
+        return dict(path_values)
 
     def get_alias(self, tag, alias):
         '''Resolves aliases or shared module for the parent module defined by tag'''
