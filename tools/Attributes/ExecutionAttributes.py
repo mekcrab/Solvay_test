@@ -181,11 +181,13 @@ class PositionAttribute(AttributeBase):
     mode_sp_dict = {'AUTO': 'SP_D', 'CAS': 'REQ_SP', 'ROUT': 'REQ_OUTP', 'RCAS': 'REQ_SP'}
 
     # mode: attr_path dictionary--> used for reads by default
-    mode_pv_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUTP', 'RCAS': 'PV_D'}
+    mode_pv_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUT', 'RCAS': 'PV_D',
+                    16: 'PV_D', 32: 'PV_D', 128: 'OUT', 64: 'PV_D'}
 
     def __init__(self, tag, attr_path='PV_D', target_mode='CAS', **kwargs):
 
         self.target_value = kwargs.pop('target_value', None)
+        self.attr_path = attr_path
 
         # sp_path, pv_path are dynamically connected based on self.mode.mode_name if not specified
         self.write_path = kwargs.pop('sp_path', None)
@@ -194,7 +196,7 @@ class PositionAttribute(AttributeBase):
         mode_path = kwargs.pop('mode_path', 'MODE')
         self.mode = ModeAttribute(tag, attr_path=mode_path, target_mode=target_mode)
 
-        AttributeBase.__init__(self, tag, attr_path=attr_path, target_value=self.target_value, **kwargs)
+        AttributeBase.__init__(self, tag, attr_path=self.attr_path, target_value=self.target_value, **kwargs)
 
     def set_read_hook(self, readhook):
         AttributeBase.set_read_hook(self, readhook)
@@ -227,11 +229,14 @@ class PositionAttribute(AttributeBase):
         self.write_mode()
 
         # determine the correct parameter to write based on mode
-        if not self.sp_path:
-            sp_path = PositionAttribute.mode_sp_dict[self.mode.mode_name]
+        if not self.write_path:
+            self.attr_path = PositionAttribute.mode_sp_dict[self.mode.mode_name]
         return self._write(target_value)
 
     def read(self, param='CV'):
+        if not self.read_path:
+            if self.read_mode() in PositionAttribute.mode_pv_dict:
+                self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
         return self._read(param=param)[0]
 
     def write_mode(self, target_mode=None):

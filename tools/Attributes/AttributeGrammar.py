@@ -21,7 +21,7 @@ def normalize(normal_value):
 # ========Grammar definitions============
 
 # ***Comparison Operators***
-EQUALS = keyword_list(['=', 'equal', 'equals', 'is', 'to']).setParseAction(normalize('='))
+EQUALS = keyword_list(['=', 'equal', 'equals', 'is']).setParseAction(normalize('='))
 GT = keyword_list(['>', 'greater than', 'more than', 'is greater than', 'not less than']).setParseAction(normalize('>'))
 LT = keyword_list(['<', 'less than', 'is less than', 'not more than']).setParseAction(normalize('<'))
 GTE = pp.Literal('>=')

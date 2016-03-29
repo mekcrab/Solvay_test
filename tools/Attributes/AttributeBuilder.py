@@ -116,7 +116,18 @@ class AttributeBuilder(object):
                     self.logger.debug("Adding wait action: %s", raw_string)
                     new_attribute = self.generate_attribute(parse_results, 'compare')
 
-                elif action in ['read', 'write']:
+                elif action in ['write']:
+                    self.logger.debug("Adding write action: %s", raw_string)
+                    if 'value' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'value')
+                    elif 'path' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'path')
+                    elif 'compare' in parse_results:
+                        new_attribute = self.generate_attribute(parse_results, 'compare')
+                    else:
+                        self.logger.error("Unknown attribute generation for %s", raw_string)
+
+                elif action in ['read']:
                     self.logger.debug("Adding read/write action: %s", raw_string)
                     if 'compare' in parse_results:
                         new_attribute = self.generate_attribute(parse_results, 'compare')
@@ -219,7 +230,12 @@ class AttributeBuilder(object):
             # otherwise return analog type
             else:
                 # fixme: taget_value should be obtained from from context of action word
-                return PositionAttribute(tag, attr_path='PV.CV', taget_value=0)
+                if 'value' in parse_dict:
+                    target_value = parse_dict.value[0]
+                else:
+                    target_value = 0
+                return PositionAttribute(tag, attr_path='PV.CV', target_value=float(target_value))
+
 
         elif attribute_type in ['condition', 'compare']:
             tag, module_info = self.get_module_info(parse_dict.lhs)
@@ -271,6 +287,10 @@ class AttributeBuilder(object):
                     else:
                         self.logger.error("No target value found, cannot set in %s", new_attr)
                     return new_attr
+                if val in ['AUTO', 'CAS', 'MAN', 'RCAS', 'ROUT', 'LO']:
+                    tag, module_info = self.get_module_info(parse_dict)
+                    return ModeAttribute(tag, target_mode=val)
+
                 elif val in ['trip', 'reset']:
                     attr_class = command_vals[val]
                     self.logger.debug("Creating %s from: %s", attr_class.__name__, ' '.join(parse_dict.asList()))
@@ -278,10 +298,11 @@ class AttributeBuilder(object):
                 elif val in ['start', 'stop']:
                     self.logger.error("===>Need to implement motors for ", parse_dict.tag)
                     return AttributeDummy
-                elif isString(val):
-                    return Constant(val.string('\"'))
                 elif isNumber(val):
                     return Constant(float(val))
+                elif isString(val):
+                    return Constant(val.string('\"'))
+
 
         else:
             self.logger.error("No attribute generated from %s", parse_dict)
