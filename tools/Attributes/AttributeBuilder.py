@@ -30,7 +30,8 @@ def isNumber(raw_string):
 
 def isString(raw_string):
     '''Checks if the raw string is surrounded by double quotes'''
-    if len(raw_string) > 1 and raw_string[0] == raw_string[-1] == '\"':
+    print len(raw_string), raw_string[0], raw_string[-1]
+    if len(raw_string) > 1 and raw_string[0] == raw_string[-1] == "\'":
             return True
     else:
         return False
@@ -115,19 +116,19 @@ class AttributeBuilder(object):
                 elif action in ['wait']:
                     self.logger.debug("Adding wait action: %s", raw_string)
                     new_attribute = self.generate_attribute(parse_results, 'compare')
+                #
+                # elif action in ['write']:
+                #     self.logger.debug("Adding write action: %s", raw_string)
+                #     if 'value' in parse_results:
+                #         new_attribute = self.generate_attribute(parse_results, 'value')
+                #     elif 'path' in parse_results:
+                #         new_attribute = self.generate_attribute(parse_results, 'path')
+                #     elif 'compare' in parse_results:
+                #         new_attribute = self.generate_attribute(parse_results, 'compare')
+                #     else:
+                #         self.logger.error("Unknown attribute generation for %s", raw_string)
 
-                elif action in ['write']:
-                    self.logger.debug("Adding write action: %s", raw_string)
-                    if 'value' in parse_results:
-                        new_attribute = self.generate_attribute(parse_results, 'value')
-                    elif 'path' in parse_results:
-                        new_attribute = self.generate_attribute(parse_results, 'path')
-                    elif 'compare' in parse_results:
-                        new_attribute = self.generate_attribute(parse_results, 'compare')
-                    else:
-                        self.logger.error("Unknown attribute generation for %s", raw_string)
-
-                elif action in ['read']:
+                elif action in ['read', 'write']:
                     self.logger.debug("Adding read/write action: %s", raw_string)
                     if 'compare' in parse_results:
                         new_attribute = self.generate_attribute(parse_results, 'compare')
@@ -182,16 +183,22 @@ class AttributeBuilder(object):
         # ===== Attribute types by string name <attribute_type>======
         if attribute_type == 'path':
             tag, module_info = self.get_module_info(parse_dict)
+            #print "parse_dict value:", parse_dict.value, type(parse_dict.value)
             # check for path
-            if 'path' in parse_dict:
+            if 'value' in parse_dict or parse_dict.value:
+                print "path parse_dict value:", parse_dict.value
+                return self.generate_attribute(parse_dict, 'value')
+            elif 'path' in parse_dict:
+                split = parse_dict['path'].split('/')
+                if split[0] == tag:
+                    split.pop(0)
+                    parse_dict['path'] = '/'.join(split)
                 return OtherAttribute(tag, parse_dict['path'])
             # no path found, assume PV
             elif '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
                 return DiscreteAttribute(tag, attr_path='PV_D')
             elif '/'.join(['/', tag, 'PV']) in module_info['attribute_paths']:
                 return IndicationAttribute(tag, attr_path='PV')
-            elif 'value' in parse_dict:
-                return self.generate_attribute(parse_dict, 'value')
             else:
                 self.logger.error("No path found in parsed expression %s", parse_dict)
 
@@ -218,23 +225,29 @@ class AttributeBuilder(object):
 
         elif attribute_type == 'position':
             tag, module_info = self.get_module_info(parse_dict)
-            # check if discrete module
-            if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
-                if '/'.join(['/', tag, 'OPEN']) in module_info['attribute_paths']:
-                    value_dict = self.get_target_value(tag, ['OPEN', 'CLOSE'])
-                    target_value = value_dict['/'.join([tag, parse_dict.action_word.upper()])]
-                else:
-                    value_dict = {'start':1, 'stop':0}  #fixme - get namedsets from configuration. this is _MTR2_PV
-                    target_value = value_dict[parse_dict.action_word]
-                return PositionAttribute(tag, attr_path='PV_D.CV', target_value=target_value)
-            # otherwise return analog type
+            print "PositionAttribute.tag:", tag
+            if 'compare' in parse_dict:
+                return self.generate_attribute(parse_dict, 'compare')
             else:
-                # fixme: taget_value should be obtained from from context of action word
-                if 'value' in parse_dict:
-                    target_value = parse_dict.value[0]
+                # check if discrete module
+                if '/'.join(['/', tag, 'PV_D']) in module_info['attribute_paths']:
+                    if 'value' in parse_dict or parse_dict.value:
+                        target_value = parse_dict.value[0]
+                    elif '/'.join(['/', tag, 'OPEN']) in module_info['attribute_paths']:
+                        value_dict = self.get_target_value(tag, ['OPEN', 'CLOSE'])
+                        target_value = value_dict['/'.join([tag, parse_dict.action_word.upper()])]
+                    else:
+                        value_dict = {'start':1, 'stop':0}  #fixme - get namedsets from configuration. this is _MTR2_PV
+                        target_value = value_dict[parse_dict.action_word]
+                    return PositionAttribute(tag, attr_path='PV_D.CV', target_value=target_value)
+                # otherwise return analog type
                 else:
-                    target_value = 0
-                return PositionAttribute(tag, attr_path='PV.CV', target_value=float(target_value))
+                    # fixme: taget_value should be obtained from from context of action word
+                    if 'value' in parse_dict:
+                        target_value = parse_dict.value[0]
+                    else:
+                        target_value = 0
+                    return PositionAttribute(tag, attr_path='PV.CV', target_value=float(target_value))
 
 
         elif attribute_type in ['condition', 'compare']:
@@ -242,19 +255,29 @@ class AttributeBuilder(object):
             lhs = self.generate_attribute(parse_dict['lhs'], 'path')
             # Check for string type
             rhs = parse_dict.rhs
+            opr = parse_dict['compare']
+
             if 'path' in rhs:
                 rhs = self.generate_attribute(parse_dict['rhs'], 'path')
             elif 'value' in rhs:
                 rhs = rhs.value[0]
-                if type(rhs) in [str, unicode] and isString(rhs):
+                if type(rhs) in [str, unicode] and not isNumber(rhs):
                     rhs = Constant(rhs.strip('\"'))
+                    parse_dict['lhs'].value = parse_dict.rhs
+                    lhs = self.generate_attribute(parse_dict['lhs'], 'path')
                 elif isNumber(rhs):
+                    if parse_dict.action_word in ['open', 'close']:
+                        parse_dict.pop('compare')
+                        parse_dict.tag = parse_dict.lhs.tag
+                        parse_dict.value = parse_dict.rhs.value
+                        lhs = self.generate_attribute(parse_dict, 'position')
                     rhs = Constant(float(rhs))
                 else:  # path is based on lhs tag
                     parse_dict['rhs']['tag'] = tag
                     rhs = self.generate_attribute(parse_dict['rhs'], 'path')
 
-            return Compare(lhs, parse_dict['compare'], rhs)
+            print "lhs:", type(lhs), "rhs:", type(rhs), "opr", opr
+            return Compare(lhs, opr, rhs)
 
         elif attribute_type == 'command':
             if 'rhs' in parse_dict:  # path attribute in command,
@@ -270,7 +293,7 @@ class AttributeBuilder(object):
                             'start': NamedDiscrete,
                             'stop': NamedDiscrete
                             }
-            if 'value' in parse_dict:
+            if 'value' in parse_dict or parse_dict.value:
 
                 val = parse_dict.value[0]
 
@@ -289,6 +312,7 @@ class AttributeBuilder(object):
                     return new_attr
                 if val in ['AUTO', 'CAS', 'MAN', 'RCAS', 'ROUT', 'LO']:
                     tag, module_info = self.get_module_info(parse_dict)
+                    print "ModeAttribute.tag: ", tag
                     return ModeAttribute(tag, target_mode=val)
 
                 elif val in ['trip', 'reset']:

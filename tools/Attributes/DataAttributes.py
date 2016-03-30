@@ -8,6 +8,8 @@ from AttributeBase import AttributeBase
 
 class Constant(AttributeBase):
     '''Attribute wrapper for constant values like numbers, strings, etc'''
+    mode_int_dict = \
+            {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
     def __init__(self, value, **kwargs):
 
@@ -18,7 +20,10 @@ class Constant(AttributeBase):
         AttributeBase.__init__(self, 'Constant', attr_path='', **kwargs)
 
     def read(self):
-        return (self.val, 'Good', time.ctime())
+        if self.val in Constant.mode_int_dict:
+            self.val = Constant.mode_int_dict[self.val]
+        return self.val
+        # return (self.val, 'Good', time.ctime())
 
     def write(self, value):
         self.val = value

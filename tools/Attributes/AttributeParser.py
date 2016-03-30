@@ -150,9 +150,9 @@ class AttributeParser(object):
         :param parse_results:
         :return: string tag of parse results
         '''
-        if 'tag' in parse_results:
-            return parse_results['tag']
-        elif 'path' in parse_results:
+        if 'tag' in parse_results or parse_results.tag:
+            return parse_results.tag
+        elif 'path' in parse_results or parse_results.path:
             path = parse_results['path']
             if '/' in path:
                 tag = path.split('/')[0].strip('/')
@@ -167,10 +167,14 @@ if __name__ == "__main__":
 
     test_strings = [
         "Open 'CV-2394'",
+        "Set 'VAC_CTL' to open",
+        "Close 'VAC_CTL' in 0",
+        "Set 'PIC-2295_RAMP/RAMP_PAUSE' to False",
+        "Verify 'PIC-4083' < 100 mmHg",
         "Set 'PIC-1899' to 100 in AUTO",
         "Open 'N2_VALVE' in Auto with a setpoint of 2 psig",
         "Open 'N2_VALVE' in auto SP 2psig",
-        "Verify 'PIC-3851' > 125 F",
+        "'PIC-3851' > 125 F",
         "Check 'FIC-1795' is in Remote OUTput",
         "Wait until 'LI-398' is less than 100 lbs or 'FIC-2432' < 2.0 ",
         'ACK operator "Sodium Borohydride Charge is Completed"',

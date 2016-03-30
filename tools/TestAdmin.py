@@ -41,14 +41,21 @@ class TestAdmin():
             # each attribute is executed during every polling period -- in case the value changes!!
             # TODO - find out how long attr.execute() method takes for each attribute type (see timeit)
             for attr in state.attrs:
+                type_error_mark = []
                 try:
                     complete_count += attr.execute()
                 except TypeError:
-                    self.logger.error('Error in %r.execute()', attr)
+                    type_error_mark.append(attr)
                     continue
+
+                if type_error_mark != []:
+                    type_error_mark = remove_duplicates(type_error_mark)
+                    for type_error in type_error_mark:
+                        self.logger.error('Error in %r.execute()', type_error)
 
             # (2) look at results
             #   (a) check if all attributes have passed,
+            print "complete_count:", complete_count, "num_attr:", num_attributes
             if complete_count == num_attributes:
                 return True
             #  (b)  or the state has timed out...
@@ -71,27 +78,43 @@ class TestAdmin():
         self.logger.debug("Testing transition between source state %r and destination state %r",
                   source.name, destination.name)
         # FIXME: empty transition on the diagram is built as one item in the transition list as well.
-        if num_attributes == 0:
-            return True
-        else:
-            while complete_count != num_attributes:
+        mark_timeout = time.time()
+        while 1:
+            poll_time = time.time() + self.poll_interval
 
-                for transition in transitions:
-                    for tran_attr in transition.attrs:
-                        # TODO: tran_attr.set_read_hook(connection.read)
-                        tran_attr.set_read_hook(self.connection.read)
-                        tran_attr.set_write_hook(self.connection.write)
-                        try:
-                            complete_count += tran_attr.execute()
-                        except TypeError:
-                            self.logger.error('Error in %r.execute()', tran_attr)
-                            continue
+            # if num_attributes == 0:
+            #     return True
+            # else:
+            #while complete_count != num_attributes:
 
-                if complete_count == num_attributes:
-                    #Activate all State Attributes in Destination State
-                    for dest_attr in destination.attrs:
-                        dest_attr.activate()
-                    return True
+            for transition in transitions:
+                for tran_attr in transition.attrs:
+                    tran_attr.set_read_hook(self.connection.read)
+                    tran_attr.set_write_hook(self.connection.write)
+                    type_error_mark = []
+                    try:
+                        complete_count += tran_attr.execute()
+                    except TypeError:
+                        type_error_mark.append(tran_attr)
+                        continue
+
+                    if type_error_mark != []:
+                        type_error_mark = remove_duplicates(type_error_mark)
+                        for type_error in type_error_mark:
+                            self.logger.error('Error in %r.execute()', type_error)
+
+            if complete_count == num_attributes:
+                #Activate all State Attributes in Destination State
+                for dest_attr in destination.attrs:
+                    dest_attr.activate()
+                return True
+            elif (time.time() - mark_timeout) > self.global_timeout:
+                return False  # or other timeout logic here!!
+            #  (c) otherwise wait for the next polling interval
+            else:
+                complete_count = 0
+                while time.time() < poll_time:
+                    pass
 
 
 class Test(TestAdmin):

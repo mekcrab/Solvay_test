@@ -441,7 +441,7 @@ class IndicationAttribute(AnalogAttribute):
         AttributeBase.__init__(self, tag, attr_path=attr_path)
 
     def read(self):
-        return self._read()
+        return self._read()[0]
 
     def execute(self, command = 'write'):
         if command == 'write':
@@ -559,7 +559,7 @@ class OtherAttribute(AttributeBase):
         AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self):
-        return self._read(param=self.param)
+        return self._read(param=self.param)[0]
 
     def write(self, target_value=None):
         if not target_value:
@@ -568,15 +568,14 @@ class OtherAttribute(AttributeBase):
         return self._write(value=target_value, param=self.param)
 
     def execute(self, command = 'write', **kwargs):
-        if command == 'read':
-            return self.read()[0]
-        elif command == 'write':
-            if self.target_value:
-                self.write(self.target_value)
-                current_value = self.read()[0]
-                return self.target_value == current_value
-            else:
-                raise TypeError
+        if not self.exe_start:
+            self.start_timer()
+
+        val = self.read()
+        if val == self.target_value:
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
 
 class AttributeDummy(AttributeBase):
     '''
@@ -590,6 +589,7 @@ class AttributeDummy(AttributeBase):
 
     def read(self):
         print 'Dummy read ', self.id
+        return self.id
 
     def write(self, val=0):
         print 'Dummy write', self.id, 'as ', val
@@ -648,7 +648,7 @@ class Compare(AttributeBase):
                      '<=': operator.le,
                      '!=': operator.ne}
 
-    def __init__(self, lhs=AttributeDummy(), op='', rhs=AttributeDummy(), deadband=0):
+    def __init__(self, lhs=AttributeDummy(), op='', rhs=AttributeDummy(), deadband=0.01):
         '''
         Comparison between two sub-attributes in the form of:
             (left hand side) (operator) (right hand side)
@@ -694,12 +694,16 @@ class Compare(AttributeBase):
         Evaluates comparison:  (lhs) - (rhs) (opr) (deadband)
         Ex. /PI-1875/PV.CV - 65 > 0.1
         '''
-        self.leftval = self.lhs.execute(command='read')
-        self.rightval = self.rhs.execute(command='read')
+
+        self.leftval = self.lhs.read()
+        self.rightval = self.rhs.read()
         cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
 
-        self.logger.debug('Evaluating: %s', cmp_val)
+        if self.op == '=' or self.op == '==':
+            self.op = '=='
+            cmp_val = 'abs('+str(self.leftval) +'-'+str(self.rightval)+')<'+str(self.deadband)
 
+        self.logger.debug('Evaluating: %s', cmp_val)
         return eval(cmp_val)
 
         # op = ComparisonAttributes.operator_dict[self.op]
@@ -719,7 +723,9 @@ class Compare(AttributeBase):
 
         self.exe_cnt += 1
 
-        if self.comp_eval():
-            self.set_complete()
+        if self.comp_eval() == True:
+            return self.set_complete(True)
+        elif self.comp_eval() == False:
+            return self.set_complete(False)
         else:
             pass
