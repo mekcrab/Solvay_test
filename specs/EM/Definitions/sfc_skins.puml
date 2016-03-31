@@ -1,0 +1,15 @@
+
+' skin parameters for SFC state additions
+' meaning all attributes within this state are also from SFC
+skinparam state {
+    BackgroundColor<<sfc>> #1a75ff
+    AttributeFontColor<<sfc>> blue
+    ArrowColor<<sfc>> #1a75ff
+}
+
+' html color tag for SFC transition additions
+!define sfc_trans [#blue]
+
+' html color tag for individual SFC attribute additions
+!define sfc_attr <color:blue>
+
