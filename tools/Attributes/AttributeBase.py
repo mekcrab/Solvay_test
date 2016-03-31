@@ -38,16 +38,36 @@ class AttributeBase(object):
 
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
 
+        # inital log for instansiation - should be set to a test-specific execution log during test runs
+        self.logger = dlog.MakeChild(self.__repr__())
+
         # internal plumbing
         self._complete = None   # value of attribute evaluation - set in self.evaluate method.
                                 # Nonetype means not yet evaluated
+
         self.active = False  # flag to indicate if the self.execute() method should be evaluated during a test
 
         self.data = list()  # list of timeseries data for trending/checking historical data
+        self.last_read = None  # most recent read value
+
+        # execution timers/counters
         self.exe_cnt = 0    # number of times self.execute() has been called
         self.exe_start = None  # internal timer, intended to be initiated on call to self.execute
+        self.exe_time = None  # total execution time once self._complete
 
-        self._default_test = None  # function hook to set default testing behavior of execute
+        self._default_test = kwargs.pop('default_test', 'check_value')  # function hook to set default testing behavior of execute
+
+
+        self._test_types = {  # test types available to this AttributeType class
+                            'check_value', self.check_value,
+                            'force_value', self.force
+        }
+
+        self._execute = None  # private execute method called by self.execute administative wrapper
+
+        self.set_execute()
+
+        self.logger.info('New instance created: %r', self)
 
     def __str__(self):
         '''String method for base attribute - can be overridden in subclasses'''
@@ -125,24 +145,49 @@ class AttributeBase(object):
         '''Returns elapsed time since start_timer or restart_timer call'''
         return time.time() - self.exe_start
 
-    def execute(self):
+    def check_value(self):
         '''
-        Execute "Set" or "Compare" (read/write)
-        commands in the attributes and flag is_complete parameter.
-
+        Baseline read-only testing method, to be overridden in subclasses.
         Base method is a dummy - sets itself to True after 10 executions.
         '''
-        if self.exe_cnt < 1:
-            self.start_timer()
-        elif self.exe_cnt > 10:
+        if self.exe_cnt > 10:
             return self.set_complete(True)
-
-        self.exe_cnt += 1
-        return self.set_complete(False)
+        else:
+            return self.set_complete(False)
 
     def force(self):
-        '''Forces a value, if possible. Used for write-based tests or forcing stuck values'''
+        '''Forces a value, if possible. Override in subclasses'''
         raise NotImplementedError
+
+    def execute(self):
+        '''Default method called by TestAdmin - can be set to an arbitration function hook as depending on
+        the demands of the system under test
+        '''
+        self.exe_cnt += 1
+
+        # start timer on first call to self.execute
+        if not self.exe_start:
+            self.start_timer()
+
+        exe = self._execute()  # should return boolean value of sucessful/unsucessful execution
+
+        if self._complete:  # set total execution time in seconds
+            self.exe_time = self.get_timer()
+            self.logger.info('Execution completed in %')
+
+        return exe
+
+    def set_execute(self, test_method=None):
+        '''
+        Sets self.execute method dynamically as the test requires. Should be overridden as appropriate in subclasses
+        :return:
+        '''
+        if test_method:
+            self._execute = test_method
+        else:
+            self._execute = self._test_types(self._default_test)
+
+        self.logger.info('Execute method set to %r', self._execute)
 
     def save_value(self):
         '''Adds a timestamp, value tuple to this attribute's self.data
@@ -151,3 +196,30 @@ class AttributeBase(object):
         '''
         self.data.append((time.time(), self._read()))
 
+
+class AttributeDummy(AttributeBase):
+    '''
+    Dummy attribute for:
+        testing, as a placeholder, or deferring attributes type differentiation'''
+
+    def __init__(self, id='', **kwargs):
+        '''Constructor'''
+        self.id = id
+        AttributeBase.__init__(self, tag='dummy', **kwargs)
+
+    def read(self):
+        print 'Dummy read ', self.id
+        return self.id
+
+    def write(self, val=0):
+        print 'Dummy write', self.id, 'as ', val
+
+    def execute(self):
+        if not self.complete:
+            self.set_complete(True)
+            self.deactivate()
+        else:
+            pass
+
+    def force(self):
+        print 'Dummy force'

@@ -1,6 +1,6 @@
 '''Module contains class definitions for attributes to be executed on the runtime system'''
 
-from AttributeBase import AttributeBase
+from AttributeBase import AttributeBase, AttributeDummy
 import operator
 
 from tools.Utilities.Logger import LogTools
@@ -21,17 +21,23 @@ class DiscreteAttribute(AttributeBase):
         AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self, param='CV'):
-        return self._read(param=param)[0]
+        self.last_read = self._read(param=param)
+        self.logger.info('Read: %s', self.last_read)
+        return self.last_read[0]
 
     def write(self, target_value, param='CV'):
-        return self._write(target_value, param=param)
+        val = self._write(target_value, param=param)
+        self.logger.info('Write %s: %s', val, target_value)
+        return val
 
-    def execute(self):
-        '''Tests to see if the current value of this attribute equal self.target_value'''
-        # start timer on first call to self.execute()
-        if not self.exe_start:
-            self.start_timer()
+    def check_status(self):
+        return self._read(param='ST')[0]
 
+    def check_value(self):
+        '''
+        Tests to see if the current value of this attribute equal self.target_value.
+        Sets self.complete as required
+        '''
         if self.read() == self.target_value:
             return self.set_complete(True)
         else:
@@ -40,10 +46,11 @@ class DiscreteAttribute(AttributeBase):
     def force(self, target_value=None):
         '''
         Attempts to force the value of this attribute to the specified target_value.
-        Defaults to self.target_value.
+        Defaults to self.target_value. Once successful reset execute method to verify target.
         '''
         if not target_value:
             target_value = self.target_value
+
         return self.write(target_value)
 
 
@@ -71,7 +78,7 @@ class NamedDiscrete(DiscreteAttribute):
             raise TypeError
 
     def get_name_value(self, name=None):
-        if name == None:
+        if name:
             name = self.target_name
         return self.namedset_dict[name]
 
@@ -145,20 +152,18 @@ class ModeAttribute(AttributeBase):
             raise
         return self.target_mode.write(value=mode_int, param='TARGET')
 
+    def write(self, mode):
+        return self.write_mode(mode_value=mode)
+
     def read_mode(self):
         '''Reads are directed to MODE.ACTUAL'''
         return self.actual_mode.read(param='ACTUAL')
 
-    def write(self, mode):
-        return self.write_mode(mode_value=mode)
-
     def read(self):
-        return self.read_mode()
+        self.last_read = self.read_mode()
+        return self.laster_read
 
-    def execute(self):
-        if not self.exe_start:
-            self.start_timer()
-
+    def check_value(self):
         if self.read() == self.get_mode_actual(self.mode_name):
             return self.set_complete(True)
         else:
@@ -237,11 +242,11 @@ class PositionAttribute(AttributeBase):
         if not self.read_path:
             if self.read_mode() in PositionAttribute.mode_pv_dict:
                 self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
-        return self._read(param=param)[0]
+        self.last_read = self._read(param=param)
 
     def write_mode(self, target_mode=None):
         '''Wrapper to write this position's mode attribute, defaults to required mode'''
-        if target_mode == None:
+        if not target_mode:
             target_mode = self.mode.mode_name
 
         return self.mode.write(target_mode)
@@ -250,21 +255,31 @@ class PositionAttribute(AttributeBase):
         '''Wrappper to read from this position's mode attribute'''
         return self.mode.read()
 
-    def execute(self):
-        if not self.exe_start:
-            self.start_timer()
+    def check_mode(self):
+        '''Wrapper to self.mode.check_mode'''
+        check = self.mode.check_value()
+        if check:
+            pass
+        else:
+            self.logger.warning('Mode target/actual mismatch: %s/%s ',
+                                self.mode.target.last_read[0], self.mode.actual.last_read[0])
+        return check
 
-        # mode = self.read_mode()
-
-        val = self.read()
-        if val == self.target_value:
+    def check_value(self):
+        self.last_read = self.read()
+        if self.last_read == self.target_value:
             return self.set_complete(True)
         else:
             return self.set_complete(False)
 
-    def force(self):
+    def force(self, target_value=None):
         '''Forces target mode and writes to appropriate SP'''
-        raise NotImplementedError
+        if not target_value:
+            target_value = self.target_value
+
+        self.logger.debug('Forcing position to (%s) in mode: %s', target_value, self.target_mode)
+
+        return self.write(target_value)
 
 
 class InterlockAttribute(AttributeBase):
@@ -283,67 +298,86 @@ class InterlockAttribute(AttributeBase):
         if self.condition:
             self.trip = DiscreteAttribute(tag, 'INTERLOCK/CND'+str(self.condition))
         else:
-            self.trip = DiscreteAttribute(tag, '/INTERLOCK/INTERLOCK')
-        self.reset = DiscreteAttribute(tag, 'INTERLOCK/RESET_D')
-        self.bypass = DiscreteAttribute(tag, 'INTERLOCK/BYPASS_ILK')
+            self.trip = DiscreteAttribute(tag, '/INTERLOCK/INTERLOCK', target_value=1)
+        self.reset = DiscreteAttribute(tag, 'INTERLOCK/RESET_D', target_value=1)
+        self.bypass = DiscreteAttribute(tag, 'INTERLOCK/BYPASS_ILK', target_value=1)
         AttributeBase.__init__(self, tag)
 
         self.set_test_param(test_param)
 
     def set_test_param(self, param):
         '''
-        Method hook for the interlock attribute instance
+        Sets execute method hook to the
         :param self:
         :param param: name of param to test
         :return:
         '''
         valid_params = {
-            'trip': self.test_trip,
-            'reset': self.test_reset,
-            'test_bypass': self.test_bypass
+            'trip': self.check_trip,
+            'reset': self.check_reset,
+            'test_bypass': self.check_bypass
         }
-        self._default_test = valid_params[param]
+        if param not in valid_params:
+            raise NameError
+        else:
+            self.set_execute(valid_params[param]())
 
-    def test_trip(self):
+    def check_trip(self):
         '''
         Tests if interlock is tripped
         :param
         :return:
         '''
-        return self.trip.execute(target_valu=1)
+        return self.trip.execute()
 
-    def test_reset(self):
+    def check_reset(self):
         '''
-        Tests if interlock is reset
+        Tests if interlock requires a reset
         :param self:
         :return:
         '''
-        return self.reset.execute(target_value=1)
+        return self.reset.execute()
 
-    def test_bypass(self):
+    def check_bypass(self):
         '''
         Tests if interlock is bypassed
         :param self:
         :return:
         '''
-        return self.bypass.execute(target_value=1)
+        return self.bypass.execute()
 
-    def execute(self):
+    def check_value(self):
         '''
-        Checks specified parameter specified
+        Checks if the interlock is active and not bypassed
         :param test_param: name of parameters to test
         :return:
         '''
-        return self._default_test()
+        if self.check_trip() and not self.check_bypass():
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
 
-    def force(self, param='reset'):
+    def ilk_reset(self):
         '''
-        Force reset or bypass of interlock.
+        Resets interlock trip
+        :return:
+        '''
+        return self.reset.force(target_value=1)
+
+    def ilk_bypass(self):
+        return self.bypass.force(target_value=1)
+
+    def force(self):
+        '''
+        Force bypass of an interlock.
         :param self:
         :return:
         '''
-        # TODO: think of a more explicit way to make this flexible and dynamic based on embedded attributes
-        return getattr(self, param).force()
+        if not self.check_bypass():
+            return self.ilk_bypass()
+        else:
+            return True
+
 
 class PromptAttribute(AttributeBase):
     '''
@@ -358,20 +392,26 @@ class PromptAttribute(AttributeBase):
 
     def __init__(self, tag, target_value, message_string, message_path, response_path):
         '''
-        :param target_value: target value of prompt response
+        :param target_value: target value of prompt response - can be an attribute that requires action!!
         :param message: string of the prompt message
         :return:
         '''
-        self.target_value = target_value
 
         self.message_string = message_string
 
         self.message = AttributeBase.__init__(self, tag, attr_path=message_path)
-        self.response = AttributeBase.__init__(self, tag, attr_path=response_path)
+
+        if isinstance(target_value, AttributeBase):  # operator action required via target_value.force() method
+            self.response = target_value
+        else:
+            self.response = AttributeBase(tag, attr_path=response_path, target_value=target_value)
+
+        self.target_value = self.response.target_value
 
     def set_read_hook(self, readhook):
-        '''Sets readhook for self.message only'''
+        '''Sets readhook for self.message and self.response'''
         self.message.set_read_hook(readhook)
+        self.response.set_read_hook(readhook)
 
     def set_write_hook(self, writehook):
         '''Sets the writehook for self.response only'''
@@ -399,33 +439,47 @@ class PromptAttribute(AttributeBase):
             # bad read value, problem with path string or client
             raise IOError
 
-    def execute(self, command = 'write'):
+    def check_value(self):
         '''Reads prompt message, checking against message string'''
-        if command == 'write':
-            message_value = self.read()
+        message_value = self.read()
 
-            if message_value == self.message_string:
-                self.set_complete(True)
-
-        if command == 'read':
-            return self.response._read()
+        if message_value == self.message_string:
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
 
     def force(self, value=None):
         '''Write prompt response self.target'''
-        self.value = value
-        if self.value:
-            self.write(input=value)
-        else:  # write self.target_value to response path
-            self.write()
+        if self.response.check_value():
+            self.logger.warning('Response %s already set to target %s', self.response.last_read, self.target_value)
+
+        self.logger.debug('OAR response %s to %r', self.target_value, self.response)
+        return self.response.force()
 
 
 class AnalogAttribute(AttributeBase):
     '''
     Base class for analog/continuously valued attributes
-    Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values)
+    Examples: PV, SP, floating point, 16/32 bit integers (ex. modbus values), analog valve position outputs
     '''
-    def __init__(self, tag, ):
-        raise NotImplementedError
+    def __init__(self, tag, **kwargs):
+        AttributeBase.__init__(self, tag, **kwargs)
+
+    def read(self):
+        self.last_read = self._read()
+        self.logger.info("Read: %s". self.last_read)
+        return self.last_read[0]
+
+    def write(self, target_value=None):
+        if not target_value:
+            if self.target_value:
+                target_value = self.target_value
+            else:
+                self.logger.error("No target value specified for %r", self)
+                raise AttributeError
+
+        self.logger.info("Writing %s to %s", target_value, self.OPC_path())
+        return self._write(target_value)
 
 
 class IndicationAttribute(AnalogAttribute):
@@ -435,27 +489,17 @@ class IndicationAttribute(AnalogAttribute):
     Indicators use AI1 or INT1 functional blocks
     '''
 
-    def __init__(self, tag, attr_path = 'PV'):
+    def __init__(self, tag, attr_path = 'PV', target_value=0, **kwargs):
         self.tag = tag
         self.attr_path = attr_path
-        AttributeBase.__init__(self, tag, attr_path=attr_path)
-
-    def read(self):
-        return self._read()[0]
-
-    def execute(self, command = 'write'):
-        if command == 'write':
-            if (self.read()[0]) and (self.read()[1] == 'Good'):
-                return True
-            else:
-                return False
-        if command == 'read':
-            return self.read()[0]
+        self.target_value = target_value
+        AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def force(self):
         '''
         Force a simulation value for this indicator
-        either through MiMiC or DeltaV simulate parameters
+        either through MiMiC or DeltaV simulate parameters -
+        saved for future work as it may require a separate OPC client for the writehook
         '''
         raise NotImplementedError
 
@@ -483,19 +527,53 @@ class LoopAttribute(AttributeBase):
         self.pv = indicator
         self.sp = setpoint
         self.out = position
+        self.target_value = self.sp.target_value
         AttributeBase.__init__(self, tag)
 
-    def execute(self):
+    def check_value(self):
         '''
         verify a match between indicator value and setpoint
         '''
-        pass
+        self.pv.set_target_value(self.target_value)
+        if self.pv.check_value():
+            self.set_complete(True)
+        else:
+            self.set_complete(False)
 
     def force(self):
         '''
         Sets the valve position in manual
         '''
-        pass
+        raise NotImplementedError
+
+
+class OtherAttribute(AttributeBase):
+    '''
+    Catch-all class for other attributes, based on absolute OPC path
+    '''
+    def __init__(self, tag, attr_path, param = 'CV', **kwargs):
+        self.param = param
+        self.target_value = kwargs.pop('target_value',None)
+        AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
+
+    def read(self):
+        return self._read(param=self.param)[0]
+
+    def write(self, target_value=None):
+        if not target_value:
+            target_value = self.target_value
+
+        return self._write(value=target_value, param=self.param)
+
+    def execute(self, command = 'write', **kwargs):
+        if not self.exe_start:
+            self.start_timer()
+
+        val = self.read()
+        if val == self.target_value:
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
 
 
 class EMCMDAttribute(AttributeBase):
@@ -546,80 +624,25 @@ class PhaseCMDAttribute(NamedDiscrete):
     #TODO:      --> However the phase will need to be loaded to a given unit before execution
 
     def __int__(self):
-        pass
-
-
-class OtherAttribute(AttributeBase):
-    '''
-    Catch-all class for other attributes, based on absolute OPC path
-    '''
-    def __init__(self, tag, attr_path, param = 'CV', **kwargs):
-        self.param = param
-        self.target_value = kwargs.pop('target_value',None)
-        AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
-
-    def read(self):
-        return self._read(param=self.param)[0]
-
-    def write(self, target_value=None):
-        if not target_value:
-            target_value = self.target_value
-
-        return self._write(value=target_value, param=self.param)
-
-    def execute(self, command = 'write', **kwargs):
-        if not self.exe_start:
-            self.start_timer()
-
-        val = self.read()
-        if val == self.target_value:
-            return self.set_complete(True)
-        else:
-            return self.set_complete(False)
-
-class AttributeDummy(AttributeBase):
-    '''
-    Dummy attribute for:
-        testing, as a placeholder, or deferring attributes type differentiation'''
-
-    def __init__(self, id='', **kwargs):
-        '''Constructor'''
-        self.id = id
-        AttributeBase.__init__(self, tag='dummy', **kwargs)
-
-    def read(self):
-        print 'Dummy read ', self.id
-        return self.id
-
-    def write(self, val=0):
-        print 'Dummy write', self.id, 'as ', val
-
-    def execute(self):
-        if not self.complete:
-            self.set_complete(True)
-            self.deactivate()
-        else:
-            pass
-
-    def force(self):
-        print 'Dummy force'
+        raise NotImplementedError
 
 
 class Calculate(AttributeBase):
-    def __init__(self, lhs = AttributeDummy(), op = '', rhs = AttributeDummy()):
+    def __init__(self, lhs = AttributeDummy(), op = '', rhs = AttributeDummy(), **kwargs):
         self.lhs = lhs
         self.rhs = rhs
         self.op = op
         self.id = self.lhs.tag + self.op + self.rhs.tag
-        AttributeBase.__init__(self, self.id)
+        AttributeBase.__init__(self, self.id, **kwargs)
 
         operator_list = ['+', '-', '*', '/', '**']
 
         if self.op not in operator_list:
+            self.logger.error('Undefined operator: %s', self.op)
             raise TypeError
-        else:
-            self.leftval = self.lhs.execute(command='read')
-            self.rightval = self.rhs.execute(command='read')
+
+        self.leftval = self.lhs.last_read
+        self.rightval = self.rhs.last_read
 
     def calc(self):
         return eval(''.join(['float(%r)'%self.leftval , self.op, 'float(%r)'%self.rightval]))
@@ -628,13 +651,20 @@ class Calculate(AttributeBase):
         raise NotImplementedError
 
     def read(self):
+        return self.get_value()
+
+    def get_value(self):
+        self.leftval = self.lhs.read()
+        self.rightval = self.rhs.read()
         return self.calc()
 
-    def execute(self, command='write'):
-        if command == 'write':
-            return self.write()
-        if command == 'read':
-            return self.read()
+    def check_value(self):
+        try:
+            self.get_value()
+            return self.set_complete(True)
+        except:
+            self.logger.warning('Calculation failure in ', self.id)
+            return self.set_complete(False)
 
 
 #####################Transition Attribute Types (use read functions and compare) #########################
@@ -683,11 +713,19 @@ class Compare(AttributeBase):
 
         AttributeBase.__init__(self, self.lhs.tag)
 
-    def read(self):
-        raise NotImplementedError
+        self.leftval = self.lhs.last_read
+        self.rightval = self.rhs.last_read
 
-    def write(self):
-        return self.lhs._write(value=self.rhs.read()[0])
+    def read(self):
+        '''Returns most recent comparison evaluation'''
+        return self.comp_eval()
+
+    def write(self, target_value=None):
+        '''Writes target value to self.lhs'''
+        if not target_value:
+            target_value = self.rhs.read()
+        self.logger.debug("Writing %s to %r", target_value, self.lhs)
+        return self.lhs.write(target_value=target_value)
 
     def comp_eval(self):
         '''
@@ -695,19 +733,15 @@ class Compare(AttributeBase):
         Ex. /PI-1875/PV.CV - 65 > 0.1
         '''
 
-        self.leftval = self.lhs.read()
-        self.rightval = self.rhs.read()
-        cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
-
         if self.op == '=' or self.op == '==':
             self.op = '=='
             cmp_val = 'abs('+str(self.leftval) +'-'+str(self.rightval)+')<'+str(self.deadband)
+        else:
+            cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
 
         self.logger.debug('Evaluating: %s', cmp_val)
-        return eval(cmp_val)
 
-        # op = ComparisonAttributes.operator_dict[self.op]
-        # return op(self.leftval, self.rightval)
+        return eval(cmp_val)
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)
@@ -717,15 +751,22 @@ class Compare(AttributeBase):
         self.lhs.set_write_hook(writehook)
         self.rhs.set_write_hook(writehook)
 
-    def execute(self):
-        if self.exe_cnt < 1:
-            self.start_timer()
+    def check_value(self):
+        self.leftval = self.lhs.read()
+        self.rightval = self.rhs.read()
 
-        self.exe_cnt += 1
-
-        if self.comp_eval() == True:
+        if self.comp_eval():
             return self.set_complete(True)
-        elif self.comp_eval() == False:
-            return self.set_complete(False)
         else:
-            pass
+            return self.set_complete(False)
+
+    def force(self):
+        '''Attempts to force self.lhs to self.rhs +/- deadband depending on operator type'''
+        if '>' in self.opr:  # set rhs = lhs - deadband
+            return self.rhs.write(self.lhs.read() - self.deadband)
+        elif '<' in self.opr:  # set rhs = lhs + deadband
+            return self.rhs.write(self.lhs.read() + self.deadband)
+        else:  # set rhs = lhs
+            return self.rhs.write(self.lhs.read())
+
+
