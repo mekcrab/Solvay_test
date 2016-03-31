@@ -67,7 +67,7 @@ class AttributeBase(object):
 
         self._execute = None  # private execute method called by self.execute administative wrapper
 
-        self.set_execute()
+        self.set_execute()  # sets self._execute to another bound instance method
 
         self.logger.info('New instance created: %r', self)
 
@@ -78,6 +78,10 @@ class AttributeBase(object):
     def __repr__(self):
         '''Method for printing the object identity'''
         return self.__class__.__name__ + ': ' + self.OPC_path()
+
+    def __eq__(self, other):
+        '''Method to determine if two attributes are equivalent by comparing their OPC paths'''
+        return self.OPC_path() == other.OPC_path()
 
     def __add__(self, other):
         '''Logical OR of attributes - disjunction of attribute.complete parameters
@@ -170,14 +174,14 @@ class AttributeBase(object):
         '''
         self.exe_cnt += 1
 
-        # start timer on first call to self.execute
-        if not self.exe_start:
+        # start timer on first call to self.execute or when self._complete is false
+        if not self.exe_start and self._complete:
             self.start_timer()
 
         exe = self._execute()  # should return boolean value of sucessful/unsucessful execution
 
-        if self._complete:  # set total execution time in seconds
-            self.exe_time = self.get_timer()
+        if self._complete and not exe:  # set total execution time in seconds on PDET
+            self.exe_time += self.get_timer(); self.stop_timer();
             self.logger.info('Execution completed in %.2f', self.exe_time)
 
         return exe
