@@ -1,0 +1,164 @@
+!include  Definitions/S_EMC_PRESS_CND/R1-PRES-EM.puml
+!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+
+Open_VAC_CTRL_Valve: Set 'VAC_CTL' in ROUT
+@startuml
+
+!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+!include Definitions/sfc_skins.puml
+
+state PRESSURE_UP {
+
+    [*] --> Check_RX_Pressure
+    Check_RX_Pressure --> [*]: 'PRESS_GAP_CTL' > pressure_setpoint
+
+    state Monitors_Enabled1 <<sfc>>{
+
+        Check_RX_Pressure --> Check_VAC_Pump: 'PRESS_GAP_CTL' < pressure_setpoint
+
+        Check_VAC_Pump --> OAR_TurnOff: 'VAC_PMP' is running
+        Check_VAC_Pump --> ValvePosition1: 'VAC_PMP' is stopped
+
+        OAR_TurnOff: OAR = INFO
+        state Vac_Pump_Off <<sfc>>
+        OAR_TurnOff -sfc_trans-> Vac_Pump_Off: sfc_attr OAR response: stop 'VAC_PMP'
+
+        Vac_Pump_Off -sfc_trans-> ValvePosition1: sfc_attr 'VAC_PMP' is stopped
+
+        ValvePosition1: Close 'SCRUB_VENT_VLV'
+        ValvePosition1: Close 'DECANT_VENT_VLV'
+        ValvePosition1: del_attr Open 'nitrogen_valve'
+        ValvePosition1: sfc_attr Set 'PRESS_GAP_CTL/SP' to 'OP001_VALUE'
+    }
+
+    ValvePosition1 -del_trans-> Complete: del_attr 'PRESS_GAP_CTL' > pressure_setpoint
+
+    state Complete <<del>>{
+        Complete: Close 'nitrogen_valve'
+    }
+
+    ValvePosition1 -sfc_trans-> [*]: 'PRESS_GAP_CTL' > pressure_setpoint
+    Complete -del_trans-> [*]
+}
+
+state START_VACUUM {
+
+    [*] --> ValvePosition2
+
+    state Monitors_Enabled2 <<sfc>> {
+
+        state ValvePosition2{
+        }
+
+        ValvePosition2: Close 'SCRUB_VENT_VLV'
+        ValvePosition2: Close 'DECANT_VENT_VLV'
+        ValvePosition2: Open 'VAC_KO_SCRUB'
+
+        ValvePosition2 --> StartVAC
+        StartVAC: Start 'VAC_PMP'
+
+        StartVAC --> Open_VAC_CTRL_Valve
+
+        Open_VAC_CTRL_Valve: sfc_attr Set 'VAC_CTL/RAMP' off
+        Open_VAC_CTRL_Valve: sfc_attr Set 'VAC_CTL' to ROUT
+        Open_VAC_CTRL_Valve: Open 'VAC_CTL' to sfc_attr 'TP001_VALUE'
+    }
+    Open_VAC_CTRL_Valve --> [*]
+
+}
+
+state STOP_VACUUM {
+
+    [*] --> Close_VAC_CTRL_Valve
+
+    state Monitors_Enabled5 <<sfc>> {
+
+        state Close_VAC_CTRL_Valve{
+        }
+
+        Close_VAC_CTRL_Valve: Close 'VAC_CTL' to 0
+
+        Close_VAC_CTRL_Valve --> Close_STM_Vlv
+        Close_STM_Vlv: Close 'VAC_STM_VLV'
+
+        Close_STM_Vlv --> Stop_VAC
+        Stop_VAC: Stop 'VAC_PMP'
+
+        Stop_VAC --> Close_Discharge_Vlv
+        Close_Discharge_Vlv: Close 'VAC_KO_SCRUB'
+    }
+
+    Close_Discharge_Vlv --> [*]
+
+}
+
+state VENT {
+
+    [*] --> Check_RX_Press
+
+    state Monitors_Enabled3 <<sfc>> {
+
+        Check_RX_Press --> [*]: 'PRESS_GAP_CTL' > pressure_setpoint
+        Check_RX_Press --> ValvePosition3: 'PRESS_GAP_CTL' < pressure_setpoint
+
+        ValvePosition3: Close 'nitrogen_valve'
+        ValvePosition3: Open 'DECANT_VENT_VLV'
+
+        ValvePosition3 --> Close_Decant: Wait for 'PRESS_GAP_CTL' < target_pressure
+
+        Close_Decant: Close 'DECANT_VENT_VLV'
+
+        Close_Decant --> [*]
+    }
+}
+
+state DEAERATE {
+
+    [*] --> ValvePosition4
+
+    state Monitors_Enabled4 <<sfc>> {
+        ValvePosition4: Close 'SCRUB_VENT_VLV'
+        ValvePosition4: Close 'DECANT_VENT_VLV'
+        ValvePosition4: Open 'VAC_KO_SCRUB'
+
+        ValvePosition4 --> Start_VAC
+        Start_VAC: Start 'VAC_PMP'
+        Start_VAC: Set 'VAC_CTL' to ROUT
+        Start_VAC: Open 'VAC_CTL' to control_valve_position
+
+        Start_VAC --> Ramp_VAC
+        Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
+        Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
+        Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
+
+        Ramp_VAC --> STOP_VAC: 'PRESS_GAP_CTL' < ramp_target
+        STOP_VAC: Stop 'VAC_PMP'
+        STOP_VAC: Close 'VAC_STM_VLV'
+        STOP_VAC: Close 'VAC_CTL' to 0
+
+        STOP_VAC --> Press_Up
+
+        state Press_Up {
+
+            state OpenN2VLV <<del>> {
+                OpenN2VLV: Open 'nitrogen_valve'
+            }
+
+            OpenN2VLV -del_trans-> CloseN2VLV: del_attr 'PRESS_GAP_CTL'  > target_pressure
+
+            state CloseN2VLV <<del>> {
+                CloseN2VLV : Close 'nitrogen_valve'
+            }
+            Press_Up: sfc_attr Set 'PRESS_GAP_CTL/SP' to 'OP004_VALUE'
+            Press_Up: sfc_attr Set 'RP001_VALUE' = 'RP001_VALUE' + 1
+        }
+
+        Press_Up -sfc_trans-> Start_VAC: sfc_attr  'PRESS_GAP_CTL' < 'OP004_VALUE' \n sfc_attr and \n sfc_attr 'RP001_VALUE' > 'TP003_VALUE'
+
+    }
+
+Press_Up -sfc_trans-> [*]: sfc_attr 'PRESS_GAP_CTL' > 'OP004_VALUE' \n sfc_attr and \n sfc_attr 'RP001_VALUE' > 'TP003_VALUE'
+
+}
+
+@enduml

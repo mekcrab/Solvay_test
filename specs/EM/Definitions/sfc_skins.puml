@@ -2,14 +2,25 @@
 ' skin parameters for SFC state additions
 ' meaning all attributes within this state are also from SFC
 skinparam state {
+    'additions taken from SFC for as-built
     BackgroundColor<<sfc>> #1a75ff
     AttributeFontColor<<sfc>> blue
     ArrowColor<<sfc>> #1a75ff
+
+    'deleted states in as-built
+    BackgroundColor<<del>> #ffb3b3
+    AttributeFontColor<<del>> red
+    AttributeFontStyle<<del>> strike
+    ArrowColor<<del>> red
+    FontColor<<del>> red
+    FontStyle<<del>> strike
 }
 
-' html color tag for SFC transition additions
+' html color tag for SFC transition additions and HLD removed items
 !define sfc_trans [#blue]
+!define del_trans [#red,dashed]
 
 ' html color tag for individual SFC attribute additions
 !define sfc_attr <color:blue>
+!define del_attr <color:red><strike>
 
