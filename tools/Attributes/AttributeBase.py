@@ -222,12 +222,12 @@ class AttributeDummy(AttributeBase):
     def write(self, val=0):
         print 'Dummy write', self.id, 'as ', val
 
-    def check_value(self):
+    def execute(self):
         if not self._complete:
-            self.set_complete(True)
             self.deactivate()
+            return self.set_complete(True)
         else:
-            pass
+            return self.set_complete(True)
 
     def force(self):
         print 'Dummy force'

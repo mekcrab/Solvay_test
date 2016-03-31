@@ -34,6 +34,8 @@ class TestAdmin():
 
         mark_timeout = time.time()
         # As long as (not any state.attrs.complete), keep attempting attr.execute at specified polling interval
+        self.last_state_complete_cnt = None
+
         while 1:
             poll_time = time.time() + self.poll_interval
 
@@ -55,8 +57,13 @@ class TestAdmin():
 
             # (2) look at results
             #   (a) check if all attributes have passed,
-            print "complete_count:", complete_count, "num_attr:", num_attributes
+            # print "complete_count:", complete_count, "num_attr:", num_attributes
+            if self.last_state_complete_cnt != complete_count:
+                print "complete_count:", complete_count, "num_attr:", num_attributes
+                self.last_state_complete_cnt = complete_count
+
             if complete_count == num_attributes:
+                self.logger.info("Test on State %s Complete", in_state.name)
                 return True
             #  (b)  or the state has timed out...
             elif (time.time() - mark_timeout) > self.global_timeout:
@@ -137,8 +144,8 @@ class Test(TestAdmin):
         # self.start_state = diagram.get_state(state_id = 'START')
 
     def start(self):
-        self.logger.debug("Start Testing Diagram::: %r", self.diagram.id)
         in_state = self.start_state
+        print "+++++++++++++++++++++++++++++++ Test Start +++++++++++++++++=+++++++++="
         while in_state and TestAdmin(self.test_case, self.diagram,  self.connection).recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
             next_states = remove_duplicates(in_state.destination) # A List of Possible Destination

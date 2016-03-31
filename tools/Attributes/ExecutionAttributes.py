@@ -242,11 +242,14 @@ class PositionAttribute(AttributeBase):
     def read(self, param='CV'):
         if not self.read_path:
             if self.read_mode() in PositionAttribute.mode_pv_dict:
-                self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
+                self.read_path = PositionAttribute.mode_pv_dict[self.read_mode()]
+                self.attr_path = self.read_path
         val = self._read(param=param)[0]
-        if self.last_read != val:
-            self.logger.info('Read %s: %s', self.read_path, val)
-        self.last_read = val
+        if self.last_read != round(val):
+            self.logger.info('Read %s, target value: %s, actual value: %s', self.OPC_path(), self.target_value, val)
+            self.last_read = round(val)
+        else:
+            pass
         return val
 
     def write_mode(self, target_mode=None):
@@ -682,6 +685,11 @@ class Compare(AttributeBase):
                      '<=': operator.le,
                      '!=': operator.ne}
 
+    last_op = None
+    last_result = None
+    last_lhs_val = None
+    last_rhs_val = None
+
     def __init__(self, lhs=AttributeDummy(), op='', rhs=AttributeDummy(), deadband=0.01):
         '''
         Comparison between two sub-attributes in the form of:
@@ -742,7 +750,17 @@ class Compare(AttributeBase):
 
         result = eval(cmp_val)
 
-        self.logger.debug('Evaluating: %s to %s', cmp_val, result)
+        rounded_left = round(float(str(self.leftval)))
+        rounded_right = round(float(str(self.rightval)))
+        if Compare.last_lhs_val == rounded_left and Compare.last_rhs_val == rounded_right\
+            and self.op == Compare.last_op and result == Compare.last_result:
+            pass
+        else:
+            self.logger.debug('Evaluating %s %s %s: %s to %s', self.lhs.OPC_path(), self.op, self.rhs.OPC_path(), cmp_val, result)
+            Compare.last_op = self.op
+            Compare.last_result = result
+            Compare.last_lhs_val = rounded_left
+            Compare.last_rhs_val = rounded_right
 
         return result
 
