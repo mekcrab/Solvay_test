@@ -21,8 +21,10 @@ class DiscreteAttribute(AttributeBase):
         AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self, param='CV'):
-        self.last_read = self._read(param=param)
-        self.logger.info('Read: %s', self.last_read)
+        val = self._read(param=param)
+        if val[0] != self.last_read[0]:
+            self.logger.info('Read: %s', val)
+        self.last_read = val
         return self.last_read[0]
 
     def write(self, target_value, param='CV'):
@@ -50,7 +52,6 @@ class DiscreteAttribute(AttributeBase):
         '''
         if not target_value:
             target_value = self.target_value
-
         return self.write(target_value)
 
 
@@ -161,7 +162,7 @@ class ModeAttribute(AttributeBase):
 
     def read(self):
         self.last_read = self.read_mode()
-        return self.laster_read
+        return self.last_read
 
     def check_value(self):
         if self.read() == self.get_mode_actual(self.mode_name):
@@ -242,7 +243,11 @@ class PositionAttribute(AttributeBase):
         if not self.read_path:
             if self.read_mode() in PositionAttribute.mode_pv_dict:
                 self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
-        self.last_read = self._read(param=param)
+        val = self._read(param=param)
+        if self.last_read[0] != val[0]:
+            self.logger.info('Read %s', val)
+        self.last_read = val
+        return val[0]
 
     def write_mode(self, target_mode=None):
         '''Wrapper to write this position's mode attribute, defaults to required mode'''
@@ -266,8 +271,8 @@ class PositionAttribute(AttributeBase):
         return check
 
     def check_value(self):
-        self.last_read = self.read()
-        if self.last_read == self.target_value:
+        '''Checks if valve is in target position (regardless of mode!?!?)'''
+        if self.read() == self.target_value:
             return self.set_complete(True)
         else:
             return self.set_complete(False)
@@ -276,9 +281,7 @@ class PositionAttribute(AttributeBase):
         '''Forces target mode and writes to appropriate SP'''
         if not target_value:
             target_value = self.target_value
-
         self.logger.debug('Forcing position to (%s) in mode: %s', target_value, self.target_mode)
-
         return self.write(target_value)
 
 
@@ -467,7 +470,7 @@ class AnalogAttribute(AttributeBase):
 
     def read(self):
         self.last_read = self._read()
-        self.logger.info("Read: %s". self.last_read)
+        self.logger.info("Read: %s", self.last_read)
         return self.last_read[0]
 
     def write(self, target_value=None):
@@ -553,7 +556,7 @@ class OtherAttribute(AttributeBase):
     '''
     def __init__(self, tag, attr_path, param = 'CV', **kwargs):
         self.param = param
-        self.target_value = kwargs.pop('target_value',None)
+        self.target_value = kwargs.pop('target_value', None)
         AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self):
@@ -690,6 +693,10 @@ class Compare(AttributeBase):
         :param deadband: tolerance of comparison value
         :return: Compare instance
         '''
+        # print "lhs", lhs; print 'op', op; print 'rhs',  rhs
+        self.id = lhs.tag+op+rhs.tag
+
+        AttributeBase.__init__(self, self.id)
 
         if op not in Compare.operator_dict:
             self.logger.error("Comparison operator \"%s\" not valid", op)
@@ -701,17 +708,10 @@ class Compare(AttributeBase):
             self.lhs = lhs
             self.rhs = rhs
         else:
+            self.logger.error("Compare arguments lhs and rhs must be objects derived from AttributeBase")
             raise TypeError
 
         self.deadband = deadband  # deadband applied to rhs of comparison
-
-        self.id = self.lhs.tag+self.op+self.rhs.tag
-
-        self.logger = dlog.MakeChild(self.id)
-
-        self.attr_path = ''
-
-        AttributeBase.__init__(self, self.lhs.tag)
 
         self.leftval = self.lhs.last_read
         self.rightval = self.rhs.last_read

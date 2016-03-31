@@ -182,8 +182,8 @@ class AttributeBuilder(object):
 
         # ===== Attribute types by string name <attribute_type>======
         if attribute_type == 'path':
+            self.logger.debug('Generating path attribute from %s', parse_dict.dump())
             tag, module_info = self.get_module_info(parse_dict)
-            #print "parse_dict value:", parse_dict.value, type(parse_dict.value)
             # check for path
             if 'value' in parse_dict or parse_dict.value:
                 print "path parse_dict value:", parse_dict.value
@@ -321,7 +321,7 @@ class AttributeBuilder(object):
                     return attr_class(parse_dict.tag, val)
                 elif val in ['start', 'stop']:
                     self.logger.error("===>Need to implement motors for ", parse_dict.tag)
-                    return AttributeDummy
+                    return AttributeDummy()
                 elif isNumber(val):
                     return Constant(float(val))
                 elif isString(val):

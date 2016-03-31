@@ -30,6 +30,8 @@ class AttributeBase(object):
             self.attr_path = attr_str[0] # attribute path from tag designation, defaults to empty string
             if len(attr_str) > 1:
                 self.param = attr_str[1]
+        elif not hasattr(self, 'attr_path'):
+            self.attr_path = ''
 
         if hasattr(self, 'target_value'):
             pass  # self.target_value inherited from child class __init__()
@@ -59,8 +61,8 @@ class AttributeBase(object):
 
 
         self._test_types = {  # test types available to this AttributeType class
-                            'check_value', self.check_value,
-                            'force_value', self.force
+                            'check_value': self.check_value,
+                            'force_value': self.force
         }
 
         self._execute = None  # private execute method called by self.execute administative wrapper
@@ -127,7 +129,10 @@ class AttributeBase(object):
         '''
         Prints the OPC path of this attribute
         '''
-        return '/'.join([str(self.tag), str(self.attr_path)])
+        if self.attr_path:
+            return '/'.join([str(self.tag), str(self.attr_path)])
+        else:
+            return self.tag
 
     def start_timer(self):
         '''Starts the attribute's internal timer'''
@@ -182,11 +187,9 @@ class AttributeBase(object):
         Sets self.execute method dynamically as the test requires. Should be overridden as appropriate in subclasses
         :return:
         '''
-        if test_method:
-            self._execute = test_method
-        else:
-            self._execute = self._test_types(self._default_test)
-
+        if not test_method:
+            test_method = self._test_types[self._default_test]
+        self._execute = test_method
         self.logger.info('Execute method set to %r', self._execute)
 
     def save_value(self):
@@ -205,7 +208,8 @@ class AttributeDummy(AttributeBase):
     def __init__(self, id='', **kwargs):
         '''Constructor'''
         self.id = id
-        AttributeBase.__init__(self, tag='dummy', **kwargs)
+        AttributeBase.__init__(self, 'dummy', **kwargs)
+        print self.tag
 
     def read(self):
         print 'Dummy read ', self.id
@@ -214,8 +218,8 @@ class AttributeDummy(AttributeBase):
     def write(self, val=0):
         print 'Dummy write', self.id, 'as ', val
 
-    def execute(self):
-        if not self.complete:
+    def check_value(self):
+        if not self._complete:
             self.set_complete(True)
             self.deactivate()
         else:

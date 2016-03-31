@@ -19,6 +19,9 @@ class Constant(AttributeBase):
             raise TypeError
         AttributeBase.__init__(self, 'Constant', attr_path='', **kwargs)
 
+    def OPC_path(self):
+        return self.tag + ' ' + str(self.val)
+
     def read(self):
         if self.val in Constant.mode_int_dict:
             self.val = Constant.mode_int_dict[self.val]
@@ -29,9 +32,7 @@ class Constant(AttributeBase):
         self.val = value
         return 'Success'
 
-    def execute(self):
-        if not self.exe_start:
-            self.start_timer()
+    def check_value(self):
         val = self.read()[0]
         if self.read()[0] == self.target_value:
             self.set_complete(True)

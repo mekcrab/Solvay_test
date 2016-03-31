@@ -72,7 +72,11 @@ class TestAdmin():
         destination = self.test_case.get_state(state_id=destination)
 
         transitions = self.diagram.get_transitions(source=source.name, dest=destination.name)
-        num_attributes = len(transitions[0].attrs)
+        if transitions:
+            num_attributes = len(transitions[0].attrs)
+        else:
+            num_attributes = 0
+            self.logger.warning("No transition found between %s and %s", source.name, destination.name)
 
         complete_count = 0
         self.logger.debug("Testing transition between source state %r and destination state %r",

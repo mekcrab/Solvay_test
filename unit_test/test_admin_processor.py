@@ -69,7 +69,7 @@ class RunEM():
             # Start EM Command
             connection.write(command_path, command)
 
-            Test(test_case= test_case, diagram = diagram, connection = connection).start()
+            Test(test_case=test_case, diagram=diagram, connection=connection).start()
 
 
 if __name__ == "__main__":
