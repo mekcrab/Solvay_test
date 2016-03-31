@@ -151,7 +151,8 @@ if __name__ == "__main__":
     file_path = os.path.join(config.specs_path, 'EM', 'S_EMC_PRESS_CND.puml')
 
     # create attribute builder instance for solving attributes
-    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    #abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
     # build StateDiagram instance
     diagram = ModelBuilder.build_state_diagram(file_path, attribute_builder=abuilder, preprocess=True)
 
@@ -161,12 +162,12 @@ if __name__ == "__main__":
 
     # verify paths manually (for now)
     print "Drawing possible diagram paths...",
-    test_gen.draw_test_paths()
+    # test_gen.draw_test_paths()
     print "complete."
 
     print "State diagram complexity: " + str(test_gen.calculate_complexity())
     print "Total test cases: ", len(test_gen.test_cases.keys())
 
     # generate drawing of flattened graph - will work on getting better syntax
-    test_gen.draw_solved_graph()
+    # test_gen.draw_solved_graph()
     print "===============Testing Complete=================="
