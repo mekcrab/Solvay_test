@@ -9,6 +9,7 @@ OPC access is via OPC gateway, with OPC gateway service run as DeltaVAdmin
 OPC_AVAILABLE = False
 try:
     import OpenOPC
+    import Pyro
     OPC_AVAILABLE = True
 except ImportError:
     print "No OpenOPC package found, revert to dummy client"
@@ -29,7 +30,12 @@ class OPCconnect(object):
         return opc_client
 
     def read(self, PV):
-        return self.client.read(str(PV))
+        try:
+            return self.client.read(str(PV))
+        except OpenOPC.TimeoutError:
+            print 'ERROR!! - OPC timeout waiting for response on ', PV
+            #try again - FOREVER!!!!! (actually until we hit the recursion limit
+            return self.read(PV)
 
     def write(self, PV, SP):
         if type(SP) in [str, unicode]:
@@ -60,7 +66,7 @@ class OPCdummy(object):
     def write(self, path, value):
         print "Dummy write: ", path, ' as ', value
         self.path_dict[path] = value
-        return 'Sucess'
+        return 'Success'
 
 # Determine OPC client type from OpenOPC availability
 if OPC_AVAILABLE:

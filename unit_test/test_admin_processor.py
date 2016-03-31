@@ -3,7 +3,7 @@ __author__ = 'vpeng'
 import test_solver_processor
 import time
 from tools.TestAdmin import Test
-from tools.serverside.OPCclient import OPC_Connect, OPCdummy
+from tools.serverside.OPCclient import OPC_Connect
 
 class RunEM():
 

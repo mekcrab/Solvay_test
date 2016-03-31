@@ -21,11 +21,11 @@ class DiscreteAttribute(AttributeBase):
         AttributeBase.__init__(self, tag, attr_path=attr_path, **kwargs)
 
     def read(self, param='CV'):
-        val = self._read(param=param)
-        if val[0] != self.last_read[0]:
+        val = self._read(param=param)[0]
+        if val != self.last_read:
             self.logger.info('Read: %s', val)
         self.last_read = val
-        return self.last_read[0]
+        return self.last_read
 
     def write(self, target_value, param='CV'):
         val = self._write(target_value, param=param)
@@ -243,11 +243,11 @@ class PositionAttribute(AttributeBase):
         if not self.read_path:
             if self.read_mode() in PositionAttribute.mode_pv_dict:
                 self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
-        val = self._read(param=param)
-        if self.last_read[0] != val[0]:
-            self.logger.info('Read %s', val)
+        val = self._read(param=param)[0]
+        if self.last_read != val:
+            self.logger.info('Read %s: %s', self.read_path, val)
         self.last_read = val
-        return val[0]
+        return val
 
     def write_mode(self, target_mode=None):
         '''Wrapper to write this position's mode attribute, defaults to required mode'''
@@ -267,7 +267,7 @@ class PositionAttribute(AttributeBase):
             pass
         else:
             self.logger.warning('Mode target/actual mismatch: %s/%s ',
-                                self.mode.target.last_read[0], self.mode.actual.last_read[0])
+                                self.mode.target.last_read, self.mode.actual.last_read)
         return check
 
     def check_value(self):
@@ -281,7 +281,7 @@ class PositionAttribute(AttributeBase):
         '''Forces target mode and writes to appropriate SP'''
         if not target_value:
             target_value = self.target_value
-        self.logger.debug('Forcing position to (%s) in mode: %s', target_value, self.target_mode)
+        self.logger.debug('Forcing position to (%s) in mode: %s', target_value, self.mode.target_mode)
         return self.write(target_value)
 
 
@@ -469,9 +469,9 @@ class AnalogAttribute(AttributeBase):
         AttributeBase.__init__(self, tag, **kwargs)
 
     def read(self):
-        self.last_read = self._read()
+        self.last_read = self._read()[0]
         self.logger.info("Read: %s", self.last_read)
-        return self.last_read[0]
+        return self.last_read
 
     def write(self, target_value=None):
         if not target_value:
@@ -631,6 +631,7 @@ class PhaseCMDAttribute(NamedDiscrete):
 
 
 class Calculate(AttributeBase):
+
     def __init__(self, lhs = AttributeDummy(), op = '', rhs = AttributeDummy(), **kwargs):
         self.lhs = lhs
         self.rhs = rhs
@@ -739,9 +740,11 @@ class Compare(AttributeBase):
         else:
             cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
 
-        self.logger.debug('Evaluating: %s', cmp_val)
+        result = eval(cmp_val)
 
-        return eval(cmp_val)
+        self.logger.debug('Evaluating: %s to %s', cmp_val, result)
+
+        return result
 
     def set_read_hook(self, readhook):
         self.lhs.set_read_hook(readhook)
@@ -762,9 +765,9 @@ class Compare(AttributeBase):
 
     def force(self):
         '''Attempts to force self.lhs to self.rhs +/- deadband depending on operator type'''
-        if '>' in self.opr:  # set rhs = lhs - deadband
+        if '>' in self.op:  # set rhs = lhs - deadband
             return self.rhs.write(self.lhs.read() - self.deadband)
-        elif '<' in self.opr:  # set rhs = lhs + deadband
+        elif '<' in self.op:  # set rhs = lhs + deadband
             return self.rhs.write(self.lhs.read() + self.deadband)
         else:  # set rhs = lhs
             return self.rhs.write(self.lhs.read())

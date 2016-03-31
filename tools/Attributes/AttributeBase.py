@@ -178,7 +178,7 @@ class AttributeBase(object):
 
         if self._complete:  # set total execution time in seconds
             self.exe_time = self.get_timer()
-            self.logger.info('Execution completed in %')
+            self.logger.info('Execution completed in %.2f', self.exe_time)
 
         return exe
 
