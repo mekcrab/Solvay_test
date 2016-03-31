@@ -4,7 +4,7 @@
 
 @startuml
 
-'!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+!include  Definitions/S_EMC_PRESS_CND/R1-PRES-EM.puml
 
 state START_VACUUM {
 
@@ -19,7 +19,7 @@ StartVAC: Start 'VAC_PMP'
 StartVAC --> Open_VAC_CTRL_Valve
 
 Open_VAC_CTRL_Valve: Set 'VAC_CTL' to ROUT
-Open_VAC_CTRL_Valve: Open 'VAC_CTL' > control_valve_position
+Open_VAC_CTRL_Valve: Open 'VAC_CTL' >= control_valve_position
 
 Open_VAC_CTRL_Valve --> [*]
 
@@ -54,7 +54,7 @@ ValvePosition4: Open 'VAC_KO_SCRUB'
 ValvePosition4 --> Start_VAC
 Start_VAC: Start 'VAC_PMP'
 Start_VAC: Set 'VAC_CTL' to ROUT
-Start_VAC: Open 'VAC_CTL' > control_valve_position
+Start_VAC: Open 'VAC_CTL' >= control_valve_position
 
 Start_VAC --> Ramp_VAC
 Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
@@ -73,7 +73,7 @@ state Press_Up {
 
 OpenN2VLV: Open 'nitrogen_valve'
 
-OpenN2VLV --> CloseN2VLV: 'PRESS_GAP_CTL'  > target_pressure
+OpenN2VLV --> CloseN2VLV: 'PRESS_GAP_CTL'  >= target_pressure
 
 CloseN2VLV: Close 'nitrogen_valve'
 
