@@ -44,11 +44,22 @@ class TestAdmin():
             # TODO - find out how long attr.execute() method takes for each attribute type (see timeit)
             for attr in state.attrs:
                 type_error_mark = []
-                try:
-                    complete_count += attr.execute()
-                except TypeError:
-                    type_error_mark.append(attr)
-                    continue
+                # if attr._complete != True:
+                #     try:
+                complete_count += (attr._complete == True)
+                if attr._complete != True:
+                    try:
+                        attr.execute()
+                    except TypeError:
+                        type_error_mark.append(attr)
+                        continue
+                #
+                # else:
+                #     try:
+                #         complete_count += attr._complete()
+                #     except TypeError:
+                #         type_error_mark.append(attr)
+                #         continue
 
                 if type_error_mark != []:
                     type_error_mark = remove_duplicates(type_error_mark)
@@ -67,6 +78,7 @@ class TestAdmin():
                 return True
             #  (b)  or the state has timed out...
             elif (time.time() - mark_timeout) > self.global_timeout:
+                self.logger.error("Time out at state %s, pass to the next test case.", in_state.name)
                 return False  # or other timeout logic here!!
             #  (c) otherwise wait for the next polling interval
             else:
@@ -103,11 +115,13 @@ class TestAdmin():
                     tran_attr.set_read_hook(self.connection.read)
                     tran_attr.set_write_hook(self.connection.write)
                     type_error_mark = []
-                    try:
-                        complete_count += tran_attr.execute()
-                    except TypeError:
-                        type_error_mark.append(tran_attr)
-                        continue
+                    complete_count += (tran_attr._complete == True)
+                    if tran_attr._complete != True:
+                        try:
+                            tran_attr.execute()
+                        except TypeError:
+                            type_error_mark.append(tran_attr)
+                            continue
 
                     if type_error_mark != []:
                         type_error_mark = remove_duplicates(type_error_mark)
@@ -120,6 +134,8 @@ class TestAdmin():
                     dest_attr.activate()
                 return True
             elif (time.time() - mark_timeout) > self.global_timeout:
+                self.logger.error("Time out in transition between %s and %s, force to the next state.", source.name,
+                                  destination.name)
                 return False  # or other timeout logic here!!
             #  (c) otherwise wait for the next polling interval
             else:

@@ -746,7 +746,7 @@ class Compare(AttributeBase):
             self.op = '=='
             cmp_val = 'abs('+str(self.leftval) +'-'+str(self.rightval)+')<'+str(self.deadband)
         else:
-            cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
+            cmp_val = str(self.leftval) +self.op+str(self.rightval)
 
         result = eval(cmp_val)
 

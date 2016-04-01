@@ -5,7 +5,7 @@ from tools import config, ModelBuilder, TestSolver
 from tools.Attributes import AttributeBuilder
 
 def S_EMC_PRESS_CND():
-    return test_solver_processor(test_class='EM', test_spec='S_EMC_PRESS_CND.puml')
+    return test_solver_processor(test_class='EM', test_spec='S_EMC_PRESS_CND_demoable.puml')
 
 def S_EMC_CHARGE():
     return test_solver_processor(test_class='EM', test_spec='S_EMC_CHARGE_V2.puml')

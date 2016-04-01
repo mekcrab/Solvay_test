@@ -1,11 +1,6 @@
 !include  Definitions/S_EMC_PRESS_CND/R1-PRES-EM.puml
 !include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
 
-Open_VAC_CTRL_Valve: Set 'VAC_CTL' in ROUT
-@startuml
-
-!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
-
 state PRESSRE_UP {
 
 [*] --> Check_RX_Pressure
@@ -29,6 +24,8 @@ Complete --> [*]
 
 }
 
+@startuml
+!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
 
 state START_VACUUM {
 
@@ -42,8 +39,8 @@ StartVAC: Start 'VAC_PMP'
 
 StartVAC --> Open_VAC_CTRL_Valve
 
-
-Open_VAC_CTRL_Valve: Open 'VAC_CTL' to control_valve_position
+Open_VAC_CTRL_Valve: Set 'VAC_CTL' in ROUT
+Open_VAC_CTRL_Valve: Open 'VAC_CTL' >= control_valve_position
 
 Open_VAC_CTRL_Valve --> [*]
 
@@ -67,6 +64,49 @@ Close_Discharge_Vlv --> [*]
 
 }
 
+
+state DEAERATE {
+
+[*] --> ValvePosition4
+ValvePosition4: Close 'SCRUB_VENT_VLV'
+ValvePosition4: Close 'DECANT_VENT_VLV'
+ValvePosition4: Open 'VAC_KO_SCRUB'
+
+ValvePosition4 --> Start_VAC
+Start_VAC: Start 'VAC_PMP'
+Start_VAC: Set 'VAC_CTL' to ROUT
+Start_VAC: Open 'VAC_CTL' >= control_valve_position
+
+Start_VAC --> Ramp_VAC
+Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
+Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
+Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
+
+Ramp_VAC --> STOP_VAC: 'VAC_CTL' < ramp_target
+STOP_VAC: Stop 'VAC_PMP'
+STOP_VAC: Close 'VAC_STM_VLV'
+STOP_VAC: Close 'VAC_CTL' to 0
+
+STOP_VAC --> Press_Up
+
+state Press_Up {
+
+
+OpenN2VLV: Open 'nitrogen_valve'
+
+OpenN2VLV --> CloseN2VLV: 'PRESS_GAP_CTL'  >= target_pressure
+
+CloseN2VLV: Close 'nitrogen_valve'
+
+
+}
+
+Press_Up --> [*]
+
+}
+
+@enduml
+
 state VENT {
 
 [*] --> Check_RX_Press
@@ -84,45 +124,3 @@ Close_Decant: Close 'DECANT_VENT_VLV'
 Close_Decant --> [*]
 
 }
-
-state DEAERATE {
-
-[*] --> ValvePosition4
-ValvePosition4: Close 'SCRUB_VENT_VLV'
-ValvePosition4: Close 'DECANT_VENT_VLV'
-ValvePosition4: Open 'VAC_KO_SCRUB'
-
-ValvePosition4 --> Start_VAC
-Start_VAC: Start 'VAC_PMP'
-Start_VAC: Set 'VAC_CTL' to ROUT
-Start_VAC: Open 'VAC_CTL' to control_valve_position
-
-Start_VAC --> Ramp_VAC
-Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
-Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
-Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
-
-Ramp_VAC --> STOP_VAC: 'PRESS_GAP_CTL' < ramp_target
-STOP_VAC: Stop 'VAC_PMP'
-STOP_VAC: Close 'VAC_STM_VLV'
-STOP_VAC: Close 'VAC_CTL' to 0
-
-STOP_VAC --> Press_Up
-
-state Press_Up {
-
-
-OpenN2VLV: Open 'nitrogen_valve'
-
-OpenN2VLV --> CloseN2VLV: 'PRESS_GAP_CTL'  > target_pressure
-
-CloseN2VLV: Close 'nitrogen_valve'
-
-
-}
-
-Press_Up --> [*]
-
-}
-
-@enduml
