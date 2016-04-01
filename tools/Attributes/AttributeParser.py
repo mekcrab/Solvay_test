@@ -167,7 +167,9 @@ if __name__ == "__main__":
 
     test_strings = [
         "Open 'CV-2394'",
-        "Set 'VAC_CTL' to open",
+        "'HS-2231' is stopped",
+        "'PIC-2295' = \n 'OP001_VALUE'",
+        "Set 'VAC_CTL' to ROUT",
         "Close 'VAC_CTL' in 0",
         "Set 'PIC-2295_RAMP/RAMP_PAUSE' to False",
         "Verify 'PIC-4083' < 100 mmHg",

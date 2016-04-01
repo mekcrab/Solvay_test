@@ -12,12 +12,12 @@ title R1-PRES-EM
 !define	VAC_RAMP	PIC-1637_RAMP
 !define	VAC_STM_VLV	CV-1647
 
-!define pressure_setpoint OP001_VALUE
-!define nitrogen_valve  CV-1606
+!define pressure_setpoint 'OP001_VALUE'
+!define nitrogen_valve  'CV-1606'
 !define control_valve_position 30%
 !define ramp_target 100 mmHg
 !define ramp_rate 0.16 %/second
-!define target_pressure OP002_VALUE
+!define target_pressure 'OP002_VALUE'
 
 
 @enduml

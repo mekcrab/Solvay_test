@@ -1,6 +1,11 @@
 !include  Definitions/S_EMC_PRESS_CND/R1-PRES-EM.puml
 !include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
 
+
+
+@startuml
+!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+
 state PRESSRE_UP {
 
 [*] --> Check_RX_Pressure
@@ -15,17 +20,33 @@ OAR_TurnOff --> ValvePosition1: 'VAC_PMP' is stopped
 
 ValvePosition1: Close 'SCRUB_VENT_VLV'
 ValvePosition1: Close 'DECANT_VENT_VLV'
-ValvePosition1: Open 'nitrogen_valve'
+ValvePosition1: Open nitrogen_valve
 
 ValvePosition1 --> Complete: 'PRESS_GAP_CTL' > pressure_setpoint
-Complete: Close 'nitrogen_valve'
+Complete: Close nitrogen_valve
 
 Complete --> [*]
 
 }
 
-@startuml
-!include  Definitions/S_EMC_PRESS_CND/R4-PRES-EM.puml
+
+state VENT {
+
+[*] --> Check_RX_Press
+
+Check_RX_Press --> [*]: 'PRESS_GAP_CTL' > pressure_setpoint
+Check_RX_Press --> ValvePosition3: 'PRESS_GAP_CTL' < pressure_setpoint
+
+ValvePosition3: Close nitrogen_valve
+ValvePosition3: Open 'DECANT_VENT_VLV'
+
+ValvePosition3 --> Close_Decant: Wait for 'PRESS_GAP_CTL' < target_pressure
+
+Close_Decant: Close 'DECANT_VENT_VLV'
+
+Close_Decant --> [*]
+
+}
 
 state START_VACUUM {
 
@@ -104,23 +125,5 @@ CloseN2VLV: Close 'nitrogen_valve'
 Press_Up --> [*]
 
 }
-
 @enduml
 
-state VENT {
-
-[*] --> Check_RX_Press
-
-Check_RX_Press --> [*]: 'PRESS_GAP_CTL' > pressure_setpoint
-Check_RX_Press --> ValvePosition3: 'PRESS_GAP_CTL' < pressure_setpoint
-
-ValvePosition3: Close 'nitrogen_valve'
-ValvePosition3: Open 'DECANT_VENT_VLV'
-
-ValvePosition3 --> Close_Decant: Wait for 'PRESS_GAP_CTL' < target_pressure
-
-Close_Decant: Close 'DECANT_VENT_VLV'
-
-Close_Decant --> [*]
-
-}

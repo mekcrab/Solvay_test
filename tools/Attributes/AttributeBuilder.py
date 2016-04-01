@@ -257,9 +257,9 @@ class AttributeBuilder(object):
             rhs = parse_dict.rhs
             opr = parse_dict['compare']
 
-            if 'path' in rhs:
+            if rhs.path or rhs.tag:
                 rhs = self.generate_attribute(parse_dict['rhs'], 'path')
-            elif 'value' in rhs:
+            elif rhs.value:
                 rhs = rhs.value[0]
                 if type(rhs) in [str, unicode] and not isNumber(rhs):
                     rhs = Constant(rhs.strip('\"'))
@@ -320,10 +320,16 @@ class AttributeBuilder(object):
                     self.logger.debug("Creating %s from: %s", attr_class.__name__, ' '.join(parse_dict.asList()))
                     return attr_class(parse_dict.tag, val)
                 elif val in ['start', 'stop']:
-                    self.logger.error("===>Need to implement motors for ", parse_dict.tag)
-                    return AttributeDummy()
+                    parse_dict.action_word = val
+                    return self.generate_attribute(parse_dict, 'position')
+                    # self.logger.error("===>Need to implement motors for ", parse_dict.tag)
+                    # return AttributeDummy()
                 elif isNumber(val):
                     return Constant(float(val))
+                elif parse_dict.tag == val:
+                    attr_path = parse_dict.tag
+                    tag = self.default_tag
+                    return OtherAttribute(tag = tag, attr_path = attr_path)
                 elif isString(val):
                     return Constant(val.string('\"'))
 
