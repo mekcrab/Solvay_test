@@ -1,0 +1,389 @@
+@startuml
+state HEAT_hot_oil {
+
+[*] --> SetMode1
+SetMode1: Set 'TC_VLV' to CAS
+SetMode1: Set 'BC_VLV' to CAS
+SetMode1: Set 'TJ_VLV' to CAS
+SetMode1: Set 'MJ_VLV' to CAS
+SetMode1: Set 'BJ_VLV' to CAS
+SetMode1: Set 'TO_FAN' to CAS
+SetMode1: Set 'TO_PUMP' TO CAS
+SetMode1: Set 'BD_CT_VLV' to CAS
+SetMode1: Set 'AIR_BD_VLV' to CAS
+SetMode1: Set 'HO_RTN_VLV' to CAS
+SetMode1: Set 'CW_RTN_VLV' to CAS
+SetMode1: Set 'TO_SPLY_VLV' to CAS
+SetMode1: Set 'TO_RTN_VLV' to CAS
+SetMode1: Set 'STM_SPLY_VLV' to CAS
+SetMode1: Set 'CND_RTN_VLV' to CAS
+SetMode1: Set 'HO_CTL' to RCAS
+SetMode1: Set 'STM_CTL' to ROUT
+SetMode1: Set 'CW_CTL' to ROUT
+SetMode1: Set 'TO_CTL' to ROUT
+SetMode1: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode1 --> ValvePosition1
+ValvePosition1: Open 'TC_VLV'
+ValvePosition1: Open 'BC_VLV'
+ValvePosition1: Open 'HO_RTN_VLV'
+ValvePosition1: Close 'TJ_VLV'
+ValvePosition1: Close 'MJ_VLV'
+ValvePosition1: Close 'BJ_VLV'
+ValvePosition1: Close 'BD_CT_VLV'
+ValvePosition1: Close 'AIR_BD_VLV'
+ValvePosition1: Close 'CW_RTN_VLV'
+ValvePosition1: Close 'TO_SPLY_VLV'
+ValvePosition1: Close 'TO_RTN_VLV'
+ValvePosition1: Close 'STM_SPLY_VLV'
+ValvePosition1: Close 'CND_RTN_VLV'
+ValvePosition1: Close 'STM_CTL' to 0
+ValvePosition1: Close 'CW_CTL' to 0
+ValvePosition1: Close 'TO_CTL' to 0
+ValvePosition1: Close 'TO_TEMP_CTL' to 0
+
+
+ValvePosition1 --> [*]
+
+
+}
+
+state HEAT_steam {
+
+[*] --> SetMode2
+SetMode2: Set 'TC_VLV' to CAS
+SetMode2: Set 'BC_VLV' to CAS
+SetMode2: Set 'TJ_VLV' to CAS
+SetMode2: Set 'MJ_VLV' to CAS
+SetMode2: Set 'BJ_VLV' to CAS
+SetMode2: Set 'TO_FAN' to CAS
+SetMode2: Set 'TO_PUMP' TO CAS
+SetMode2: Set 'BD_CT_VLV' to CAS
+SetMode2: Set 'AIR_BD_VLV' to CAS
+SetMode2: Set 'HO_RTN_VLV' to CAS
+SetMode2: Set 'CW_RTN_VLV' to CAS
+SetMode2: Set 'TO_SPLY_VLV' to CAS
+SetMode2: Set 'TO_RTN_VLV' to CAS
+SetMode2: Set 'STM_SPLY_VLV' to CAS
+SetMode2: Set 'CND_RTN_VLV' to CAS
+SetMode2: Set 'HO_CTL' to ROUT
+SetMode2: Set 'STM_CTL' to RCAS
+SetMode2: Set 'CW_CTL' to ROUT
+SetMode2: Set 'TO_CTL' to ROUT
+SetMode2: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode2 --> ValvePosition2
+ValvePosition2: Open 'TJ_VLV'
+ValvePosition2: Open 'MJ_VLV'
+ValvePosition2: Open 'BJ_VLV'
+ValvePosition2: Close 'TC_VLV'
+ValvePosition2: Close 'BC_VLV'
+ValvePosition2: Close 'BD_CT_VLV'
+ValvePosition2: Close 'AIR_BD_VLV'
+ValvePosition2: Close 'CW_RTN_VLV'
+ValvePosition2: Close 'TO_SPLY_VLV'
+ValvePosition2: Close 'TO_RTN_VLV'
+ValvePosition2: Open 'STM_SPLY_VLV'
+ValvePosition2: Open 'CND_RTN_VLV'
+ValvePosition2: Close 'HO_RTN_VLV'
+ValvePosition2: Close 'HO_CTL' to 0
+ValvePosition2: Close 'CW_CTL' to 0
+ValvePosition2: Close 'TO_CTL' to 0
+ValvePosition2: Close 'TO_TEMP_CTL' to 0
+
+ValvePosition2 --> [*]
+
+}
+
+state HEAT_both {
+
+[*] --> SetMode3
+SetMode3: Set 'TC_VLV' to CAS
+SetMode3: Set 'BC_VLV' to CAS
+SetMode3: Set 'TJ_VLV' to CAS
+SetMode3: Set 'MJ_VLV' to CAS
+SetMode3: Set 'BJ_VLV' to CAS
+SetMode3: Set 'TO_FAN' to CAS
+SetMode3: Set 'TO_PUMP' TO CAS
+SetMode3: Set 'BD_CT_VLV' to CAS
+SetMode3: Set 'AIR_BD_VLV' to CAS
+SetMode3: Set 'HO_RTN_VLV' to CAS
+SetMode3: Set 'CW_RTN_VLV' to CAS
+SetMode3: Set 'TO_SPLY_VLV' to CAS
+SetMode3: Set 'TO_RTN_VLV' to CAS
+SetMode3: Set 'STM_SPLY_VLV' to CAS
+SetMode3: Set 'CND_RTN_VLV' to CAS
+SetMode3: Set 'HO_CTL' to RCAS
+SetMode3: Set 'STM_CTL' to RCAS
+SetMode3: Set 'CW_CTL' to ROUT
+SetMode3: Set 'TO_CTL' to ROUT
+SetMode3: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode3 --> ValvePosition3
+ValvePosition3: Open 'TJ_VLV'
+ValvePosition3: Open 'MJ_VLV'
+ValvePosition3: Open 'BJ_VLV'
+ValvePosition3: Open 'TC_VLV'
+ValvePosition3: Open 'BC_VLV'
+ValvePosition3: Close 'BD_CT_VLV'
+ValvePosition3: Close 'AIR_BD_VLV'
+ValvePosition3: Close 'CW_RTN_VLV'
+ValvePosition3: Close 'TO_SPLY_VLV'
+ValvePosition3: Close 'TO_RTN_VLV'
+ValvePosition3: Open 'STM_SPLY_VLV'
+ValvePosition3: Open 'CND_RTN_VLV'
+ValvePosition3: Open 'HO_RTN_VLV'
+ValvePosition3: Close 'CW_CTL' to 0
+ValvePosition3: Close 'TO_CTL' to 0
+ValvePosition3: Close 'TO_TEMP_CTL' to 0
+
+ValvePosition3 --> [*]
+
+}
+
+state OFF {
+
+
+[*] --> SetMode4
+SetMode4: Set 'TC_VLV' to CAS
+SetMode4: Set 'BC_VLV' to CAS
+SetMode4: Set 'TJ_VLV' to CAS
+SetMode4: Set 'MJ_VLV' to CAS
+SetMode4: Set 'BJ_VLV' to CAS
+SetMode4: Set 'TO_FAN' to CAS
+SetMode4: Set 'TO_PUMP' TO CAS
+SetMode4: Set 'HO_RTN_VLV' to CAS
+SetMode4: Set 'BD_CT_VLV' to CAS
+SetMode4: Set 'AIR_BD_VLV' to CAS
+SetMode4: Set 'CW_RTN_VLV' to CAS
+SetMode4: Set 'TO_SPLY_VLV' to CAS
+SetMode4: Set 'TO_RTN_VLV' to CAS
+SetMode4: Set 'STM_SPLY_VLV' to CAS
+SetMode4: Set 'CND_RTN_VLV' to CAS
+SetMode4: Set 'HO_CTL' to ROUT
+SetMode4: Set 'STM_CTL' to ROUT
+SetMode4: Set 'CW_CTL' to ROUT
+SetMode4: Set 'TO_CTL' to ROUT
+SetMode4: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode4 --> ValvePosition4
+ValvePosition4: Close 'TJ_VLV'
+ValvePosition4: Close 'MJ_VLV'
+ValvePosition4: Close 'BJ_VLV'
+ValvePosition4: Close 'TC_VLV'
+ValvePosition4: Close 'BC_VLV'
+ValvePosition4: Close 'BD_CT_VLV'
+ValvePosition4: Close 'AIR_BD_VLV'
+ValvePosition4: Close 'CW_RTN_VLV'
+ValvePosition4: Close 'TO_SPLY_VLV'
+ValvePosition4: Close 'TO_RTN_VLV'
+ValvePosition4: Close 'STM_SPLY_VLV'
+ValvePosition4: Close 'CND_RTN_VLV'
+ValvePosition4: Close 'HO_RTN_VLV'
+ValvePosition4: Close 'STM_CTL' to 0
+ValvePosition4: Close 'HO_CTL' to 0
+ValvePosition4: Close 'CW_CTL' to 0
+ValvePosition4: Close 'TO_CTL' to 0
+ValvePosition4: Close 'TO_TEMP_CTL' to 0
+
+ValvePosition4 --> [*]
+
+
+}
+
+state BLOWDOWN {
+
+[*] --> SetMode5
+SetMode5: Set 'TC_VLV' to CAS
+SetMode5: Set 'BC_VLV' to CAS
+SetMode5: Set 'TJ_VLV' to CAS
+SetMode5: Set 'MJ_VLV' to CAS
+SetMode5: Set 'BJ_VLV' to CAS
+SetMode5: Set 'TO_FAN' to CAS
+SetMode5: Set 'TO_PUMP' TO CAS
+SetMode5: Set 'BD_CT_VLV' to CAS
+SetMode5: Set 'AIR_BD_VLV' to CAS
+SetMode5: Set 'HO_RTN_VLV' to CAS
+SetMode5: Set 'CW_RTN_VLV' to CAS
+SetMode5: Set 'TO_SPLY_VLV' to CAS
+SetMode5: Set 'TO_RTN_VLV' to CAS
+SetMode5: Set 'STM_SPLY_VLV' to CAS
+SetMode5: Set 'CND_RTN_VLV' to CAS
+SetMode5: Set 'HO_CTL' to ROUT
+SetMode5: Set 'STM_CTL' to ROUT
+SetMode5: Set 'CW_CTL' to ROUT
+SetMode5: Set 'TO_CTL' to ROUT
+SetMode5: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode5 --> ValvePosition5
+ValvePosition5: Open 'TJ_VLV'
+ValvePosition5: Open 'MJ_VLV'
+ValvePosition5: Open 'BJ_VLV'
+ValvePosition5: Open 'BD_CT_VLV'
+ValvePosition5: Open 'AIR_BD_VLV'
+ValvePosition5: Close 'TC_VLV'
+ValvePosition5: Close 'BC_VLV'
+ValvePosition5: Close 'CW_RTN_VLV'
+ValvePosition5: Close 'TO_SPLY_VLV'
+ValvePosition5: Close 'TO_RTN_VLV'
+ValvePosition5: Close 'STM_SPLY_VLV'
+ValvePosition5: Close 'CND_RTN_VLV'
+ValvePosition5: Close 'HO_RTN_VLV'
+ValvePosition5: Close 'STM_CTL' to 0
+ValvePosition5: Close 'HO_CTL' to 0
+ValvePosition5: Close 'CW_CTL' to 0
+ValvePosition5: Close 'TO_CTL' to 0
+ValvePosition5: Close 'TO_TEMP_CTL' to 0
+
+ValvePosition5 --> [*]
+}
+
+state COOL_oil {
+
+
+[*] --> SetMode6
+SetMode6: Set 'TC_VLV' to CAS
+SetMode6: Set 'BC_VLV' to CAS
+SetMode6: Set 'TJ_VLV' to CAS
+SetMode6: Set 'MJ_VLV' to CAS
+SetMode6: Set 'BJ_VLV' to CAS
+SetMode6: Set 'TO_FAN' to CAS
+SetMode6: Set 'TO_PUMP' TO CAS
+SetMode6: Set 'HO_RTN_VLV' to CAS
+SetMode6: Set 'BD_CT_VLV' to CAS
+SetMode6: Set 'AIR_BD_VLV' to CAS
+SetMode6: Set 'CW_RTN_VLV' to CAS
+SetMode6: Set 'TO_SPLY_VLV' to CAS
+SetMode6: Set 'TO_RTN_VLV' to CAS
+SetMode6: Set 'STM_SPLY_VLV' to CAS
+SetMode6: Set 'CND_RTN_VLV' to CAS
+SetMode6: Set 'HO_CTL' to ROUT
+SetMode6: Set 'STM_CTL' to ROUT
+SetMode6: Set 'CW_CTL' to ROUT
+SetMode6: Set 'TO_CTL' to ROUT
+SetMode6: Set 'TO_TEMP_CTL' to RCAS
+
+SetMode6 --> ValvePosition6
+ValvePosition6: Close 'TJ_VLV'
+ValvePosition6: Close 'MJ_VLV'
+ValvePosition6: Close 'BJ_VLV'
+ValvePosition6: Open 'TC_VLV'
+ValvePosition6: Open 'BC_VLV'
+ValvePosition6: Start 'TO_FAN'
+ValvePosition6: Start 'TO_PUMP'
+ValvePosition6: Close 'BD_CT_VLV'
+ValvePosition6: Close 'AIR_BD_VLV'
+ValvePosition6: Close 'CW_RTN_VLV'
+ValvePosition6: Open 'TO_SPLY_VLV'
+ValvePosition6: Open 'TO_RTN_VLV'
+ValvePosition6: Close 'STM_SPLY_VLV'
+ValvePosition6: Close 'CND_RTN_VLV'
+ValvePosition6: Close 'HO_RTN_VLV'
+ValvePosition6: Close 'STM_CTL' to 0
+ValvePosition6: Close 'HO_CTL' to 0
+ValvePosition6: Close 'CW_CTL' to 0
+ValvePosition6: Close 'TO_CTL' to 5
+
+
+ValvePosition6 --> [*]
+
+
+}
+
+state COOL_water {
+
+[*] --> SetMode7
+SetMode7: Set 'TC_VLV' to CAS
+SetMode7: Set 'BC_VLV' to CAS
+SetMode7: Set 'TJ_VLV' to CAS
+SetMode7: Set 'MJ_VLV' to CAS
+SetMode7: Set 'BJ_VLV' to CAS
+SetMode7: Set 'TO_FAN' to CAS
+SetMode7: Set 'TO_PUMP' TO CAS
+SetMode7: Set 'HO_RTN_VLV' to CAS
+SetMode7: Set 'BD_CT_VLV' to CAS
+SetMode7: Set 'AIR_BD_VLV' to CAS
+SetMode7: Set 'CW_RTN_VLV' to CAS
+SetMode7: Set 'TO_SPLY_VLV' to CAS
+SetMode7: Set 'TO_RTN_VLV' to CAS
+SetMode7: Set 'STM_SPLY_VLV' to CAS
+SetMode7: Set 'CND_RTN_VLV' to CAS
+SetMode7: Set 'HO_CTL' to ROUT
+SetMode7: Set 'STM_CTL' to ROUT
+SetMode7: Set 'CW_CTL' to RCAS
+SetMode7: Set 'TO_CTL' to ROUT
+SetMode7: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode7 --> ValvePosition7
+ValvePosition7: Open 'TJ_VLV'
+ValvePosition7: Open 'MJ_VLV'
+ValvePosition7: Open 'BJ_VLV'
+ValvePosition7: Close 'TC_VLV'
+ValvePosition7: Close 'BC_VLV'
+ValvePosition7: Close 'BD_CT_VLV'
+ValvePosition7: Close 'AIR_BD_VLV'
+ValvePosition7: Open 'CW_RTN_VLV'
+ValvePosition7: Close 'TO_SPLY_VLV'
+ValvePosition7: Close 'TO_RTN_VLV'
+ValvePosition7: Close 'STM_SPLY_VLV'
+ValvePosition7: Close 'CND_RTN_VLV'
+ValvePosition7: Close 'HO_RTN_VLV'
+ValvePosition7: Close 'STM_CTL' to 0
+ValvePosition7: Close 'HO_CTL' to 0
+ValvePosition7: Close 'TO_CTL' to 0
+ValvePosition7: Close 'TO_TEMP_CTL' to 0
+
+ValvePosition7 --> [*]
+
+}
+
+state COOL_both {
+
+[*] --> SetMode8
+SetMode8: Set 'TC_VLV' to CAS
+SetMode8: Set 'BC_VLV' to CAS
+SetMode8: Set 'TJ_VLV' to CAS
+SetMode8: Set 'MJ_VLV' to CAS
+SetMode8: Set 'BJ_VLV' to CAS
+SetMode8: Set 'TO_FAN' to CAS
+SetMode8: Set 'TO_PUMP' TO CAS
+SetMode8: Set 'HO_RTN_VLV' to CAS
+SetMode8: Set 'BD_CT_VLV' to CAS
+SetMode8: Set 'AIR_BD_VLV' to CAS
+SetMode8: Set 'CW_RTN_VLV' to CAS
+SetMode8: Set 'TO_SPLY_VLV' to CAS
+SetMode8: Set 'TO_RTN_VLV' to CAS
+SetMode8: Set 'STM_SPLY_VLV' to CAS
+SetMode8: Set 'CND_RTN_VLV' to CAS
+SetMode8: Set 'HO_CTL' to ROUT
+SetMode8: Set 'STM_CTL' to ROUT
+SetMode8: Set 'CW_CTL' to RCAS
+SetMode8: Set 'TO_CTL' to ROUT
+SetMode8: Set 'TO_TEMP_CTL' to ROUT
+
+SetMode8 --> ValvePosition8
+ValvePosition8: Open 'TJ_VLV'
+ValvePosition8: Open 'MJ_VLV'
+ValvePosition8: Open 'BJ_VLV'
+ValvePosition8: Open 'TC_VLV'
+ValvePosition8: Open 'BC_VLV'
+ValvePosition8: Start 'TO_FAN'
+ValvePosition8: Start 'TO_PUMP'
+ValvePosition8: Close 'BD_CT_VLV'
+ValvePosition8: Close 'AIR_BD_VLV'
+ValvePosition8: Open 'CW_RTN_VLV'
+ValvePosition8: Open 'TO_SPLY_VLV'
+ValvePosition8: Open 'TO_RTN_VLV'
+ValvePosition8: Close 'STM_SPLY_VLV'
+ValvePosition8: Close 'CND_RTN_VLV'
+ValvePosition8: Close 'HO_RTN_VLV'
+ValvePosition8: Close 'STM_CTL' to 0
+ValvePosition8: Close 'HO_CTL' to 0
+ValvePosition8: Open 'TO_CTL' to 5
+
+ValvePosition8 --> [*]
+
+
+}
+
+@enduml

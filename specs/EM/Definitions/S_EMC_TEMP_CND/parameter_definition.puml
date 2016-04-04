@@ -1,0 +1,17 @@
+@startuml
+
+!define JACKET_BLOWDOWN 8
+!define JACKET_COOL 4
+!define JACKET_COOL 7
+!define JACKET_OFF  1
+!define TEMP_COOL   4
+!define TEMP_HEAT   3
+!define init_stm_vlv_position   'OP002_VALUE'
+!define init_ho_vlv_position    'OP004_VALUE'
+!define init_cw_vlv_position    'OP003_VALUE'
+!define init_to_vlv_position    'OP005_VALUE'
+!define temperature_sp  'OP001_VALUE'
+!define temperature_deadband    5
+
+
+@enduml

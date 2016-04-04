@@ -1,0 +1,130 @@
+To include parameter definitions, copy this to the major script below:
+!include  Definitions/S_EMC_TEMP_CND/parameter_definition.puml
+
+@startuml
+
+state OFF {
+
+[*] --> ValvePosition5
+
+ValvePosition5: Close 'CW_CTL_VLV'
+ValvePosition5: Close 'TO_CTL_VLV'
+ValvePosition5: Close 'STM_CTL_VLV'
+ValvePosition5: Close 'HO_CTL_VLV'
+ValvePosition5: 'VLV_CTL_EM/A_COMMAND' = JACKET_OFF
+
+ValvePosition5 --> [*]
+
+}
+
+state BLOWDOWN {
+
+[*] --> Set_JACKET_CMD
+Set_JACKET_CMD: 'VLV_CTL_EM/A_COMMAND' = JACKET_BLOWDOWN
+
+Set_JACKET_CMD --> [*]: wait time for 300s
+
+}
+
+state HEAT {
+[*] --> Check_Last_CMD1
+
+Check_Last_CMD1 --> Blowdown1: 'A_LAST_CMD' != TEMP_COOL
+Check_Last_CMD1 --> ValvePosition1: 'A_LAST_CMD' == TEMP_COOL
+
+Blowdown1: 'VLV_CTL_EM/A_COMMAND' = JACKET_BLOWDOWN
+
+Blowdown1 --> ValvePosition1: Wait time for 300s
+
+ValvePosition1: Close 'CW_CTL_VLV'
+ValvePosition1: Close 'TO_CTL_VLV'
+ValvePosition1: Set 'HO_CTL_VLV' to ROUT
+ValvePosition1: Open 'HO_CTL_VLV' to init_ho_vlv_position
+ValvePosition1: Set 'STM_CTL_VLV' to ROUT
+ValvePosition1: Open 'STM_CTL_VLV' to init_stm_vlv_position
+ValvePosition1: 'VLV_CTL_EM/A_COMMAND' = JACKET_HEAT
+
+ValvePosition1 --> [*]
+
+}
+
+state COOL {
+
+[*] --> Check_Last_CMD2
+
+Check_Last_CMD2 --> Blowdown2: 'A_LAST_CMD' != TEMP_HEAT
+Blowdown2: 'VLV_CTL_EM/A_COMMAND' = JACKET_BLOWDOWN
+
+Check_Last_CMD2 --> ValvePosition2: 'A_LAST_CMD' == TEMP_HEAT
+
+Blowdown2 --> ValvePosition2: wait time for 30s
+
+ValvePosition2: Close 'STM_CTL_VLV'
+ValvePosition2: Close 'HO_CTL_VLV'
+ValvePosition2: Set 'CW_CTL_VLV' to ROUT
+ValvePosition2: Open 'CW_CTL_VLV' to init_cw_vlv_position
+ValvePosition2: Set 'TO_CTL_VLV' to RCAS
+ValvePosition2: Open 'TO_CTL_VLV' to init_to_vlv_position
+ValvePosition2: Set 'TOT_CTL_VLV' to RCAS
+ValvePosition2: Open 'TOT_CTL_VLV' to temperature_sp
+ValvePosition2: 'VLV_CTL_EM/A_COMMAND' = JACKET_COOL
+
+ValvePosition2 --> [*]
+}
+
+state AUTOMATIC{
+
+[*] --> Check_Temp_SP
+
+Check_Temp_SP --> Heat: 'STM_CTL_VLV' < temperature_sp
+
+Check_Temp_SP --> Cool: 'STM_CTL_VLV' > temperature_sp
+
+state Heat {
+
+Check_Last_CMD3 --> Blowdown3: 'A_LAST_CMD' != TEMP_COOL
+Check_Last_CMD3 --> ValvePosition3: 'A_LAST_CMD' == TEMP_COOL
+
+Blowdown3: 'VLV_CTL_EM/A_COMMAND' = JACKET_BLOWDOWN
+
+Blowdown3 --> ValvePosition3: Wait time for 300s
+
+ValvePosition3: Close 'CW_CTL_VLV'
+ValvePosition3: Close 'TO_CTL_VLV'
+ValvePosition3: Set 'HO_CTL_VLV' to ROUT
+ValvePosition3: Open 'HO_CTL_VLV' to init_ho_vlv_position
+ValvePosition3: Set 'STM_CTL_VLV' to ROUT
+ValvePosition3: Open 'STM_CTL_VLV' to init_stm_vlv_position
+ValvePosition3: 'VLV_CTL_EM/A_COMMAND' = JACKET_HEAT
+
+}
+
+state Cool {
+
+Check_Last_CMD4 --> Blowdown4: 'A_LAST_CMD' != TEMP_HEAT
+Blowdown4: 'VLV_CTL_EM/A_COMMAND' = JACKET_BLOWDOWN
+
+Check_Last_CMD4 --> ValvePosition4: 'A_LAST_CMD' == TEMP_HEAT
+
+Blowdown4 --> ValvePosition4: wait time for 30s
+
+ValvePosition4: Close 'STM_CTL_VLV'
+ValvePosition4: Close 'HO_CTL_VLV'
+ValvePosition4: Set 'CW_CTL_VLV' to ROUT
+ValvePosition4: Open 'CW_CTL_VLV' to init_cw_vlv_position
+ValvePosition4: Set 'TO_CTL_VLV' to RCAS
+ValvePosition4: Open 'TO_CTL_VLV' to init_to_vlv_position
+ValvePosition4: Set 'TOT_CTL_VLV' to RCAS
+ValvePosition4: Open 'TOT_CTL_VLV' to temperature_sp
+ValvePosition4: 'VLV_CTL_EM/A_COMMAND' = JACKET_COOL
+
+
+}
+
+
+Heat --> Check_Temp_SP: 'STM_CTL_VLV' > temperature_sp + temperature_deadband
+Cool --> Check_Temp_SP: 'STM_CTL_VLV' < temperature_sp + temperature_deadband
+
+}
+
+@enduml
