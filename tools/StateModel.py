@@ -7,7 +7,7 @@ Model will be used as an output from plantUML lexer/parser combination.
 Model will also be used an input for test generation.
 '''
 
-from networkx import DiGraph
+from networkx import DiGraph, topological_sort_recursive
 
 from Utilities.Logger import LogTools
 dlog = LogTools('StateModel.log', 'StateModel')
@@ -33,6 +33,44 @@ class StateDiagram(DiGraph):
 
         # Initialize parent class
         DiGraph.__init__(self, *args, **kwargs)
+
+    def __deepcopy__(self, memo):
+        '''
+        Creates a complete copy of the state diagram instance and all underlying states/transitions.
+        Attributes are copied by reference. Transition branching flag is preserved from parent transition.
+        :param memo:
+        :return:
+        '''
+        diagram_copy = StateDiagram(id=self.id)
+        for state in self.nodes():
+            diagram_copy.add_state(state.name, parent_state=state.parent, attrs=state.attrs)
+
+        for source, dest, trans_dict in self.edges(data=True):  # dictionary of source, destination, {'trans':<transition instace>}
+            source_name = source.name; dest_name = dest.name;
+            print trans_dict
+            if 'trans' in trans_dict:
+                transition = trans_dict['trans']
+                attribute_list = transition.attrs  # retrieve transition instance from edge dictionary
+                is_branch = transition.is_branch
+            else:
+                attribute_list = []
+                is_branch = None
+
+            # add transition, if it exists, in the copied state
+            if source_name in diagram_copy.state_names and dest_name in diagram_copy.state_names:
+                t = diagram_copy.add_transition(source_name, dest_name, attributes=attribute_list)
+                t.set_branch(is_branch)
+            else:
+                pass
+
+        return diagram_copy
+
+    def copy(self):
+        '''"
+        Public" method reference to self.__deepcopy__ - intended to make copy of diagram states/transitions but
+        retain attribute instance references
+        '''
+        return self.__deepcopy__({})
 
     def get_state(self, state_id, supress_error=False):
         if isinstance(state_id, State):
@@ -66,6 +104,14 @@ class StateDiagram(DiGraph):
             dest = self.get_state(dest)
             trans_list = [x for x in trans_list if dest in x.dest]
         return trans_list
+
+    def get_transition(self, source, dest):
+        '''returns a single transition bound to the edge between source and destination'''
+        edge_dict = self.get_edge_data(source,dest)
+        try:
+            return edge_dict['trans']
+        except NameError:
+            return None
 
     def print_edges(self):
         '''prints edges with friendly names'''
@@ -105,9 +151,12 @@ class StateDiagram(DiGraph):
         if attrs:
             new_state.add_attribute(attrs)
 
+        return new_state
+
     def add_state_attr(self, state_id, attribute):
         state = self.get_state(state_id)
         state.add_attribute(attribute)
+        return attribute
 
     def add_transition(self, source, dest, parent_state=None, attributes=None):
         if parent_state:
@@ -151,6 +200,8 @@ class StateDiagram(DiGraph):
         source.add_destination(dest)
         dest.add_source(source)
 
+        return new_transition
+
     def get_start_states(self, global_scope=False):
         start_states = list()
         for state in self.nodes():
@@ -168,7 +219,7 @@ class StateDiagram(DiGraph):
     def flatten_graph(self):
         '''
         Flattens recursive structure of State.substates to a single graph by eliminating all superstates
-        :return: directed graph of flattened structure
+        :return: Copy of the directed graph with a flattened structure
         '''
         flat_graph = self.subgraph(self.nodes())  # retains only nodes and edges in top-level graph - not a copy!!
         for state in flat_graph.nodes():
@@ -176,14 +227,20 @@ class StateDiagram(DiGraph):
             if state.num_substates > 0:
                 # recursively flatten subgraphs
                 subgraph = state.substates.flatten_graph()
-                # add resulting subgraph to newly flattened graph
-                flat_graph.add_edges_from(subgraph.edges())
+                # add resulting subgraph to newly flattened graph, transitions will follow with subgraph edges
+                for edge in subgraph.edges_iter(data=True):
+                    flat_graph.add_edge(edge[0], edge[1], attr_dict=edge[2])
                 # connect starting edges to superstate.source, ending edges to superstate.destination
                 for sub_state in subgraph.nodes():
+                    # make transition edges from subgrab start/end states to parent state
                     if sub_state.is_start_state():
-                        [flat_graph.add_edge(src, sub_state) for src in state.source]
+                        [flat_graph.add_edge(src, sub_state,
+                                             attr_dict={'trans':self.get_transition(src, state)})
+                         for src in state.source]
                     if sub_state.is_end_state():
-                        [flat_graph.add_edge(sub_state, dest) for dest in state.destination]
+                        [flat_graph.add_edge(sub_state, dest,
+                                             attr_dict={'trans':self.get_transition(state, dest)})
+                         for dest in state.destination]
                 # remove superstate
                 flat_graph.remove_node(state)
         return flat_graph
@@ -197,15 +254,51 @@ class StateDiagram(DiGraph):
             labeled_graph.add_edge(source.name, destination.name)
         return labeled_graph
 
+    def get_state_topology(self, reverse=False):
+        '''
+        Returns a list of states in topological order.
+        :param reverse: flag to return results in reverse order (last executed state in first in list)
+        '''
+        return topological_sort_recursive(self, reverse=reverse)
+
+    def set_branch_flags(self):
+        '''
+        Sets transition branching flag based on diagram topology.
+        :return:
+        '''
+        transitions = [d['trans'] for u,v,d in self.edges(data=True) if ('trans' in d) and d['trans']]
+        for trans in transitions:
+            for s in trans.source:
+                if len(s.destination) > 1:
+                    trans.set_branch(True)
+                else:
+                    trans.set_branch(False)
+
+    def get_state_attributes(self):
+        '''
+        Provides a list of state
+        :return:
+        '''
+        attr_dict = dict()
+        for state in self.state_names.values():
+            attr_dict[state.name] = state.attrs
+
+        return attr_dict
+
+    def get_transition_attributes(self):
+        '''
+        :return: list of transition attributes
+        '''
+        attr_list = list()
+        [attr_list.append(transition.attrs) for transition in self.get_transitions()]
+        return attr_list
+
     def collect_attributes(self):
         '''
         Provides a dictionary of state_id: attribute list
         :return: dictionary
         '''
-        attr_dict = dict()
-        for state in self.state_names.values():
-            attr_dict[state.name] = state.attrs
-        return attr_dict
+        return self.get_state_attributes().values() + self.get_transition_attributes()
 
 
 class State(object):
@@ -219,7 +312,7 @@ class State(object):
 
         self.name = name
         self.attrs = list()
-        self.attributes = self.attrs  # overload
+        self.attributes = self.attrs  # overload reference
         self.substates = StateDiagram()
         self.num_substates = 0
         self.source = list()
@@ -232,7 +325,10 @@ class State(object):
             raise TypeError
 
     def add_attribute(self, attribute):
-        self.attrs.append(attribute)
+        if type(attribute) is list:
+            self.attrs.extend(attribute)
+        else:
+            self.attrs.append(attribute)
 
     def add_substate(self, substate):
         if not isinstance(substate, State):
@@ -283,13 +379,13 @@ class State(object):
     def add_source(self, source):
         if not isinstance(source, State):
            raise TypeError
-        else:
+        elif source not in self.source:
             self.source.append(source)
 
     def add_destination(self, destination):
         if not isinstance(destination, State):
            raise TypeError
-        else:
+        elif destination not in self.destination:
             self.destination.append(destination)
 
     def print_attributes(self):
@@ -299,14 +395,14 @@ class State(object):
 
 
 class Transition(object):
-    def __init__(self, source, dest, attrs=None):
+    def __init__(self, source, dest, is_branch=None, attrs=None):
         '''
         Constructor
         :return: new Transition with source and destination
         '''
         self.attrs = list()  #List of transition attributes
         self.attributes = self.attrs  # overload
-        self.source = list() # list of states
+        self.source = list()  # list of states (fixme: should really be a set!!)
         self.dest = list() # list of states with transitions originating in this state
 
         # extend lists of sources, destinations and attributes
@@ -315,21 +411,34 @@ class Transition(object):
         if attrs:
             [self.add_attribute(attr) for attr in attrs]
 
+        self.is_branch = is_branch
+
+    def set_branch(self, branch_val):
+        '''Sets a flag for this transition to be a part of branching states'''
+        self.is_branch = branch_val
+
     def add_attribute(self, attribute):
+        '''Adds attribute to this transition'''
         try:
             self.attrs.extend(attribute)
         except:  # attribute is not iterable, expecting a list
             self.attrs.append(attribute)
 
     def add_source(self, TranSource):
+        '''Adds source state to transition'''
         if not isinstance(TranSource, State):
             raise TypeError
+        elif TranSource in self.source:
+            print "Source", TranSource, "already in source list"
         else:
             self.source.append(TranSource)
 
     def add_destination(self, TranDest):
+        '''Adds destination state to transition'''
         if not isinstance(TranDest, State):
             raise TypeError
+        elif TranDest in self.dest:
+            print "Destination", TranDest, "alread in destination list"
         else:
             self.dest.append(TranDest)
 

@@ -47,7 +47,8 @@ class GraphSolver(object):
             subgraph = self.graph.subgraph(list(path))
             subgraph.remove_edges_from(self.graph.edges())
             # add back only path_edges to cleared subgraph
-            subgraph.add_edges_from(self.edges_in_path(path))
+            for u,v in self.edges_in_path(path):
+                subgraph.add_edge(u, v, attr_dict=self.graph.get_edge_data(u,v))
             subgraphs.append(subgraph)
         return subgraphs
 

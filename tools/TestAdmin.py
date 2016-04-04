@@ -202,6 +202,6 @@ if __name__ == "__main__":
     print "Parsed", len(diagram.get_transitions()), "transitions"
 
     print "Attributes generated:"
-    pp(diagram.collect_attributes())
+    pp(diagram.get_state_attributes())
 
     Test(test_case=diagram, diagram=diagram, connection=connection).start()

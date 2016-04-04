@@ -7,6 +7,7 @@ Should fully define abstracted Attribute class interface
 '''
 
 import time
+import copy
 
 from tools.Utilities.Logger import LogTools
 dlog = LogTools('AttributeTypes.log', 'AttributeBase')
@@ -61,8 +62,8 @@ class AttributeBase(object):
 
 
         self._test_types = {  # test types available to this AttributeType class
-                            'check_value': self.check_value,
-                            'force_value': self.force
+                            'check_value': 'check_value',
+                            'force_value': 'force'
         }
 
         self._execute = None  # private execute method called by self.execute administative wrapper
@@ -92,6 +93,36 @@ class AttributeBase(object):
         '''Logical AND of attributes - conjunction of attribute.complete parameters.
             Note "True and None" returns None'''
         return self._complete and other._complete
+
+    def copy(self, copy_all=False):
+        '''Creates a copy of the attribute. Underlying attribute are copied with the copy_all flag'''
+        # dereference 'uncopyable' items, create deep copy, then rebind
+
+        # internally bound methods/exeternal objects
+        logger = self.logger; self.logger = None
+        _execute = self._execute; self._execute = None
+
+        # attributes contained in this module
+        embedded_attrs = {k:v for k,v in self.__dict__.items() if isinstance(v, AttributeBase)}
+        new_embedded = dict()
+        for name, attr in embedded_attrs.items():
+            if copy_all:
+                new_embedded[name] = attr.copy()
+            else:
+                new_embedded[name] = attr
+            setattr(self, name, None)
+            embedded_attrs.pop(name)
+
+        attr_copy = copy.deepcopy(self)
+
+        for k,v in embedded_attrs.items():
+            setattr(self, k, v)
+            setattr(attr, k, new_embedded[k])
+
+        attr_copy.logger = logger; self.logger = logger
+        attr_copy._execute = _execute; self._execute = _execute
+
+        return attr_copy
 
     def _read(self, param='CV'):
         '''Stub for reading a value for this attribute
@@ -193,7 +224,7 @@ class AttributeBase(object):
         '''
         if not test_method:
             test_method = self._test_types[self._default_test]
-        self._execute = test_method
+        self._execute = getattr(self, test_method)
         self.logger.info('Execute method set to %r', self._execute)
 
     def save_value(self):

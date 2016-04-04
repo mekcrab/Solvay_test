@@ -204,13 +204,13 @@ def build_state_diagram(fpath, attribute_builder=None, preprocess=True):
 
     tkns = get_tokens_from_file(fpath, preprocess=preprocess)
     builder = StateModelBuilder(attribute_builder=attribute_builder)
-    diagram = builder.parse(tkns)
+    new_diagram = builder.parse(tkns)
 
     dlog.rootlog.info("New diagram parsed from ", fpath)
-    dlog.rootlog.info("Parsed " + str(len(diagram.state_names.values())) + "states")
-    dlog.rootlog.info("Parsed " + str(len(diagram.get_transitions())) + "transitions")
+    dlog.rootlog.info("Parsed " + str(len(new_diagram.state_names.values())) + "states")
+    dlog.rootlog.info("Parsed " + str(len(new_diagram.get_transitions())) + "transitions")
 
-    return diagram
+    return new_diagram
 
 
 if __name__ == "__main__":
@@ -233,5 +233,5 @@ if __name__ == "__main__":
     print "Parsed", len(diagram.get_transitions()), "transitions"
 
     print "Attributes generated:"
-    pp(diagram.collect_attributes())
+    pp(diagram.get_state_attributes())
     print "=================== Testing Complete ==================="

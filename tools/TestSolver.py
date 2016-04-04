@@ -5,11 +5,12 @@ and test definitions in the if/where/then format for
 solving test cases specified as a binary tree.
 '''
 
-from graph_utils import GraphSolver
-import StateModel
-import time, os
-
+import time
 import config
+import StateModel
+from graph_utils import GraphSolver
+from Attributes import AttributeTypes
+
 from Utilities.Logger import LogTools
 dlog = LogTools('TestSolver.log', 'TestSolver')
 dlog.rootlog.warning('Module initialized')
@@ -20,9 +21,7 @@ class TestCase(object):
     def __init__(self, *args, **kwargs):
 
         self.name = kwargs.pop('name', 'test_case')
-        self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # list of ordered states that make up the test case path
-        # repopulated diagram.state_names in the test_case
-        self.diagram.state_names = {s.name:s for s in self.diagram.nodes()}
+        self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # StateModel.StateDiagram of the test case path
 
         self.passed = None
         self.created = time.time()  # generation timestamp
@@ -37,6 +36,16 @@ class TestCase(object):
         else:
             return True
 
+    def set_passed(self):
+        '''Sets the test case as "passed"'''
+        self.update_timestamp()
+        self.passed = True
+
+    def set_failed(self):
+        '''Sets the test case as "failed"'''
+        self.update_timestamp()
+        self.passed = False
+
     def has_passed(self):
         if not self.is_pending():
             return self.passed
@@ -49,6 +58,64 @@ class TestCase(object):
         :return:
         '''
         self.timestamp = time.time()
+
+    def add_path_directives(self):
+        '''
+        Adds forced attributes to TestCase to ensure the test utilizes the intended path
+            for each CompareAttribute instance in the path's transitions.
+
+        Attributes to force are determined by inclusion in transition comparisons. The left hand side (lhs) of these
+            compares will be forced in the 2 states preceding the transition in question, back-calculated to
+            the attribute which writes to the value chain earliest in the TestCase path.
+
+        Forced attributes are added to a states specifically for this test case.
+
+        :return: List of forced attributes added
+        '''
+        def compare_attribute_list(attribute, other_list):
+            equal_paths = list()
+            if isinstance(attribute, AttributeTypes.Compare):
+                equal_paths += [compare_attribute_list(a, other_list) for a in [attribute.lhs, attribute.rhs]]
+            elif type(attribute) is list:
+                equal_paths += [compare_attribute_list(a, other_list) for a in attr]
+            else:
+                equal_paths = [a for a in other_list if a == attribute]
+            return equal_paths
+
+        force_attrs = dict()  # dictionary of {<state to force value>: <force attribute>}
+
+        # get topological list of states and transitions
+        state_order = self.diagram.get_state_topology(reverse=True)
+
+        # work through attr transition attributes in reverse order
+        # back calculate transition attribute, mapping any prior references
+        for source in state_order[1:]:  # no transition connected to last state
+            s, dest, edge_dict = self.diagram.edges(source, data=True)[0]
+            if s is not source:
+                raise ValueError
+            # check for updates written to forced attributes
+            for src_state, attr in force_attrs.items():
+                attr_update = compare_attribute_list(attr, source.attrs)  # attr can become a list
+                if attr_update:
+                    force_attrs.update({source:attr})
+                    force_attrs.pop(src_state)
+
+            if 'trans' in edge_dict:
+                transition = edge_dict['trans']
+                if transition.is_branch:
+                    force_attrs.update({source:[attr.copy() for attr in transition.attrs]})
+            else:
+                continue
+            # make a new attribute for the topological "top" of the reference map, setting the execute() method to "force"
+            # the value reference (as read from runtime system if required)
+
+        # set default test method to 'force', and add to transition prior to branching
+        for src_state, attrs in force_attrs.items():
+            [a.set_execute(test_method='force') for a in attrs]
+            src_state.add_attribute(attrs)
+
+        # return forced attribute dictionary
+        return force_attrs
 
 class TestCaseGenerator(object):
     '''
@@ -70,9 +137,9 @@ class TestCaseGenerator(object):
         Method to generate test cases for all linear paths through state diagram.
         :return:
         '''
-        path_list = list()  # list of paths through the diagram
-        # flatten state model diagram
+        # flatten state model diagram, set flags for branching transitions
         flat_graph = self.diagram.flatten_graph()
+        flat_graph.set_branch_flags()
         # generate linear state model for each path through graph from each possible starting state to each ending state
         self.solver.set_graph(flat_graph)
         test_number = 1
@@ -82,10 +149,11 @@ class TestCaseGenerator(object):
                 if self.solver.check_path(start_state, end_state):
                     # add a new test case for each subgraph in new_paths list
                     for path_diagram in self.solver.generate_path_graphs(start_state, end_state):
-                        print path_diagram.nodes()
                         case_name = start_state.name+'-'+end_state.name+'_'+str(test_number)
                         self.logger.debug('Adding test case %s', case_name)
-                        self.test_cases[case_name] = TestCase(name=case_name, diagram=path_diagram)
+                        test_case = TestCase(name=case_name, diagram=path_diagram.copy())
+                        test_case.add_path_directives()
+                        self.test_cases[case_name] = test_case
                         test_number += 1
         return self.test_cases
 
@@ -136,12 +204,11 @@ class TestCaseGenerator(object):
         '''Draws all test case paths to svg files by test case name'''
         for case in self.test_cases.values():
             self.solver.set_graph(case.diagram.get_labeled_graph())
-            self.solver.draw_graph(output=os.path.join(save_path,case.name))
+            self.solver.draw_graph(output=os.path.join(save_path, case.name))
 
 
 if __name__ == "__main__":
     import os
-    import config
     import ModelBuilder
     from Attributes import AttributeBuilder
 
@@ -169,4 +236,7 @@ if __name__ == "__main__":
 
     # generate drawing of flattened graph - will work on getting better syntax
     test_gen.draw_solved_graph()
+
+    t = test_gen.test_cases.values()[0]
+
     print "===============Testing Complete=================="

@@ -33,11 +33,12 @@ state CHARGE {
         OAR_ChargeTarget --> OAR_Verify: OAR response: VALUE
 
         OAR_Verify: OAR Message: "Charge"
+        OAR_Verify: Set CHG_SP to OAR response
         OAR_Verify --> Set_Charge_TGT: OAR response: YES
         OAR_Verify --> OAR_ChargeTarget: OAR response: NO
     }
 
-    Set_Charge_TGT: Set CHG_SP to FLOW_TOT
+    Set_Charge_TGT: Set FLOW_TOT to CHG_SP
     Set_Charge_TGT --> Check_TGT : FLOW_TOT = \n CHG_SP
 
     Check_TGT --> ChargeComplete: CHG_SP < \n LOW_CHG_SP
