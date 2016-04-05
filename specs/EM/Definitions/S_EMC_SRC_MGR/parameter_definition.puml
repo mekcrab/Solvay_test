@@ -1,0 +1,6 @@
+@startuml
+
+!define recirc_press_setpoint 50 psig
+!define recirc_vlv_position 35%
+
+@enduml

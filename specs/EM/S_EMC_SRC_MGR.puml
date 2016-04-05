@@ -1,0 +1,47 @@
+@startuml
+!include Definitions/S_EMC_SRC_MGR/parameter_definition.puml
+
+state AUTOMATIC{
+
+[*] --> Check_SRC_Valve
+
+Check_SRC_Valve --> Open_SRC_Valve: if 'SRC_VLV' closed
+
+Open_SRC_Valve: Open 'SRC_VLV'
+
+Check_SRC_Valve --> Check_PRESS_CTL: if 'SRC_VLV' opened
+Open_SRC_Valve --> Check_PRESS_CTL
+
+Check_PRESS_CTL --> Open_PRESS_CTL: 'RECIRC_PRESS_CTL/OUT' < 1%
+
+Open_PRESS_CTL: Set 'RECIRC_PRESS_CTL' to ROUT
+Open_PRESS_CTL: Open 'RECIRC_PRESS_CTL' to recirc_vlv_position
+
+Check_PRESS_CTL --> Check_Pump: 'RECIRC_PRESS_CTL/OUT' >= 1%
+Open_PRESS_CTL --> Check_Pump
+
+Check_Pump --> Start_Pump: if 'RECIRC_PMP' stopped
+Start_Pump: Open 'RECIRC_VLV'
+Start_Pump: Start 'RECIRC_PMP'
+
+Check_Pump --> Set_PRESS_CTL: if 'RECIRC_PMP' started
+Start_Pump --> Set_PRESS_CTL
+
+Set_PRESS_CTL: Set 'RECIRC_PRESS_CTL' in RCAS
+Set_PRESS_CTL: Open 'RECIRC_PRESS_CTL' to recirc_press_setpoint
+
+Set_PRESS_CTL --> Check_Other_Reactor
+
+Check_Other_Reactor --> [*]: if 'RX_A_VLV/OWNER_ID' != (None) or 'RX_B_VLV/OWNER_ID' != (None) \
+\n or 'RX_C_VLV/OWNER_ID' != (None) or 'RX_D_VLV/OWNER_ID' != (None)
+
+Check_Other_Reactor --> Stop_Pump: if 'RX_A_VLV/OWNER_ID' = (None) and 'RX_B_VLV/OWNER_ID' = (None) \
+\n and 'RX_C_VLV/OWNER_ID' = (None) and 'RX_D_VLV/OWNER_ID' = (None)
+
+Stop_Pump: Stop 'RECIRC_PMP'
+Stop_Pump: Close 'RECIRC_VLV'
+Stop_Pump: Close 'SRC_VLV'
+
+Stop_Pump --> [*]
+}
+@enduml
