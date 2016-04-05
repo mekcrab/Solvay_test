@@ -1,0 +1,25 @@
+@startuml
+title R4-JACKET-EM
+
+!define	STM_CTL	TIC-4181
+!define	CW_CTL	TIC-4169
+!define	HO_CTL	FIC-4162
+!define	TO_CTL	FIC-4164
+!define	TO_TEMP_CTL	TIC-1761
+!define	STM_SPLY_VLV	CV-4166
+!define	CND_RTN_VLV	CV-4167
+!define	CW_RTN_VLV	CV-4173
+!define	HO_RTN_VLV	CV-4163
+!define	TO_SPLY_VLV	CV-4164
+!define	TO_RTN_VLV	CV-4165
+!define	TO_FAN	HS-1762
+!define	TO_PUMP	HS-1763
+!define	BD_CT_VLV	CV-4174
+!define	AIR_BD_VLV	CV-4176
+!define	TJ_VLV	CV-4170
+!define	MJ_VLV	CV-4172
+!define	BJ_VLV	CV-4106
+!define	TC_VLV	CV-4171
+!define	BC_VLV	CV-4178
+
+@enduml

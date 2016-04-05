@@ -1,0 +1,12 @@
+@startuml
+
+title R4-TEMP-EM
+
+!define	STM_CTL_VLV	TIC-4181
+!define	CW_CTL_VLV	TIC-4169
+!define	HO_CTL_VLV	FIC-4162
+!define	TO_CTL_VLV	FIC-4164
+!define	TOT_CTL_VLV	TIC-1761
+!define VLV_CTL_EM  R4-JACKET-EM
+
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+title R1-JACKET-EM
+
+!define	STM_CTL	TIC-1628B
+!define	CW_CTL	TIC-1628A
+!define	STM_SPLY_VLV	CV-1628
+!define CW_SPLY_VLV  CV-1608
+!define	CND_RTN_VLV	CV-1612
+!define	CW_RTN_VLV	CV-1628A
+!define BD_DRN_LW_VLV   CV-1613
+!define	BD_DRN_UP_VLV	CV-1611
+!define	AIR_BD_VLV	CV-1616
+!define	TJ_VLV	CV-1607
+!define	MJ_VLV	CV-1609
+!define	BC_VLV	CV-1610
+
+@enduml

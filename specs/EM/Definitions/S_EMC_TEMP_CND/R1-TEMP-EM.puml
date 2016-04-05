@@ -1,0 +1,12 @@
+@startuml
+
+title R1-TEMP-EM
+
+!define	STM_CTL_VLV	TIC-1628B
+!define	CW_CTL_VLV	TIC-1628A
+!define	HO_CTL_VLV	ignore
+!define	TO_CTL_VLV	ignore
+!define	TOT_CTL_VLV	ignore
+!define VLV_CTL_EM  R1-JACKET-EM
+
+@enduml
