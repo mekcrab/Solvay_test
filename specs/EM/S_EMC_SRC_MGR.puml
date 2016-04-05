@@ -1,5 +1,6 @@
 @startuml
 !include Definitions/S_EMC_SRC_MGR/parameter_definition.puml
+!include Definitions/S_EMC_SRC_MGR/PT5-SRC-EM.puml
 
 state AUTOMATIC{
 
@@ -43,5 +44,50 @@ Stop_Pump: Close 'RECIRC_VLV'
 Stop_Pump: Close 'SRC_VLV'
 
 Stop_Pump --> [*]
+}
+
+state RUN{
+
+[*] --> Check_SRC_Valve2
+
+Check_SRC_Valve2 --> Open_SRC_Valve2: if 'SRC_VLV' closed
+
+Open_SRC_Valve2: Open 'SRC_VLV'
+
+Check_SRC_Valve2 --> Check_PRESS_CTL2: if 'SRC_VLV' opened
+Open_SRC_Valve2 --> Check_PRESS_CTL2
+
+Check_PRESS_CTL2 --> Open_PRESS_CTL2: 'RECIRC_PRESS_CTL/OUT' < 1%
+
+Open_PRESS_CTL2: Set 'RECIRC_PRESS_CTL' to ROUT
+Open_PRESS_CTL2: Open 'RECIRC_PRESS_CTL' to recirc_vlv_position
+
+Check_PRESS_CTL2 --> Check_Pump2: 'RECIRC_PRESS_CTL/OUT' >= 1%
+Open_PRESS_CTL2 --> Check_Pump2
+
+Check_Pump2 --> Start_Pump2: if 'RECIRC_PMP' stopped
+Start_Pump2: Open 'RECIRC_VLV'
+Start_Pump2: Start 'RECIRC_PMP'
+
+Check_Pump2 --> Set_PRESS_CTL2: if 'RECIRC_PMP' started
+Start_Pump2 --> Set_PRESS_CTL2
+
+Set_PRESS_CTL2: Set 'RECIRC_PRESS_CTL' in RCAS
+Set_PRESS_CTL2: Open 'RECIRC_PRESS_CTL' to recirc_press_setpoint
+
+Set_PRESS_CTL2 --> [*]
+
+}
+
+state STOP {
+
+[*] --> CloseAll
+CloseAll: Close 'SRC_VLV'
+CloseAll: Set 'RECIRC_PRESS_CTL' to ROUT
+CloseAll: Close 'RECIRC_PRESS_CTL' to 0
+CloseAll: Close 'RECIRC_VLV'
+CloseAll: Stop 'RECIRC_PMP'
+
+CloseAll --> [*]
 }
 @enduml

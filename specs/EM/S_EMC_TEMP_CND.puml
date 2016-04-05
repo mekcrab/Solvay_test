@@ -2,6 +2,8 @@ To include parameter definitions, copy this to the major script below:
 !include  Definitions/S_EMC_TEMP_CND/parameter_definition.puml
 
 @startuml
+!include  Definitions/S_EMC_TEMP_CND/parameter_definition.puml
+!include  Definitions/S_EMC_TEMP_CND/R1-TEMP-EM.puml
 
 state OFF {
 

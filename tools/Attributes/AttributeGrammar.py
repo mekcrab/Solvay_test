@@ -91,7 +91,7 @@ ilk_trip = keyword_list(['trip', 'tripped', 'interlock trip']).setParseAction(no
 ilk_reset = keyword_list(['reset', 'interlock reset']).setParseAction(normalize('reset'))
 
 # ===read keywords===
-read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify'])\
+read_keyword = keyword_list(['read', 'get', 'check', 'check that', 'check if', 'verify', 'if'])\
     .setParseAction(normalize('read'))
 wait_keyword = keyword_list(['wait', 'wait until', 'wait for', 'delay']).setParseAction(normalize('wait'))
 wait_time = (wait_keyword + NUMBER.setResultsName('value') + time_units.setResultsName('units')).setResultsName('wait_time')

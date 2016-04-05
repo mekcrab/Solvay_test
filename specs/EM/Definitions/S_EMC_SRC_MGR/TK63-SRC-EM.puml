@@ -1,0 +1,15 @@
+@startuml
+title TK63-SRC-EM
+
+!define	RECIRC_PMP	HS-1743
+!define	RECIRC_VLV	CV-1744
+!define	RX_A_VLV	ignore
+!define	RX_B_VLV	CV-1659
+!define	RX_C_VLV	CV-2142
+!define	RX_D_VLV	CV-1783
+!define	SRC_VLV	ignore
+!define	RECIRC_PRESS_CTL	ignore
+
+
+
+@enduml

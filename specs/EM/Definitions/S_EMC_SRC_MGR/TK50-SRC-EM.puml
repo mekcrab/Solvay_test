@@ -1,0 +1,15 @@
+@startuml
+title TK50-SRC-EM
+
+!define	RECIRC_PMP	HS-248
+!define	RECIRC_VLV	ignore
+!define	RX_A_VLV	CV-2137
+!define	RX_B_VLV	CV-2202
+!define	RX_C_VLV	CV-2432
+!define	RX_D_VLV	CV-4270
+!define	SRC_VLV	ignore
+!define	RECIRC_PRESS_CTL	PIC-4321
+
+
+
+@enduml

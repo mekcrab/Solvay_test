@@ -1,0 +1,15 @@
+@startuml
+title TK64-SRC-EM
+
+!define	RECIRC_PMP	HS-1712
+!define	RECIRC_VLV	CV-1709
+!define	RX_A_VLV	ignore
+!define	RX_B_VLV	ignore
+!define	RX_C_VLV	CV-2143
+!define	RX_D_VLV	CV-1784
+!define	SRC_VLV	ignore
+!define	RECIRC_PRESS_CTL	ignore
+
+
+
+@enduml

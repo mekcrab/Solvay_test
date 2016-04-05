@@ -1,4 +1,7 @@
 @startuml
+
+!include Definitions/S_EMC_TEMP_CND/R4-JACKET-EM.puml
+
 state HEAT_hot_oil {
 
 [*] --> SetMode1

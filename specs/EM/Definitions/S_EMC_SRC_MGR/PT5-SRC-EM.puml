@@ -1,0 +1,13 @@
+@startuml
+title PT5-SRC-EM
+
+!define	RECIRC_PMP	HS-1569
+!define	RECIRC_VLV	ignore
+!define	RX_A_VLV	ignore
+!define	RX_B_VLV	CV-2440
+!define	RX_C_VLV	CV-2121
+!define	RX_D_VLV	ignore
+!define	SRC_VLV	CV-1568
+!define	RECIRC_PRESS_CTL	ignore
+
+@enduml

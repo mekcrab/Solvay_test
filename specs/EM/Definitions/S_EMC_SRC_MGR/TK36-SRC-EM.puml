@@ -1,0 +1,14 @@
+@startuml
+title TK36-SRC-EM
+
+!define	RECIRC_PMP	HS-2287
+!define	RECIRC_VLV	ignore
+!define	RX_A_VLV	ignore
+!define	RX_B_VLV	CV-4685
+!define	RX_C_VLV	CV-2433
+!define	RX_D_VLV	CV-4268
+!define	SRC_VLV	CV-2165
+!define	RECIRC_PRESS_CTL	PIC-4308
+
+
+@enduml

@@ -1,5 +1,7 @@
 @startuml
 
+!include Definitions/S_EMC_TEMP_CND/R1-JACKET-EM.puml
+
 state HEAT {
 
 [*] --> SetMode1
