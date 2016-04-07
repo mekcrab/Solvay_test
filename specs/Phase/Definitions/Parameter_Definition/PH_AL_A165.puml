@@ -1,0 +1,7 @@
+@startuml
+
+!define std_batch_size  'UP001_VALUE'
+!define A165_charge_setpoint 'TK15_CHG_EM/OP001_VALUE'
+!define CHARGE_CHARGE   2
+
+@enduml

@@ -1,0 +1,15 @@
+@startuml
+
+!define std_batch_size  'UP001_VALUE'
+!define water_charge_setpoint 'WTR_CHG_EM/OP001_VALUE'
+!define vent_setpoint    'RX_PRESS_EM/OP005_VALUE'
+!define pad_setpoint    'RX_PRESS_EM/OP001_VALUE'
+!define agitator_speed  80%
+!define reactor_target_weight   15000 lb
+!define temperature_setpoint    'RX_JKT_CTRL_EM/OP001_VALUE'
+!define CHARGE_CHARGE   2
+!define VENT_ATM    2
+!define PRESS_AUTO  4
+!define TEMP_COOL   2
+
+@enduml

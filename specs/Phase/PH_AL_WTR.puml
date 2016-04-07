@@ -1,0 +1,55 @@
+@startuml
+!include Definitions/Parameter_Definition/PH_AL_WTR.puml
+!include Definitions/Aliases_Table/R9-BATCH.puml
+
+state RUN {
+
+[*] --> Initialize: 'P_TASK_PTR' = 0
+state Initialize{
+[*] --> Set_Charge_Target
+Set_Charge_Target: 'P_WTR_TGT' = round(std_batch_size * 'R_WTR_PCT' * 0.01)
+Set_Charge_Target: water_charge_setpoint = 'P_WTR_TGT'
+
+Set_Charge_Target --> AcquireAll
+AcquireAll: Acquire 'WTR_CHG_EM'
+AcquireAll: Acquire 'RX_PRESS_EM'
+AcquireAll: Acquire 'RX_JKT_CTRL_EM'
+
+}
+
+[*] --> Water_Charge: 'P_TASK_PTR' = 1
+Initialize --> Water_Charge
+Water_Charge: 'WTR_CHG_EM/A_TARGET' = CHARGE_CHARGE
+
+[*] --> Vent_Press: 'P_TASK_PTR' = 2
+Water_Charge --> Vent_Press
+Vent_Press: vent_setpoint = 'R_VENTSP'
+Vent_Press: Set 'RX_PRESS_EM/A_TARGET' to VENT_ATM
+
+[*] --> Press_Auto: 'P_TASK_PTR' = 3
+Vent_Press --> Press_Auto: wait for 'RX_PRESSURE' < 2 psig
+Press_Auto: pad_setpoint = 'R_PADSP'
+Press_Auto: Set 'RX_PRESS_EM/A_TARGET' to PRESS_AUTO
+
+[*] --> Agitate: 'P_TASK_PTR' = 4
+Press_Auto --> Agitate: Wait for 'RX_WEIGHT' > reactor_target_weight
+Agitate: Set 'RX_AGITATOR_CM/SPEED_RSP' to agitator_speed
+Agitate: Set 'RX_AGITATOR_CM' to CAS
+Agitate: Start 'RX_AGITATOR_CM'
+
+[*] --> Cool: 'P_TASK_PTR' = 5
+Agitate --> Cool
+Cool: temperature_setpoint = 'R_TEMP_SP'
+Cool: Set 'RX_JKT_CTEL_EM' to TEMP_COOL
+
+[*] --> Complete: 'P_TASK_PTR' = 6
+Cool --> Complete
+Complete: Release 'WTR_CHG_EM'
+Complete: Release 'RX_PRESS_EM'
+Complete: Release 'RX_JKT_CTRL_EM'
+
+Complete --> [*]
+
+
+}
+@enduml

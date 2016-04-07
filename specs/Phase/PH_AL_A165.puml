@@ -1,0 +1,29 @@
+@startuml
+
+!include Definitions/PH_AL_A165/parameter_definition.puml
+!include Definitions/Aliases_Table/R6-BATCH.puml
+
+state RUN {
+[*] --> Initialize
+Initialize: Acquire 'TK15_CHG_EM'
+Initialize: 'P_A165_TGT' = round(std_batch_size * 'R_A165_PCT' * 0.01)
+Initialize: A165_charge_setpoint = 'P_WTR_TGT'
+
+Initialize --> Charge_TK15
+state Charge_TK15 {
+Check_Weight --> Start_Charge: 'RX_WEIGHT' >= cond_target
+
+Check_Weight --> OAR_Charge: 'RX_WEIGHT' < cond_target
+OAR_Charge: OAR response: Set 'WTR_CHG_EM/A_TARGET' to CHARGE_CHARGE
+
+Start_Charge: 'WTR_CHG_EM/A_TARGET' = CHARGE_CHARGE
+
+}
+
+Charge_TK15 --> Complete
+Complete: Release 'TK15_CHG_EM'
+
+Complete --> [*]
+}
+
+@enduml

@@ -1,0 +1,76 @@
+@startuml
+!include Definitions/Parameter_Definition/PH_AL_INIT.puml
+!include Definitions/Aliases_Table/R10-BATCH.puml
+
+state RUN {
+
+
+[*] --> Initialize: 'P_TASK_PTR' = 0
+
+state Initialize{
+[*] --> AcquireAll
+AcquireAll: Acquire 'RX_PRESS_EM'
+AcquireAll: Acquire 'WTR_CHG_EM'
+AcquireAll: Acquire 'RX_JKT_CTRL_EM'
+AcquireAll: Acquire 'TK15_CHG_EM'
+AcquireAll: Acquire 'TK36_CHG_EM'
+AcquireAll: Acquire 'TK50_CHG_EM'
+AcquireAll: Acquire 'UV_CHG_EM'
+AcquireAll: Acquire 'HCL_CHG_EM'
+
+AcquireAll --> CloseAll
+CloseAll: Set 'RX_PRESS_EM/A_TARGET' to PRESSURE_OFF
+CloseAll: Set 'WTR_CHG_EM/A_TARGET' to CHARGE_OFF
+CloseAll: Set 'RX_JKT_CTL_EM/A_TARGET' to TEMP_OFF
+CloseAll: Set 'TK15_CHG_EM/A_TARGET' to CHARGE_OFF
+CloseAll: Set 'TK36_CHG_EM/A_TARGET' to CHARGE_OFF
+CloseAll: Set 'TK50_CHG_EM/A_TARGET' to CHARGE_OFF
+CloseAll: Set 'UV_CHG_EM/A_TARGET' to CHARGE_OFF
+CloseAll: Set 'HCL_CHG_EM/A_TARGET' to CHARGE_OFF
+
+CloseAll --> TARE
+TARE: Set 'RX_TARE1/RESET_TOT' to True
+TARE: Set 'RX_TARE2/RESET_TOT' to True
+TARE: Set 'WTR_CHG_TOT' to 0
+TARE: Set 'TH15_CHG_TOT' to 0
+TARE: Set 'TK36_CHG_TOT' to 0
+TARE: Set 'TK50_CHG_TOT' to 0
+TARE: Set 'UV_CHG_TOT' to 0
+TARE: Set 'HCL_CHG_TOT' to 0
+
+}
+
+[*] --> Deaerate: 'P_TASK_PTR' = 1
+Initialize --> Deaerate
+state Deaerate{
+
+[*] --> Message_Clean
+Message_Clean: OAR message: "Reactor must be clean"
+Message_Clean --> PromptYN
+PromptYN: OAR message: "Deaerate?"
+PromptYN --> Deaerate_Complete: OAR response = no
+PromptYN --> Start_Deaerate: OAR response = yes
+Start_Deaerate: Set 'RX_PRESS_EM/A_TARGET' to PRESSURE_DEAERATE
+Start_Deaerate --> Deaerate_Complete: 'RX_PRESS_EM/A_COMMAND' = PRESSURE_DEAERATE
+}
+
+[*] --> PromptOK: 'P_TASK_PTR' = 2
+Deaerate --> PromptOK
+PromptOK: OAR message: "Ready to start charging raw materials?"
+
+[*] --> Complete: 'P_TASK_PTR' = 3
+PromptOK --> Complete: OAR response = ok
+Complete: Release 'RX_PRESS_EM'
+Complete: Release 'WTR_CHG_EM'
+Complete: Release 'RX_JKT_CTRL_EM'
+Complete: Release 'TK15_CHG_EM'
+Complete: Release 'TK36_CHG_EM'
+Complete: Release 'TK50_CHG_EM'
+Complete: Release 'UV_CHG_EM'
+Complete: Release 'HCL_CHG_EM'
+
+Complete --> [*]
+}
+
+
+@enduml
