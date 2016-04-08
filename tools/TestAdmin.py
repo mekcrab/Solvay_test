@@ -70,7 +70,8 @@ class TestAdmin(object):
             #   (a) check if all attributes have passed,
             # print "complete_count:", complete_count, "num_attr:", num_attributes
             if self.last_state_complete_cnt != complete_count:
-                print "complete_count:", complete_count, "num_attr:", num_attributes
+                self.logger.info("Checking state %s: %d of %d attributes complete",
+                                 state.name, complete_count, num_attributes)
                 self.last_state_complete_cnt = complete_count
 
             if complete_count == num_attributes:

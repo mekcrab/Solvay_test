@@ -41,7 +41,7 @@ from sys import stdout
 class LogTools(object):
     def __init__(self, log_filename='test.log', module="ModuleName",
                         level=config.log_level,
-                        maxSize=500000, maxCount=5,
+                        maxSize=1000000, maxCount=5,
                         streamLevel=config.log_level):
         '''Initialize Root Logger Instance'''
         self.fileformat = logging.Formatter('%(asctime)s ::%(levelname)8s:: %(name)15s:: %(message)s')

@@ -783,11 +783,16 @@ class Compare(AttributeBase):
 
     def force(self):
         '''Attempts to force self.lhs to self.rhs +/- deadband depending on operator type'''
-        if '>' in self.op:  # set rhs = lhs - deadband
-            return self.rhs.write(self.lhs.read() - self.deadband)
-        elif '<' in self.op:  # set rhs = lhs + deadband
-            return self.rhs.write(self.lhs.read() + self.deadband)
-        else:  # set rhs = lhs
-            return self.rhs.write(self.lhs.read())
+        if self.check_value():
+            if '>' in self.op:  # set rhs = lhs - deadband
+                self.rhs.write(self.lhs.read() - self.deadband)
+            elif '<' in self.op:  # set rhs = lhs + deadband
+                return self.rhs.write(self.lhs.read() + self.deadband)
+            else:  # set rhs = lhs
+                return self.rhs.write(self.lhs.read())
+            return self.set_complete(False)
+        else:
+            return self.set_complete(True)
+
 
 

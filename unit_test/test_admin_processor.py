@@ -71,9 +71,12 @@ class RunEM():
             command_name = solved_path.split(' ')[1].split('-')[0]
             command = self.command_dict[command_name]
 
-            # Start EM Command
-            connection.write(command_path, command)
+            verify_path = '/'.join([str(diagram.id).strip("'"), 'A_TARGET.CV'])
 
+            # Start EM command, verify started
+            while connection.read(verify_path)[0] != command:
+                connection.write(command_path, command)
+                time.sleep(0.5)
 
             new_test = Test(test_case=test_case, diagram=diagram, connection=connection)
             test_list.append(new_test)
