@@ -13,7 +13,7 @@ def remove_duplicates(values):
     return list(cleanup)
 
 
-class TestAdmin():
+class TestAdmin(object):
     def __init__(self, test_case, diagram, connection, poll_interval=0.5, timeout=600):
         self.diagram = diagram
         self.test_case = test_case
@@ -162,7 +162,7 @@ class Test(TestAdmin):
     def start(self):
         in_state = self.start_state
         print "+++++++++++++++++++++++++++++++ Test Start +++++++++++++++++=+++++++++="
-        while in_state and TestAdmin(self.test_case, self.diagram,  self.connection).recur(in_state):
+        while in_state and self.recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
             next_states = remove_duplicates(in_state.destination) # A List of Possible Destination
             if next_states: # not empty
@@ -172,7 +172,7 @@ class Test(TestAdmin):
                 while transition_pass != True:
                     for next_state in next_states:
                         print "next_state:", next_state.name
-                        transition_pass = TestAdmin(self.test_case, self.diagram, self.connection).transit(source = in_state, destination = next_state)
+                        transition_pass = self.transit(source = in_state, destination = next_state)
                         in_state = next_state
             else:
                 print "==============================Test Complete========================="

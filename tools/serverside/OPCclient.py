@@ -5,16 +5,16 @@ OPC access is via OPC gateway, with OPC gateway service run as DeltaVAdmin
 
 '''
 
+import time
+
 # aliased class names based on import sucess
 OPC_AVAILABLE = False
 try:
     import OpenOPC
-    import Pyro
+    import Pyro.core
     OPC_AVAILABLE = True
 except ImportError:
     print "No OpenOPC package found, revert to dummy client"
-
-import time
 
 
 class OPCconnect(object):
@@ -23,6 +23,7 @@ class OPCconnect(object):
     '''
     def __init__(self, srv_name='OPC.DeltaV.1'):
         self.client = self.connect_local(srv_name)
+        self.is_dummy = False
 
     def connect_local(self, svr_name, host='localhost'):
         opc_client = OpenOPC.open_client(host)
@@ -54,6 +55,8 @@ class OPCdummy(object):
 
         self.path_dict = dict()  # dictionary of paths for write loopback testing
 
+        self.is_dummy = True
+
     def connect_local(self, srv_name, host='dummy'):
         return 'Dummy client connection'
 
@@ -73,6 +76,7 @@ if OPC_AVAILABLE:
     OPC_Connect = OPCconnect
 else:
     OPC_Connect = OPCdummy
+
 
 # testing
 if __name__ == "__main__":

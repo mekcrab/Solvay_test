@@ -1,9 +1,9 @@
 __author__ = 'vpeng'
 
-import test_solver_processor
 import time
+import test_solver_processor
 from tools.TestAdmin import Test
-from tools.serverside.OPCclient import OPC_Connect
+import tools.serverside.OPCclient as OPCclient
 
 class RunEM():
 
@@ -47,30 +47,39 @@ class RunEM():
         return self.test_admin_processor(test_gen, diagram)
 
     def test_admin_processor(self, test_gen, diagram):
-
-        connection = OPC_Connect()
-        time.sleep(1)
+        '''
+        Processes multiple test cases for multiple diagrams.
+        Each test case is administered by the TestAdmin class
+        '''
 
         from tools import TestAdmin
+
+        connection = OPCclient.OPC_Connect(srv_name='OPC.DeltaV.1')
+        time.sleep(1)
 
         dlog = TestAdmin.dlog
         logger = dlog.MakeChild('TestAdmin')
         logger.debug("Start Testing Diagram::: %r", diagram.id)
 
+        test_list = list()
         for solved_path in test_gen.test_cases:
             test_case = test_gen.test_cases[solved_path].diagram
             logger.debug("Testing Solved Test Case: %r", solved_path)
 
             # Set EM Command path and target
-            command_path = '/'.join([str(diagram.id).strip("'"),'A_COMMAND.CV'])
+            command_path = '/'.join([str(diagram.id).strip("'"), 'A_COMMAND.CV'])
             command_name = solved_path.split(' ')[1].split('-')[0]
             command = self.command_dict[command_name]
 
             # Start EM Command
             connection.write(command_path, command)
 
-            Test(test_case=test_case, diagram=diagram, connection=connection).start()
 
+            new_test = Test(test_case=test_case, diagram=diagram, connection=connection)
+            test_list.append(new_test)
+            new_test.start()
+
+        return test_list
 
 if __name__ == "__main__":
     RunEM().S_EMC_PRESS_CND()
