@@ -1,0 +1,75 @@
+@startuml
+!include Definitions/Parameter_Definition/PH_AL_MAN.puml
+
+state RUN {
+[*] --> TaskPointer_0: 'P_TASK_PTR' = 0
+[*] --> TaskPointer_1: 'P_TASK_PTR' = 1
+[*] --> TaskPointer_2: 'P_TASK_PTR' = 2
+[*] --> TaskPointer_3: 'P_TASK_PTR' = 3
+[*] --> TaskPointer_4: 'P_TASK_PTR' = 4
+[*] --> TaskPointer_5: 'P_TASK_PTR' = 5
+[*] --> TaskPointer_6: 'P_TASK_PTR' = 6
+
+state TaskPointer_0 {
+[*] --> Initialize
+Initialize: Acquire 'RX_PRESS_EM'
+Initialize: Acquire 'RX_AGITATOR_CM'
+
+Initialize --> Wait_Temperature
+Wait_Temperature: Wait for 'RX_TEMPERATURE' < temperature_lo_sp
+}
+
+TaskPointer_0 --> TaskPointer_1
+state TaskPointer_1{
+[*] --> Vent_ATM
+Vent_ATM: Set 'RX_PRESS_EM' to VENT_ATM
+}
+
+TaskPointer_1 --> TaskPointer_2: Wait for 'RX_PRESSURE' < 0.1 psig
+state TaskPointer_2 {
+[*] --> Agitate1
+Agitate1: Set 'RX_AGITATOR_CM/SPEED_RSP' to agitator_speed_1
+Agitate1: Set 'RX_AGITATOR_CM' to CAS
+Agitate1: Start 'RX_AGITATOR_CM'
+}
+
+TaskPointer_2 --> TaskPointer_3
+state TaskPointer_3 {
+[*] --> OAR_Vent
+OAR_Vent: OAR message: "Verify Reactor Pressure has Vented. \nCharge Sodium Borohydride."
+
+OAR_Vent --> OAR_Charge: OAR response = ok
+OAR_Charge: OAR message: "Sodium Borohydride Charge is Completed."
+
+OAR_Charge --> Boro_Charged: OAR response = ok
+}
+
+TaskPointer_3 --> TaskPointer_4
+state TaskPointer_4 {
+[*] --> Agitate2
+Agitate2: Set 'RX_AGITATOR_CM/SPEED_RSP' to agitator_speed_2
+Agitate2: Set 'RX_AGITATOR_CM' to CAS
+Agitate2: Start 'RX_AGITATOR_CM'
+
+}
+
+TaskPointer_4 --> TaskPointer_5
+state TaskPointer_5 {
+[*] --> Press_AUTO
+Press_AUTO: Set 'RX_PRESS_EM' to PRESS_AUTO
+
+}
+
+TaskPointer_5 --> TaskPointer_6
+state TaskPointer_6 {
+[*] --> Complete
+Complete: Release 'RX_PRESS_EM'
+Complete: Release 'RX_AGITATOR_CM'
+
+}
+
+Complete --> [*]
+
+}
+
+@enduml
