@@ -13,7 +13,7 @@ title R4-PRES-EM
 !define	VAC_STM_VLV	CV-2295
 
 !define pressure_setpoint 'OP001_VALUE'
-!define nitrogen_valve  CV-2302
+!define nitrogen_valve  'CV-2302'
 !define control_valve_position 30%
 !define ramp_target 100 mmHg
 !define ramp_rate 0.16 %/second

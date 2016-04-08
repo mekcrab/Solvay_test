@@ -103,7 +103,7 @@ class AttributeBase(object):
         _execute = self._execute; self._execute = None
 
         # attributes contained in this module
-        embedded_attrs = {k:v for k,v in self.__dict__.items() if isinstance(v, AttributeBase)}
+        embedded_attrs = self.get_embedded_attrs()
         new_embedded = dict()
         for name, attr in embedded_attrs.items():
             if copy_all:
@@ -111,18 +111,22 @@ class AttributeBase(object):
             else:
                 new_embedded[name] = attr
             setattr(self, name, None)
-            embedded_attrs.pop(name)
+            # embedded_attrs.pop(name)
 
-        attr_copy = copy.deepcopy(self)
+        attr_copy = copy.deepcopy(self)  # creates a copy of all remaining bound data structures
 
         for k,v in embedded_attrs.items():
             setattr(self, k, v)
-            setattr(attr, k, new_embedded[k])
+            setattr(attr_copy, k, new_embedded[k])
 
         attr_copy.logger = logger; self.logger = logger
         attr_copy._execute = _execute; self._execute = _execute
 
         return attr_copy
+
+    def get_embedded_attrs(self):
+        '''Returns a dictionary of AttributeBase instances which are (python) attributes of this AttributeBase instace'''
+        return dict([(k,v) for k,v in self.__dict__.items() if isinstance(v, AttributeBase)])
 
     def _read(self, param='CV'):
         '''Stub for reading a value for this attribute
