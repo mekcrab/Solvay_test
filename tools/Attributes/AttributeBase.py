@@ -13,9 +13,12 @@ from tools.Utilities.Logger import LogTools
 dlog = LogTools('AttributeTypes.log', 'AttributeBase')
 dlog.rootlog.warning('AttributeBase initialized')
 
+
 class AttributeBase(object):
     '''Base class for various types of system . Contains hooks, method stubs and normalized instance
         attributes for derivative classes.'''
+
+    base_log = dlog
 
     def __init__(self, tag, **kwargs):
         '''
@@ -41,14 +44,16 @@ class AttributeBase(object):
 
         self.raw_string = kwargs.pop('raw_string', '')  # string from which this attribute was parsed
 
-        # inital log for instansiation - should be set to a test-specific execution log during test runs
+        # initial log for instantiation
+        #   should be set to a test-specific execution log during test case execution
+        #   with self.set_log
         self.logger = dlog.MakeChild(self.__repr__())
 
         # internal plumbing
         self._complete = None   # value of attribute evaluation - set in self.evaluate method.
                                 # Nonetype means not yet evaluated
 
-        self.active = False  # flag to indicate if the self.execute() method should be evaluated during a test
+        self._active = False  # flag to indicate if the self.execute() method should be evaluated during a test
 
         self.data = list()  # list of timeseries data for trending/checking historical data
         self.last_read = None  # most recent read value
@@ -60,7 +65,6 @@ class AttributeBase(object):
 
         self._default_test = kwargs.pop('default_test', 'check_value')  # function hook to set default testing behavior of execute
 
-
         self._test_types = {  # test types available to this AttributeType class
                             'check_value': 'check_value',
                             'force_value': 'force'
@@ -70,7 +74,7 @@ class AttributeBase(object):
 
         self.set_execute()  # sets self._execute to another bound instance method
 
-        self.logger.info('New instance created: %r', self)
+        self.logger.debug('New instance created: %r', self)
 
     def __str__(self):
         '''String method for base attribute - can be overridden in subclasses'''
@@ -124,6 +128,18 @@ class AttributeBase(object):
 
         return attr_copy
 
+    def set_log(self, log_tool, level = None):
+        '''Sets self.logger to be a child of the new_log,
+        embedded attributes become children of self.logger'''
+        if isinstance(log_tool, LogTools):
+            self.logger = log_tool.MakeChild(self.__repr__(), level)
+            # set child log of all embedded attributes
+            for k, v in self.get_embedded_attrs().items():
+                v.set_log(log_tool)
+            self.logger.debug('Logger set to %s', self.logger.name)
+        else:
+            raise TypeError
+
     def get_embedded_attrs(self):
         '''Returns a dictionary of AttributeBase instances which are (python) attributes of this AttributeBase instace'''
         return dict([(k,v) for k,v in self.__dict__.items() if isinstance(v, AttributeBase)])
@@ -153,16 +169,28 @@ class AttributeBase(object):
         '''
         self.taget_value = target_value
 
+    def get_complete(self):
+        '''Returns boolean value if the execution of this attribute is complete'''
+        return self._complete
+
     def set_complete(self, complete=False):
         '''Sets the self.complete parameter to be True or False depending on results of self.evaluate'''
         self._complete = complete
         return self._complete
 
     def activate(self):
+        '''Sets self._activate flag True, indicating this attribute should actively be calling self.execute()
+         during test execution'''
         self._active = True
 
     def deactivate(self):
+        '''Sets self._activate flag False, indicating this attribute should no longer calling self.execute()
+        during test execution'''
         self._active = False
+
+    def is_active(self):
+        '''Method to check if this attribute is currently active'''
+        return self._active
 
     def OPC_path(self):
         '''
@@ -208,17 +236,17 @@ class AttributeBase(object):
         the demands of the system under test
         '''
         self.exe_cnt += 1
-
+        self.logger.debug("Execute call, count = %d", self.exe_cnt)
         # start timer on first call to self.execute or when self._complete is false
         if not self.exe_start and self._complete:
             self.start_timer()
 
-        exe = self._execute()  # should return boolean value of sucessful/unsucessful execution
+        exe = self._execute()  # should return boolean value of successfulunsuccessfull execution
 
         if self._complete and not exe:  # set total execution time in seconds on PDET
-            self.exe_time += self.get_timer(); self.stop_timer();
-            self.logger.info('Execution completed in %.2f', self.exe_time)
-
+            self.exe_time += self.get_timer();
+            self.stop_timer()
+            self.logger.info('Execute set complete after %.2f seconds', self.exe_time)
         return exe
 
     def set_execute(self, test_method=None):
@@ -248,16 +276,16 @@ class AttributeDummy(AttributeBase):
         '''Constructor'''
         self.id = id
         AttributeBase.__init__(self, 'dummy', **kwargs)
-        print self.tag
 
     def read(self):
-        print 'Dummy read ', self.id
+        self.logger.debug('Dummy read ', self.id)
         return self.id
 
     def write(self, val=0):
-        print 'Dummy write', self.id, 'as ', val
+        self.logger.debug('Dummy write', self.id, 'as ', val)
 
     def execute(self):
+        self.logger.debug('Dummy execute', self.id)
         if not self._complete:
             self.deactivate()
             return self.set_complete(True)
@@ -265,4 +293,5 @@ class AttributeDummy(AttributeBase):
             return self.set_complete(True)
 
     def force(self):
-        print 'Dummy force'
+        self.logger.debug('Dummy force')
+        self.set_complete(True)

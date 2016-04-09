@@ -2,13 +2,11 @@ __author__ = 'vpeng'
 
 import time
 import test_solver_processor
-from tools.TestAdmin import Test
 import tools.serverside.OPCclient as OPCclient
+from tools import TestAdmin
+
 
 class RunEM():
-
-    def __init__(self):
-        pass
 
     def S_EMC_PRESS_CND(self):
         self.command_dict = {
@@ -52,37 +50,50 @@ class RunEM():
         Each test case is administered by the TestAdmin class
         '''
 
-        from tools import TestAdmin
+        opc_connection = OPCclient.OPC_Connect(srv_name='OPC.DeltaV.1')
 
-        connection = OPCclient.OPC_Connect(srv_name='OPC.DeltaV.1')
         time.sleep(1)
 
-        dlog = TestAdmin.dlog
-        logger = dlog.MakeChild('TestAdmin')
-        logger.debug("Start Testing Diagram::: %r", diagram.id)
+        logger = TestAdmin.dlog.MakeChild('TestAdmin')
+        logger.debug("Starting Tests for Diagram::: %r", diagram.id)
 
         test_list = list()
+
+        # Process a single test instance per path in test_gen.test_cases
         for solved_path in test_gen.test_cases:
-            test_case = test_gen.test_cases[solved_path].diagram
-            logger.debug("Testing Solved Test Case: %r", solved_path)
+            test_case = test_gen.test_cases[solved_path]
+
+            logger.debug("Preparing to execute test case: %r", solved_path)
+
+            # create new test instance
+            new_test = TestAdmin.Test(test_case=test_case,
+                                      connection=opc_connection,
+                                      log_level='info',
+                                      test_id=diagram.id  # test_id also is name of log item
+                                      )
 
             # Set EM Command path and target
             command_path = '/'.join([str(diagram.id).strip("'"), 'A_COMMAND.CV'])
             command_name = solved_path.split(' ')[1].split('-')[0]
             command = self.command_dict[command_name]
+            # verification path == command path for dummy OPC client
+            if opc_connection.is_dummy:
+                verify_path = command_path
+            else:
+                verify_path = '/'.join([str(diagram.id).strip("'"), 'A_TARGET.CV'])
 
-            verify_path = '/'.join([str(diagram.id).strip("'"), 'A_TARGET.CV'])
-
-            # Start EM command, verify started
-            while connection.read(verify_path)[0] != command:
-                connection.write(command_path, command)
+            # Start EM command, verify command has started
+            while opc_connection.read(verify_path)[0] != command:
+                opc_connection.write(command_path, command)
                 time.sleep(0.5)
 
-            new_test = Test(test_case=test_case, diagram=diagram, connection=connection)
             test_list.append(new_test)
+            # start Test thread, allow to run to completion
             new_test.start()
+            new_test.join()
 
         return test_list
 
 if __name__ == "__main__":
+    # example test
     RunEM().S_EMC_PRESS_CND()

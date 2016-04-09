@@ -10,6 +10,7 @@ import config
 import StateModel
 from graph_utils import GraphSolver
 from Attributes import AttributeTypes
+from StateModel import StateDiagram
 
 from Utilities.Logger import LogTools
 dlog = LogTools('TestSolver.log', 'TestSolver')
@@ -18,20 +19,32 @@ dlog.rootlog.warning('Module initialized')
 
 class TestCase(object):
     '''Single path through a specified state model which can be verified as Pass/Fail'''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, case_number, *args, **kwargs):
 
-        self.name = kwargs.pop('name', 'test_case')
-        self.diagram = kwargs.pop('diagram', StateModel.StateDiagram())  # StateModel.StateDiagram of the test case path
+        self.case_no = case_number  # unique integer to server as baseline identifier for this test case
+
+        self.name = kwargs.pop('name', '')  # string identifier of this test case
+
+        # assign specification diagram, can start with blank state diagram if nothing specified
+        # StateModel.StateDiagram of the test case path (should be unbranched DAG)
+        diagram = kwargs.pop('diagram', StateModel.StateDiagram())
+        if isinstance(diagram, StateDiagram):
+            self.diagram = diagram
+        else:
+            raise TypeError
 
         self.passed = None
         self.created = time.time()  # generation timestamp
         self.timestamp = time.time()  # testing activity timestamp
 
+    def __repr__(self):
+        return "TestCase no."+str(self.case_no)+" "+self.name
+
     def get_name(self):
         return self.name
 
     def is_pending(self):
-        if type(self.passed) is not type(None):
+        if self.passed is not None:
             return False
         else:
             return True
@@ -117,6 +130,7 @@ class TestCase(object):
         # return forced attribute dictionary
         return force_attrs
 
+
 class TestCaseGenerator(object):
     '''
     Generates a series of TestCase instances from a given StateDiagram instance
@@ -135,7 +149,7 @@ class TestCaseGenerator(object):
     def generate_test_cases(self):
         '''
         Method to generate test cases for all linear paths through state diagram.
-        :return:
+        :return: dictionary {<test case name> : <test case instance>}
         '''
         # flatten state model diagram, set flags for branching transitions
         flat_graph = self.diagram.flatten_graph()
@@ -151,7 +165,7 @@ class TestCaseGenerator(object):
                     for path_diagram in self.solver.generate_path_graphs(start_state, end_state):
                         case_name = start_state.name+'-'+end_state.name+'_'+str(test_number)
                         self.logger.debug('Adding test case %s', case_name)
-                        test_case = TestCase(name=case_name, diagram=path_diagram.copy())
+                        test_case = TestCase(test_number, name=case_name, diagram=path_diagram.copy())
                         test_case.add_path_directives()
                         self.test_cases[case_name] = test_case
                         test_number += 1
@@ -229,14 +243,12 @@ if __name__ == "__main__":
     # verify paths manually (for now)
     print "Drawing possible diagram paths...",
     test_gen.draw_test_paths()
-    print "complete."
+    print "...complete."
 
     print "State diagram complexity: " + str(test_gen.calculate_complexity())
     print "Total test cases: ", len(test_gen.test_cases.keys())
 
     # generate drawing of flattened graph - will work on getting better syntax
     test_gen.draw_solved_graph()
-
-    t = test_gen.test_cases.values()[0]
 
     print "===============Testing Complete=================="

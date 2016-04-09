@@ -3,10 +3,6 @@
 from AttributeBase import AttributeBase, AttributeDummy
 import operator
 
-from tools.Utilities.Logger import LogTools
-dlog = LogTools('AttributeTypes.log', 'ExecutionAttributes')
-dlog.rootlog.warning('ExecutionAttributes initialized')
-
 
 class DiscreteAttribute(AttributeBase):
     '''
@@ -23,13 +19,13 @@ class DiscreteAttribute(AttributeBase):
     def read(self, param='CV'):
         val = self._read(param=param)[0]
         if val != self.last_read:
-            self.logger.info('Read: %s', val)
+            self.logger.debug('Read: %s', val)
         self.last_read = val
         return self.last_read
 
     def write(self, target_value, param='CV'):
         val = self._write(target_value, param=param)
-        self.logger.info('Write %s: %s', val, target_value)
+        self.logger.debug('Write %s: %s', val, target_value)
         return val
 
     def check_status(self):
@@ -77,6 +73,7 @@ class NamedDiscrete(DiscreteAttribute):
             self.target_value = target_value
         else:
             raise TypeError
+        self.logger.debug("Taget value set = %s", target_value)
 
     def get_name_value(self, name=None):
         if name:
@@ -246,7 +243,7 @@ class PositionAttribute(AttributeBase):
                 self.attr_path = self.read_path
         val = self._read(param=param)[0]
         if self.last_read != round(val):
-            self.logger.info('Read %s, target value: %s, actual value: %s', self.OPC_path(), self.target_value, val)
+            self.logger.debug('Read %s, target value: %s, actual value: %s', self.OPC_path(), self.target_value, val)
             self.last_read = round(val)
         else:
             pass
@@ -282,10 +279,13 @@ class PositionAttribute(AttributeBase):
 
     def force(self, target_value=None):
         '''Forces target mode and writes to appropriate SP'''
-        if not target_value:
+        self.logger.debug('Forcing position to (%s) in mode: %s', max(target_value, self.target_value), self.mode.target_mode)
+        if target_value is None:
             target_value = self.target_value
-        self.logger.debug('Forcing position to (%s) in mode: %s', target_value, self.mode.target_mode)
-        return self.write(target_value)
+            self.write(target_value)
+            return self.check_value()
+        else:
+            return self.write(target_value) == 'Success'
 
 
 class InterlockAttribute(AttributeBase):
@@ -640,6 +640,7 @@ class Calculate(AttributeBase):
         self.rhs = rhs
         self.op = op
         self.id = self.lhs.tag + self.op + self.rhs.tag
+
         AttributeBase.__init__(self, self.id, **kwargs)
 
         operator_list = ['+', '-', '*', '/', '**']
@@ -669,7 +670,7 @@ class Calculate(AttributeBase):
         try:
             self.get_value()
             return self.set_complete(True)
-        except:
+        except IOError:
             self.logger.warning('Calculation failure in ', self.id)
             return self.set_complete(False)
 
@@ -748,6 +749,7 @@ class Compare(AttributeBase):
         else:
             cmp_val = str(self.leftval) +self.op+str(self.rightval)
 
+        self.logger.debug('Evaluating: %s', cmp_val)
         result = eval(cmp_val)
 
         rounded_left = round(float(str(self.leftval)))
