@@ -1,6 +1,7 @@
 __author__ = 'vpeng'
 
 import time
+import threading
 from serverside.OPCclient import OPC_Connect
 from tools.TestSolver import TestCase
 
@@ -29,7 +30,7 @@ def make_test_log(filename, rootname):
 
 
 class TestAdmin(object):
-
+    '''Class for administration of an individual test case'''
     base_logtool = dlog
 
     def __init__(self, test_case, connection, poll_interval=0.5, timeout=600, **kwargs):
@@ -158,7 +159,7 @@ class TestAdmin(object):
             for transition in transitions:
                 for tran_attr in transition.attrs:
                     type_error_mark = []
-                    complete_count += (tran_attr.get_complete())
+                    complete_count += (tran_attr.get_complete() is True)
                     if not tran_attr.get_complete():
                         try:
                             tran_attr.execute()
@@ -187,11 +188,13 @@ class TestAdmin(object):
                     pass
 
 
-class Test(TestAdmin):
+class Test(TestAdmin, threading.Thread):
+    '''Class for threaded execution of test cases'''
 
     def __init__(self, test_case, connection, **kwargs):
         '''Constructor'''
         TestAdmin.__init__(self, test_case, connection, **kwargs)
+        threading.Thread.__init__(self, name=test_case.get_name())
 
     def get_start_state(self):
         '''Method to verify there is only a single starting state for the given test.'''
@@ -212,8 +215,12 @@ class Test(TestAdmin):
         else:
             return end_states[0]
 
-    def start(self):
-        '''Executes the test as defined by self.test_case.'''
+    def run(self):
+        '''
+        Executes the test as defined by self.test_case. Runs in a separate thread of control
+        by calling self.start()
+        '''
+
         in_state = self.get_start_state()
 
         self.logger.info("+++++++++++++++++++++++++++++++ Test Start ++++++++++++++++++++++++++++=")

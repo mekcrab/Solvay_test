@@ -68,7 +68,7 @@ class RunEM():
             # create new test instance
             new_test = TestAdmin.Test(test_case=test_case,
                                       connection=opc_connection,
-                                      log_level='debug',
+                                      log_level='info',
                                       test_id=diagram.id  # test_id also is name of log item
                                       )
 
@@ -88,7 +88,9 @@ class RunEM():
                 time.sleep(0.5)
 
             test_list.append(new_test)
+            # start Test thread, allow to run to completion
             new_test.start()
+            new_test.join()
 
         return test_list
 
