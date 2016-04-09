@@ -25,8 +25,8 @@ def test_solver_processor(test_class, test_spec):
     file_path = os.path.join(config.specs_path, test_class, test_spec)
 
     # create attribute builder instance for solving attributes
-    abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
-    # abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
+    # abuilder = AttributeBuilder.create_attribute_builder(server_ip='127.0.0.1', server_port=5489)
+    abuilder = AttributeBuilder.create_attribute_builder(server_ip='10.0.1.200', server_port=5489)
     # build StateDiagram instance
     diagram = ModelBuilder.build_state_diagram(file_path, attribute_builder=abuilder)
 
