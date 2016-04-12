@@ -1,0 +1,56 @@
+@startuml
+!include Definitions/Parameter_Definition/PH_AL_SMCA.puml
+
+state RUN {
+[*] --> Initialize: 'P_TASK_PTR' = 0
+Initialize: Acquire 'TK36_CHG_EM'
+Initialize: Acquire 'TK50_CHG_EM'
+Initialize: 'P_MCA_TGT' = std_batch_size * 'R_MCA_PCT' * 0.01
+Initialize: 'P_NAOH_TGT' = std_batch_size * 'R_NAOH_PCT' * 0.01
+
+[*] --> TaskPointer_1: 'P_TASK_PTR' = 1
+
+Initialize --> TaskPointer_1
+state TaskPointer_1 {
+Initialize --> Charge_MCA
+Charge_MCA: 'TK36_CHG_EM/A_TARGET' = CHARGE_CHARGE
+Charge_MCA: Wait for 'TK36_CHG_EM/FLOW_CTL/PV' > 10
+
+
+Charge_MCA --> Wait_NaOH: 'TK36_CHG_EM/FLOW_CTL/PV' > 10
+Wait_NaOH: Wait for 3 min
+}
+
+Charge_MCA --> MCA_LF_Hold: 'TK36_CHG_EM/FLOW_CTL/PV' < 10
+MCA_LF_Hold: 'TK36_CHG_EM/A_TARGET' = CHARGE_HOLD
+MCA_LF_Hold --> [*]
+
+
+[*] --> TaskPointer_2: 'P_TASK_PTR' = 2
+
+state TaskPointer_2 {
+
+Wait_NaOH --> Charge_NaOH
+Charge_NaOH: 'TK50_CHG_EM/A_TARGET' = CHARGE_CHARGE
+Charge_NaOH: Wait for 'TK50_CHG_EM/FLOW_CTL/PV' > 10
+
+
+Charge_NaOH --> Charge_Complete: 'TK50_CHG_EM/FLOW_CTL/PV' > 10
+Charge_Complete: 'TK36_CHG_TOT' >= 'P_MCA_TGT'
+Charge_Complete: 'TK50_CHG_TOT' >= 'P_NAOH_TGT'
+
+}
+
+Charge_NaOH --> NaOH_LF_Hold: 'TK50_CHG_EM/FLOW_CTL/PV' < 10
+NaOH_LF_Hold: 'TK50_CHG_EM/A_TARGET' = CHARGE_HOLD
+NaOH_LF_Hold --> [*]
+
+[*] --> Release_Equipment: 'P_TASK_PTR' = 3
+Charge_Complete --> Release_Equipment
+Release_Equipment: Release 'TK36_CHG_EM'
+Release_Equipment: Release 'TK50_CHG_EM'
+
+Release_Equipment --> [*]
+}
+
+@enduml

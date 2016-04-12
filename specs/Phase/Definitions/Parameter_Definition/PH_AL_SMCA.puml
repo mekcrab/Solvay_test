@@ -1,0 +1,7 @@
+@startuml
+
+!define std_batch_size  'UP001_VALUE'
+!define CHARGE_CHARGE   2
+!define CHARGE_HOLD 0
+
+@enduml

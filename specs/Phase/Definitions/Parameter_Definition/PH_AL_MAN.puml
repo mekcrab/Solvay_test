@@ -1,0 +1,8 @@
+@startuml
+
+!define VENT_ATM    2
+!define PRESS_AUTO  4
+!define agitator_speed_1  50%
+!define agitator_speed_2    80%
+!define temperature_lo_sp   130 F
+@enduml
