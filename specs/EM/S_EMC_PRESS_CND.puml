@@ -102,7 +102,7 @@ Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to ramp_rate
 Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
 Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
 
-Ramp_VAC --> STOP_VAC: 'PRESS_GAP_CTL' < ramp_target
+Ramp_VAC --> STOP_VAC: 'VAC_CTL' < ramp_target
 STOP_VAC: Stop 'VAC_PMP'
 STOP_VAC: Close 'VAC_STM_VLV'
 STOP_VAC: Close 'VAC_CTL' to 0
