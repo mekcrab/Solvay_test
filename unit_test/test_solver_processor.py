@@ -1,8 +1,10 @@
 __author__ = 'vpeng'
 
 import os
-from tools import config, ModelBuilder, TestSolver
+
+from tools import config, ModelBuilder
 from tools.Attributes import AttributeBuilder
+from tools.test_generation import TestSolver
 
 
 def S_EMC_PRESS_CND():

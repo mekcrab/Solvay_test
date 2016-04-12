@@ -1,9 +1,10 @@
 __author__ = 'vpeng'
 
-import time
 import threading
+import time
+
 from serverside.OPCclient import OPC_Connect
-from tools.TestSolver import TestCase
+from tools.test_generation.TestSolver import TestCase
 
 # Module level log setup
 from Utilities.Logger import LogTools
@@ -251,7 +252,7 @@ if __name__ == "__main__":
     from pprint import pprint as pp
     from ModelBuilder import build_state_diagram
     from Attributes import AttributeBuilder
-    from TestSolver import TestCaseGenerator
+    from tools.test_generation.TestSolver import TestCaseGenerator
 
     # very light testing here:
     connection = OPC_Connect()

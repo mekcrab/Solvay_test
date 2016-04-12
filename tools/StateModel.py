@@ -47,7 +47,7 @@ class StateDiagram(DiGraph):
 
         for source, dest, trans_dict in self.edges(data=True):  # dictionary of source, destination, {'trans':<transition instace>}
             source_name = source.name; dest_name = dest.name;
-            print trans_dict
+
             if 'trans' in trans_dict:
                 transition = trans_dict['trans']
                 attribute_list = transition.attrs  # retrieve transition instance from edge dictionary

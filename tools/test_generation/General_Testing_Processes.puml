@@ -1,0 +1,62 @@
+File lays out the general activities and TestTypes used in running a single test case.
+
+Nomenclature:
+    Activity name <candidate TestType class>
+
+@startuml
+
+(*) --> "Read state diagrams" as input_data
+
+partition TestSetup {
+
+    input_data --> "Setup Unit \n <Setup>" as unit_setup
+
+    unit_setup -down-> "Test Condition Setup \n <Setup> \n <RandomSetup>" as case_setup
+}
+
+partition TestAdmin {
+
+
+    case_setup --> ===StartTest===
+
+    ===StartTest=== -down-> "Test Case Execution \n <PassiveTest> \n <ActiveTest>" as case_execute
+        note bottom
+            A single <TestAdmin> instance
+            executes a single <TestType>
+            instance.
+        end note
+    --> ===EndTest===
+
+    ===StartTest=== -down-> "Watch on-line values \n not in test specs \n <Monitor>" as monitor
+    --> ===EndTest===
+        note right
+            Python runtime errors
+            managed by <TestAdmin>
+        end note
+}
+
+
+partition TestAnalysis {
+
+    ===EndTest=== --> "Check online \n results for errors \n <Monitor>" as check_monitor
+
+
+    if "" then
+    --> [Error] "Notify test engineers \n <Monitor>" as runtime_error
+    else
+    --> [Not \n Error] "Record test \n statistics" as analyze_results
+    --> "Generate test reports" as output_results
+
+    output_results --> if "" then
+    --> [pass] (*)
+    else
+    --> [fail] "Notify system developers" as fix_code
+    Endif
+
+    runtime_error --> "Refine test \n specs" as fix_test
+    fix_test --> input_data
+
+    fix_code --> (*)
+}
+
+@enduml

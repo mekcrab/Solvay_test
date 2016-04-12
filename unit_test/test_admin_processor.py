@@ -89,8 +89,11 @@ class RunEM():
 
             test_list.append(new_test)
             # start Test thread, allow to run to completion
-            new_test.start()
-            new_test.join()
+            # new_test.start()
+            # new_test.join()
+
+            # to run without a new thread, just call run()
+            new_test.run()
 
         return test_list
 
