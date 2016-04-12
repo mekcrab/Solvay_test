@@ -1,0 +1,9 @@
+@startuml
+title THISUNIT/PH_AL_ADJ_COOL
+!define temperature_setpoint    'RX_JKT_CTL_EM/OP001_VALUE'
+!define pressure_setpoint   'RX_PRESS_EM/OP001_VALUE'
+!define TEMP_AUTO   4
+!define CHARGE_CHARGE   2
+!define VENT_ATM    2
+!define PRESS_AUTO  4
+@enduml

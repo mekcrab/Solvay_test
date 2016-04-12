@@ -1,0 +1,7 @@
+@startuml
+title THISUNIT/PH_AL_XFR
+!define pressure_setpoint   'RX_PRESS_EM/OP001_VALUE'
+!define PRESS_AUTO  4
+!define TEMP_OFF    1
+
+@enduml

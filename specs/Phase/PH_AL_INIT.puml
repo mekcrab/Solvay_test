@@ -1,6 +1,6 @@
 @startuml
-!include Definitions/Parameter_Definition/PH_AL_INIT.puml
 !include Definitions/Aliases_Table/R10-BATCH.puml
+!include Definitions/Parameter_Definition/PH_AL_INIT.puml
 
 state RUN {
 

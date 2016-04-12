@@ -1,5 +1,4 @@
 @startuml
-title R9-BATCH
 
 !define	ALIAS	ignore
 !define	BISULFITE_CM	ignore
@@ -111,6 +110,6 @@ title R9-BATCH
 !define	WTR_CHG_VLV	CV-2431
 
 
-!define RX_JKT_CTRL_EM  RX_TEMPERATURE
+!define RX_JKT_CTRL_EM  RX_TEMP_CTRL_EM
 
 @enduml

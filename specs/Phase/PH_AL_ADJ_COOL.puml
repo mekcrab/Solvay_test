@@ -1,0 +1,79 @@
+@startuml
+!include    Definitions/Aliases_Table/R10-BATCH.puml
+!include Definitions/Parameter_Definition/PH_AL_ADJ_COOL.puml
+
+state RUN{
+[*] --> Initialize
+Initialize: Acquire 'RX_JKT_CTRL_EM'
+Initialize: Acquire 'UV_CHG_EM'
+Initialize: Acquire 'RX_PRESS_EM
+Initialize: Acquire 'HCL_CHG_EM'
+
+Initialize --> Temp_Cool
+Temp_Cool: Set temperature_setpoint = 'R_TEMP_SP'-5
+Temp_Cool: Set 'RX_JKT_CTRL_EM' to TEMP_AUTO
+
+Temp_Cool --> OAR_ADJ_PH
+OAR_ADJ_PH: OAR message: "Adjust pH to greater than 9.8 if needed"
+OAR_ADJ_PH: OAR response = ok
+
+OAR_ADJ_PH --> OAR_Charge_NaBH4: Wait for 'RX_TEMPERATURE' < 125 F
+OAR_Charge_NaBH4: OAR message: "Sodium Borohydride charge is completed"
+OAR_Charge_NaBH4: OAR response = ok
+
+OAR_Charge_NaBH4 --> OAR_Solid_ADJ: Wait for 'UNIT_SUPPORT/TMR1/TM_SP' = 30 min
+OAR_Solid_ADJ: OAR message: "Make a solids adjustment?"
+
+OAR_Solid_ADJ --> DILUTE: OAR response = yes
+DILUTE: Set 'UV_CHG_EM' to CHARGE_CHAGRE
+
+DILUTE --> PH
+OAR_Solid_ADJ --> PH: OAR response = no
+
+state PH{
+
+[*] --> OAR_Charge_HCL: Wait for 'RX_TEMPERATURE' < 180 F
+OAR_Charge_HCL: OAR message: "Make a solids adjustment?"
+
+OAR_Charge_HCL --> Charge_HCl: OAR response = yes
+Charge_HCl: Set 'HCL_CHG_EM' to CHARGE_CHARGE
+
+OAR_Charge_HCL --> Cool: OAR response = no
+Charge_HCl --> Cool
+Cool: Wait for 'RX_TEMPERATURE' < temperature_setpoint
+}
+
+PH --> Vent_ATM
+Vent_ATM: Set pressure_setpoint = 'R_VENT_SP'
+Vent_ATM: Set 'RX_PRESS_EM' to VENT_ATM
+
+Vent_ATM --> OAR_Verify_Pressure: Wait for 'RX_PRESSURE' < 0.1 psig
+OAR_Verify_Pressure: OAR message: "Verify reactor pressure has vented. \nCharge Biocide."
+
+OAR_Verify_Pressure --> OAR_Charge_Complete: OAR response = ok
+OAR_Charge_Complete: OAR message: "Biocide Charge is Complete."
+
+OAR_Charge_Complete --> Pressure_Auto: OAR response = ok
+Pressure_Auto: Set pressure_setpoint = 'R_PRESS_SP'
+Pressure_Auto: Set 'RX_PRESS_EM' to PRESS_AUTO
+
+Pressure_Auto --> OAR_Sample_Final: Wait for 'UNIT_SUPPORT/TMR1/TM_SP' = 15 min
+OAR_Sample_Final: OAR message: "Sample for final product specs. Wait for results."
+
+OAR_Sample_Final --> OAR_Verify_Spec: OAR response = ok
+OAR_Verify_Spec: OAR message: "Product in spec?"
+
+OAR_Verify_Spec --> OAR_Manual_ADJ: OAR response = no
+OAR_Manual_ADJ: OAR message: Make manual adjustment then continue."
+
+OAR_Manual_ADJ --> Complete: OAR response = ok
+OAR_Verify_Spec --> Complete: OAR response = yes
+
+Complete: Release 'RX_JKT_CTRL_EM'
+Complete: Release 'UV_CHG_EM'
+Complete: Release 'RX_PRESS_EM
+Complete: Release 'HCL_CHG_EM'
+Complete --> [*]
+}
+
+@enduml

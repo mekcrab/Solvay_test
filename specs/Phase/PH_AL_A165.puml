@@ -1,14 +1,14 @@
 @startuml
-
-!include Definitions/PH_AL_A165/parameter_definition.puml
 !include Definitions/Aliases_Table/R6-BATCH.puml
+!include Definitions/Parameter_Definition/PH_AL_A165.puml
 
 state RUN {
-[*] --> Initialize
+[*] --> Initialize: 'P_TASK_PTR' = 0
 Initialize: Acquire 'TK15_CHG_EM'
 Initialize: 'P_A165_TGT' = round(std_batch_size * 'R_A165_PCT' * 0.01)
 Initialize: A165_charge_setpoint = 'P_WTR_TGT'
 
+[*] --> Charge_TK15: 'P_TASK_PTR' = 1
 Initialize --> Charge_TK15
 state Charge_TK15 {
 Check_Weight --> Start_Charge: 'RX_WEIGHT' >= cond_target
@@ -20,6 +20,7 @@ Start_Charge: 'WTR_CHG_EM/A_TARGET' = CHARGE_CHARGE
 
 }
 
+[*] --> Complete: 'P_TASK_PTR' = 2
 Charge_TK15 --> Complete
 Complete: Release 'TK15_CHG_EM'
 

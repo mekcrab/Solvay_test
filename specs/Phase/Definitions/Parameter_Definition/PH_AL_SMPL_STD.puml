@@ -1,0 +1,10 @@
+@startuml
+title THISUNIT/PH_AL_SMPL_STD
+!define smca_result 25
+!define aa_result   5
+!define AA_result   'P_AA_RESULT'
+!define SMCA_result 'P_SMCA_RESULT'
+!define AA_test 'R_SMPL_AA_SPEC'
+!define SMCA_test   'R_SMPL_SMCA_SPEC'
+
+@enduml

@@ -1,7 +1,5 @@
 @startuml
 
-title R6-BATCH
-
 !define	ALIAS	ignore
 !define	BISULFITE_CM	ignore
 !define	BT4_AGIT_CM	HS-2358
@@ -112,6 +110,6 @@ title R6-BATCH
 !define	WTR_CHG_VLV	CV-3008
 
 
-!define RX_JKT_CTRL_EM  RX_TEMPERATURE
+!define RX_JKT_CTRL_EM  RX_TEMP_CTRL_EM
 
 @enduml

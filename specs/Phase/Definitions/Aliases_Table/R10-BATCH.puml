@@ -1,5 +1,4 @@
 @startuml
-title R10-BATCH
 
 !define	ALIAS	ignore
 !define	BISULFITE_CM	CV-4272
@@ -110,6 +109,6 @@ title R10-BATCH
 !define	WTR_CHG_TOT	FQIC-4289
 !define	WTR_CHG_VLV	CV-4289
 
-!define RX_JKT_CTRL_EM  RX_TEMPERATURE
+!define RX_JKT_CTRL_EM  RX_TEMP_CTRL_EM
 
 @enduml

@@ -1,0 +1,32 @@
+@startuml
+!include    Definitions/Aliases_Table/R10-BATCH.puml
+!include Definitions/Parameter_Definition/PH_AL_XFR.puml
+
+state RUN{
+[*] --> Initialize
+Initialize: Acquire 'RX_PRESS_EM'
+Initialize: Acquire 'RX_JKT_CTRL_EM'
+Initialize: Acquire 'RX_AGITATOR_CM'
+
+Initialize --> Pressure_Auto
+Pressure_Auto: Set pressure_setpoint to 'R_PRESS_SP'
+Pressure_Auto: Set 'RX_PRESS_EM' to PRESS_AUTO
+
+Pressure_Auto --> Stop_Agitator
+Stop_Agitator: Stop 'RX_AGITATOR_CM'
+
+Stop_Agitator --> OAR_Transfer
+OAR_Transfer: OAR message: "Ready for drumming or transfer"
+OAR_Transfer: OAR response = ok
+
+OAR_Transfer --> Temperature_OFF: Wait for 'RX_WEIGHT' < 3000lbs
+Temperature_OFF: Set 'RX_JKT_CTRL_EM' to TEMP_OFF
+
+Temperature_OFF --> Complete
+Complete: Release 'RX_PRESS_EM'
+Complete: Release 'RX_JKT_CTRL_EM'
+Complete: Release 'RX_AGITATOR_EM'
+
+Complete --> [*]
+}
+@enduml

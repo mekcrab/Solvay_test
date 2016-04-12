@@ -1,0 +1,68 @@
+@startuml
+!include    Definitions/Aliases_Table/R10-BATCH.puml
+!include Definitions/Parameter_Definition/PH_AL_SMPL_STD.puml
+
+state RUN{
+[*] --> Initialize
+
+Initialize --> OAR_Take_Sample
+OAR_Take_Sample: OAR message: "Take Sample for SMCA/AA. Wait for results"
+
+OAR_Take_Sample --> OAR_Enter_Amount: OAR response = ok
+
+
+state OAR_Enter_Amount {
+[*] --> OAR_SMCA_Result
+OAR_SMCA_Result: OAR message: "enter SMCA result."
+OAR_SMCA_Result: OAR response: 'OAR/INPUT' = smca_result
+OAR_SMCA_Result: SMCA_result = 'OAR/INPUT'
+note right of OAR_SMCA_Result: OAR input should be \nset at the beginning of \nthis state \
+ and should \nbe different on every trail
+
+OAR_SMCA_Result --> OAR_AA_Result
+OAR_AA_Result: OAR message: "enter AA result."
+OAR_AA_Result: OAR response: 'OAR/INPUT' = aa_result
+OAR_AA_Result: AA_result = 'OAR/INPUT'
+note right of OAR_AA_Result: OAR input should be \nset at the beginning of \nthis state \
+ and should \nbe different on every trail
+}
+
+OAR_Enter_Amount --> AA_Ratio: if AA_result >= AA_test
+AA_Ratio: OAR message: "Is SMCA/AA Ratio OK?"
+
+AA_Ratio --> AA_Hold: OAR response = yes
+AA_Ratio --> SMCA_Add: OAR response = no
+SMCA_Add: OAR message: "Make an SMCA addtion"
+
+SMCA_Add --> AA_Hold: OAR response = ok
+
+AA_Hold --> OAR_Take_Sample: wait for 'UNIT_SUPPORT/TM1/TM_SP' = 120 min
+
+OAR_Enter_Amount --> SMCA: if AA_result < AA_test
+
+SMCA --> SMCA25: SMCA_result >= MCA_test
+
+SMCA25 --> OAR_Take_Sample: SMCA_result < SMCA_test+25
+SMCA25 --> SMCA_High: SMCA_result >= SMCA_test+25
+SMCA_High: OAR message: "Make a condensate addition?"
+
+SMCA_High --> Cond_Add: OAR response = yes
+Cond_Add: OAR message: "Make a condensate addition."
+
+Cond_Add --> SMCA_Hold: OAR response = ok
+
+SMCA_High --> Check_PH: OAR response = no
+
+Check_PH --> SMCA_Hold: 'RX_PH' >= 'R_PH_SP'
+
+Check_PH --> ADJ_PH: 'RX_PH' < 'R_PH_SP'
+ADJ_PH: OAR message: "pH Low. Ask QA for pH ADJ"
+
+ADJ_PH --> SMCA_Hold: OAR resoibse = ok
+
+SMCA_Hold --> OAR_Take_Sample: wait for 'UNIT_SUPPORT/TM1/TM_SP' = 120 min
+
+SMCA --> [*]: SMCA_result < SMCA_test
+
+}
+@enduml
