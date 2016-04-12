@@ -1,0 +1,37 @@
+@startuml
+
+!include Definitions/Parameter_Definition/PH_AL_HYD_NAOH2.puml
+
+state RUN{
+[*] --> Initialize: 'P_TASK_PTR' = 0
+Initialize: Acquire 'RX_JKT_CTRL_EM'
+Initialize: Acquire 'TK50_CHG_EM'
+
+[*] --> Temp_Auto: 'P_TASK_PTR' = 1
+Initialize --> Temp_Auto
+Temp_Auto: Set temperature_setpoint = 'R_TEMP_SP' + 2
+Temp_Auto: Set 'RX_JKT_CTRL_EM' to TEMP_AUTO
+
+Temp_Auto --> Hold_Timer: 'RX_TEMPERATURE' > temperature_setpoint
+Hold_Timer: Wait for 'UNIT_SUPPORT/TMR1/TM_SP' = 'R_TIME'
+
+[*] --> Charge_NaOH1: 'P_TASK_PTR' = 2
+Hold_Timer --> Charge_NaOH1: Wait for 'UNIT_SUPPORT/TMR2/TM_SP' = 15 min
+Charge_NaOH1: Set charge_setpoint = 'P_NAOH_TGT'
+Charge_NaOH1: Set flow_setpoint = 'R_NAOH_FLOW'
+Charge_NaOH1: Set 'TK50_CHG_EM' to CHARGE_CHARGE
+
+[*] --> Charge_NaOH2: 'P_TASK_PTR' = 3
+Charge_NaOH1 --> Charge_NaOH2: Wait for 'UNIT_SUPPORT/TMR2/TM_SP' = 150 min
+Charge_NaOH2: Set charge_setpoint = 'P_NAOH_TGT'
+Charge_NaOH2: Set flow_setpoint = 'R_NAOH_FLOW'
+Charge_NaOH2: Set 'TK50_CHG_EM' to CHARGE_CHARGE
+
+[*] --> Complete: 'P_TASK_PTR' = 4
+Charge_NaOH2 --> Complete
+Complete: Release 'RX_JKT_CTRL_EM'
+Complete: Release 'TK50_CHG_EM'
+
+Complete --> [*]
+}
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include    Definitions/Parameter_Definition/PH_AL_RCT_NAOH1.puml
+state RUN{
+[*] --> Initialize: 'P_TASK_PTR' = 0
+Initialize: Acquire 'RX_JKT_CTRL_EM'
+Initialize: Acquire 'TK50_CHG_EM'
+
+[*] --> Temp_AUTO: 'P_TASK_PTR' = 1
+Initialize --> Temp_AUTO
+Temp_AUTO: Set reaction_temp_setpoint = 'R_TEMP_SP' + 2
+Temp_AUTO: Set 'RX_JKT_CTRL_EM' to TEMP_AUTO
+
+Temp_AUTO --> Hold_Timer: Wait for 'RX_TEMPERATURE' > 'R_TEMP_SP'
+Hold_Timer: wait for 'UNIT_SUPPORT/TMR1/TM_SP' = 'R_TIME'
+
+[*] --> Charge_NaOH: 'P_TASK_PTR' = 2
+Hold_Timer --> Charge_NaOH: 'UNIT_SUPPORT/TMR2/TM_SP' = 15 min
+Charge_NaOH: Set charge_flow_rate to 'R_NAOH_FLOW'
+Charge_NaOH: Set charge_setpoint to 'P_NAOH_TGT'
+Charge_NaOH: Set 'TK50_CHG_EM' to CHARGE_CHARGE
+
+Charge_NaOH --> Complete: Verify 'TK50_CHG_TOT' > 'P_NAOH_TGT'
+
+[*] --> Complete: 'P_TASK_PTR' = 3
+Complete: Release 'RX_JKT_CTRL_EM'
+Complete: Release 'TK50_CHG_EM'
+
+Complete --> [*]
+}
+@enduml

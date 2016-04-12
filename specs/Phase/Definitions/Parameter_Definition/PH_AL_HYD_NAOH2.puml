@@ -1,0 +1,9 @@
+@startuml
+
+!define temperature_setpoint   'RX_JKT_CTRL_EM/OP001_VALUE'
+!define TEMP_AUTO   4
+!define CHARGE_CHARGE   2
+!define charge_setpoint 'TK50_CHG_EM/OP001_VALUE'
+!define flow_setpoint 'TK50_CHG_EM/OP002_VALUE'
+
+@enduml
