@@ -73,6 +73,7 @@ class StateDiagram(DiGraph):
         return self.__deepcopy__({})
 
     def get_state(self, state_id, supress_error=False):
+        # type: (object, object) -> object
         if isinstance(state_id, State):
             return state_id
         else:  # string name of state passed as arg

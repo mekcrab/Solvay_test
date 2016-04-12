@@ -89,7 +89,6 @@ class TestAdmin(object):
 
             # (1) execute test loop if all attributes are not complete
             # each attribute is executed during every polling period -- in case the value changes!!
-            # TODO - find out how long attr.execute() method takes for each attribute type (see timeit)
             for attr in state.attrs:
                 type_error_mark = []
                 complete_count += (attr.get_complete() == True)
@@ -101,7 +100,7 @@ class TestAdmin(object):
                         type_error_mark.append(attr)
                         continue
 
-                if type_error_mark: # falls through if list not empty
+                if type_error_mark:  # falls through if list not empty
                     type_error_mark = remove_duplicates(type_error_mark)
                     for type_error in type_error_mark:
                         self.logger.error('Error in %r.execute()', type_error)
@@ -111,11 +110,11 @@ class TestAdmin(object):
             # print "complete_count:", complete_count, "num_attr:", num_attributes
             if last_state_complete_cnt != complete_count:
                 self.logger.debug("Checking state %s: %d of %d attributes complete",
-                                 state.name, complete_count, num_attributes)
+                    state.name, complete_count, num_attributes)
                 last_state_complete_cnt = complete_count
 
             if complete_count == num_attributes:
-                self.logger.info("Test on State %s Complete", in_state.name)
+                self.logger.info("Attribute execution for state %s complete.", in_state.name)
                 return True
             #  (b)  or the state has timed out...
             elif (time.time() - mark_timeout) > self.global_timeout:
@@ -168,13 +167,13 @@ class TestAdmin(object):
                             type_error_mark.append(tran_attr)
                             continue  # to next transition
 
-                    if type_error_mark != []:
+                    if type_error_mark:
                         type_error_mark = remove_duplicates(type_error_mark)
                         for type_error in type_error_mark:
                             self.logger.error('Error in %r.execute()', type_error)
 
             if complete_count == num_attributes:
-                #Activate all State Attributes in Destination State
+                # Activate all State Attributes in Destination State
                 for dest_attr in destination.attrs:
                     dest_attr.activate()
                 return True
@@ -228,9 +227,7 @@ class Test(TestAdmin, threading.Thread):
 
         # test is executed by calling attribute.execute() for all state and transition
         #   attributes until all attribute._complete flags are true
-        while in_state and self.recur(in_state):
-            # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder
-            # FIXME: --> see get_start_state and get_end_state methods above
+        while in_state and not self.recur(in_state):
             next_states = remove_duplicates(in_state.destination)  # A list of possible destinations
             if next_states:  # not empty
                 self.logger.info("Transiting...")
@@ -240,10 +237,18 @@ class Test(TestAdmin, threading.Thread):
                         self.logger.info("Next_state: %s", next_state.name)
                         transition_pass = self.transit(source=in_state, destination=next_state)
                         in_state = next_state
-            elif in_state is self.get_end_state():
-                self.logger.info("==============================Test Complete=========================")
+            # test case passes
+            elif in_state is self.get_end_state() and self.recur(in_state):
+                in_state = None
+                self.test_case.passed = True
+            # Missing transiton - something is not right...could hang tests?
             else:
-                self.logger.warning("No transition to process for %s!!", in_state.name)
+                self.logger.error("No transition to process for %s!!", in_state.name)
+                self.logger.error("Unknown test_case execution state")
+                self.test_case.passed = False
+
+        self.logger.info("==============================Test Complete=========================")
+        return self.test_case.passed
 
 
 if __name__ == "__main__":
@@ -276,6 +281,6 @@ if __name__ == "__main__":
     tests = TestCaseGenerator(diagram)
     opc_client = OPC_Connect()
 
-    for test_case in tests.test_cases.values():
-        new_test = Test(test_case=test_case, connection=opc_client)
+    for case in tests.test_cases.values():
+        new_test = Test(test_case=case, connection=opc_client)
         new_test.start()
