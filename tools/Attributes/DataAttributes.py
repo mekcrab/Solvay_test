@@ -11,6 +11,11 @@ class Constant(AttributeBase):
     mode_int_dict = \
             {'LO': 4, 'MAN': 8, 'AUTO': 16, 'CAS': 32, 'ROUT': 128, 'RCAS': 64}
 
+    bool_position_dict = {'open': 1, 'close': 0,
+                          'OPEN': 1, 'CLOSE': 0,
+                          'START': 1, 'STOP': 0,
+                          'start': 1, 'stop': 0}
+
     def __init__(self, value, **kwargs):
 
         if type(value) in [int, float, str, unicode]:
@@ -19,9 +24,14 @@ class Constant(AttributeBase):
             raise TypeError
         AttributeBase.__init__(self, 'Constant', attr_path='', **kwargs)
 
+    def OPC_path(self):
+        return self.tag + ' ' + str(self.val)
+
     def read(self):
         if self.val in Constant.mode_int_dict:
             self.val = Constant.mode_int_dict[self.val]
+        if self.val in Constant.bool_position_dict:
+            self.val = Constant.bool_position_dict[self.val]
         return self.val
         # return (self.val, 'Good', time.ctime())
 
@@ -29,9 +39,7 @@ class Constant(AttributeBase):
         self.val = value
         return 'Success'
 
-    def execute(self):
-        if not self.exe_start:
-            self.start_timer()
+    def check_value(self):
         val = self.read()[0]
         if self.read()[0] == self.target_value:
             self.set_complete(True)

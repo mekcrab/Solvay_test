@@ -593,6 +593,8 @@ class AttributeDummy(AttributeBase):
     def __init__(self, id='', **kwargs):
         '''Constructor'''
         self.id = id
+        self.attr_path = ''
+        self.tag = ''
         AttributeBase.__init__(self, tag='dummy', **kwargs)
 
     def read(self):
