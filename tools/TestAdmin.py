@@ -7,7 +7,7 @@ from serverside.OPCclient import OPC_Connect
 from tools.test_generation.TestSolver import TestCase
 
 # Module level log setup
-from Utilities.Logger import LogTools
+from Utilities.Logger import LogTools, AuxLog
 dlog = LogTools('TestAdmin.log', 'TestAdmin')
 dlog.rootlog.warning('TestAdmin initialized')
 
@@ -51,8 +51,8 @@ class TestAdmin(object):
         # optional arguments for test_id and logging level control
         test_id = kwargs.pop('test_id', test_case.get_name())
         log_level = kwargs.pop('log_level', 'debug')
-        self.log_tool = LogTools(test_id+'.log', test_id, level=log_level)
-        self.logger = self.log_tool.MakeChild(test_id+'_TestAdmin')
+        self.log_tool = dlog.change_file_out(test_id+'.log')
+        self.logger = self.log_tool.MakeChild(name=test_id+'_TestAdmin')
 
         # global variables to control test timing
         self.poll_interval = poll_interval  # interval between calls to execute states or transitions

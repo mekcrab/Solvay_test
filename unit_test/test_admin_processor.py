@@ -100,3 +100,5 @@ class RunEM():
 if __name__ == "__main__":
     # example test
     RunEM().S_EMC_PRESS_CND()
+
+    print "Test complete."

@@ -61,7 +61,8 @@ class LogTools(object):
                  level=config.log_level,
                  maxSize=1000000,
                  maxCount=5,
-                 streamLevel=None):
+                 streamLevel=None,
+                 ):
 
         '''Initialize root logger instance and create initial handlers'''
 
@@ -87,7 +88,8 @@ class LogTools(object):
         # bind our handler specification to this log
         self.rootlog.addHandler(self.handler)
 
-        # set initial level for this logs stream output - applies to console outputs or log pipes
+        # set initial level for this logs stream output -
+        # applies to console outputs or log pipes. defaults to stderr
         if streamLevel is None:
             streamLevel = level
 
@@ -102,6 +104,23 @@ class LogTools(object):
         '''Returns a handle to the root log of this LogTools instance hierarchy'''
         return logging.getLogger(self.modulename)
 
+    def change_file_out(self, new_log_name):
+        # create new handler for file
+        new_file_handler = logging.handlers.RotatingFileHandler(
+                                                                os.path.join(config.log_path, new_log_name)
+                                                            )
+        new_file_handler.setFormatter(self.fileformat)
+        new_file_handler.setLevel(self.handler.level)
+
+        # re-assign handler
+        self.rootlog.removeHandler(self.handler)
+        self.rootlog.addHandler(new_file_handler)
+        self.handler = new_file_handler
+
+        # return reference to LogTool instance for convenience
+        return self
+
+
     def MakeChild(self, name=None, level=None):
         '''Makes a child logger of the logger specified by name'''
         if name is None:
@@ -115,6 +134,7 @@ class LogTools(object):
 
         childlog = self.rootlog.getChild(name)
         childlog.setLevel(level)
+
         return childlog
 
     def GetLogger(self, name, level_name='debug'):
