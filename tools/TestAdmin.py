@@ -227,28 +227,39 @@ class Test(TestAdmin, threading.Thread):
 
         # test is executed by calling attribute.execute() for all state and transition
         #   attributes until all attribute._complete flags are true
-        while in_state and not self.recur(in_state):
+        while in_state and self.recur(in_state):
             next_states = remove_duplicates(in_state.destination)  # A list of possible destinations
-            if next_states:  # not empty
-                self.logger.info("Transiting...")
-                transition_pass = False
-                while not transition_pass:
-                    for next_state in next_states:
-                        self.logger.info("Next_state: %s", next_state.name)
-                        transition_pass = self.transit(source=in_state, destination=next_state)
-                        in_state = next_state
+            # if next_states:  # not empty
+            self.logger.info("Transiting...")
+            transition_pass = False
+            while transition_pass is False:
+                for next_state in next_states:
+                    self.logger.info("Next_state: %s", next_state.name)
+                    transition_pass = self.transit(source=in_state, destination=next_state)
+                    in_state = next_state
             # test case passes
-            elif in_state is self.get_end_state() and self.recur(in_state):
+            if in_state is self.get_end_state() and self.recur(in_state) is True:
                 in_state = None
                 self.test_case.passed = True
-            # Missing transiton - something is not right...could hang tests?
-            else:
-                self.logger.error("No transition to process for %s!!", in_state.name)
-                self.logger.error("Unknown test_case execution state")
-                self.test_case.passed = False
+
+
+        if self.test_case.passed:
+            self.logger.info("Test Passed.")
+        else:
+            self.logger.info("Test Failed.")
 
         self.logger.info("==============================Test Complete=========================")
+
         return self.test_case.passed
+
+            # Missing transiton - something is not right...could hang tests?
+            # else:
+            #     self.logger.error("No transition to process for %s!!", in_state.name)
+            #     self.logger.error("Unknown test_case execution state")
+            #     self.test_case.passed = False
+
+        # self.logger.info("==============================Test Complete=========================")
+        # return self.test_case.passed
 
 
 if __name__ == "__main__":

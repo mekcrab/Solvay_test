@@ -83,9 +83,11 @@ class RunEM():
                 verify_path = '/'.join([str(diagram.id).strip("'"), 'A_TARGET.CV'])
 
             # Start EM command, verify command has started
-            while opc_connection.read(verify_path)[0] != command:
-                opc_connection.write(command_path, command)
-                time.sleep(0.5)
+            #FIXME: The verify_path logic does not work here because A_TARGET won't be cleared when the command complete.
+            #FIXME:     If the testing command is the same as the last command, EM will not be called.
+            # while opc_connection.read(verify_path)[0] != command:
+            opc_connection.write(command_path, command)
+            time.sleep(0.5)
 
             test_list.append(new_test)
             # start Test thread, allow to run to completion

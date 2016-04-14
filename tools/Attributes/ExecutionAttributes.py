@@ -749,16 +749,17 @@ class Compare(AttributeBase):
         else:
             cmp_val = str(self.leftval) +self.op+str(self.rightval)
 
-        self.logger.debug('Evaluating: %s', cmp_val)
-        result = eval(cmp_val)
+        # self.logger.debug('Evaluating: %s', cmp_val)
 
         rounded_left = round(float(str(self.leftval)))
         rounded_right = round(float(str(self.rightval)))
+        result = eval(cmp_val)
         if Compare.last_lhs_val == rounded_left and Compare.last_rhs_val == rounded_right\
             and self.op == Compare.last_op and result == Compare.last_result:
             pass
         else:
             self.logger.debug('Evaluating %s %s %s: %s to %s', self.lhs.OPC_path(), self.op, self.rhs.OPC_path(), cmp_val, result)
+
             Compare.last_op = self.op
             Compare.last_result = result
             Compare.last_lhs_val = rounded_left
