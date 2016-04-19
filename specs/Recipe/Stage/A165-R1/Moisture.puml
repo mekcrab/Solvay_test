@@ -1,0 +1,72 @@
+!define START_VACUUM    2
+!define	VAC_RAMP	PIC-1637_RAMP
+!define STEAM_VLV CV-1647
+!define CW_SPLY_VLV  CV-1608
+!define	CND_RTN_VLV	CV-1612
+!define 'RX_JKT_CTRL_EM' R1-TEMP-EM
+!define TEMP_COOL   2
+!define STOP_VACUUM 3
+!define     PRESSURE_UP 6
+!define TEMP_OFF    1
+
+
+@startuml
+
+state Moisture{
+
+[*] --> OAR_StartN2
+OAR_StartN2: OAR message: "Start N2 Sparge at 2 scfm"
+
+OAR_StartN2 --> mois_Start_Vacuum
+mois_Start_Vacuum: Set 'RX_PRESSURE_EM/A_COMMAND' to START_VACUUM
+mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_RATE' to 0.33% /second
+mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_PAUSE' to False
+mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_ENABLE' to True
+
+mois_Start_Vacuum --> mois_Steam_Heat
+mois_Steam_Heat: Open 'STEAM_VLV'
+
+mois_Steam_Heat --> Wait_Press: wait 'RX_TEMPERATURE' > 180F
+Wait_Press: Wait 'RX_PRESSURE' < 25 mmHg
+
+Wait_Press --> Wait_Mois_Chain: Wait for 30 mins
+
+
+Wait_Mois_Chain --> mois_Cool
+mois_Cool: OAR message: "Cooling for catalyst."
+mois_Cool: Set 'RX_JKT_CRTL_EM/A_COMMAND' to TEMP_COOL
+
+
+
+mois_Cool --> mois_Stop_Vacuum: wait for 'RX_TEMPERTUARE' < 160 F
+mois_Stop_Vacuum: Set 'RX_PRESS_EM/A_COMMAND' to STOP_VACUUM
+
+mois_Stop_Vacuum --> mois_Pressure_Up
+mois_Pressure_Up: Set 'RX_PRESS_EM/A_COMMAND' to PRESSURE_UP
+
+mois_Pressure_Up --> mois_Close_Temp: wait for 'RX_TEMPERATURE' < 120F
+mois_Close_Temp: Set 'RX_JKT_CTRL_EM/A_COMMAND' to TEMP_OFF
+
+mois_Close_Temp --> mois_Check_Pressure
+
+mois_Check_Pressure --> [*]: 'RX_PRESSURE' < 35 mmHg
+
+mois_Check_Pressure --> OAR_Sample: 'RX_PRESSURE' >= 35 mmHg
+OAR_Sample: OAR message: "Proper vacuum was not achieved. Sample for moisture."
+OAR_Sample: OAR response = 5
+
+OAR_Sample --> OAR_Smpl_Amt
+
+OAR_Smpl_Amt --> OAR_mois_strip: moisture_result >= moisture_test
+OAR_mois_strip: OAR message: "Moisture high. contining moisture strip. Check N2 sparge"
+
+OAR_mois_strip --> Wait_Pressure: wait for 'RX_TEMPERATURE' > 180 F
+Wait_Pressure: wait for 'RX_PRESSURE < 25 mmHg
+
+Wait_Pressure --> OAR_Sample: wait for 30 min
+
+OAR_Smpl_Amt --> [*]: moisture_result < moisture_test
+
+
+}
+@enduml

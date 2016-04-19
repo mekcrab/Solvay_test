@@ -1,0 +1,35 @@
+@startuml
+[*] --> Initialize
+
+!include    Stage/A165-R1/Initialize.puml
+
+Initialize --> Coco_Oil_R1
+
+!include    Stage/A165-R1/Coco_Oil_R1.puml
+
+Coco_Oil_R1 --> Coco_Oil: wait for 'RX_WEIGHT' > 7000lb
+
+!include    Stage/A165-R1/Coco_Oil.puml
+
+Coco_Oil --> Moisture
+
+!include    Stage/A165-R1/Moisture.puml
+
+Moisture --> Catalyst
+
+Catalyst --> DMAPA
+
+DMAPA --> Reaction
+
+Reaction --> DMAPA_Strip
+
+DMAPA_Strip --> Cooldown
+
+Cooldown --> Transfer
+
+Transfer --> Complete
+
+Complete --> [*]
+
+
+@enduml
