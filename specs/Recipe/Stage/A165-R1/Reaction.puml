@@ -1,0 +1,28 @@
+@startuml
+state Reaction{
+[*] --> reaction_TEMP_HEAT
+reaction_TEMP_HEAT: Open 'STEAM_VLV'
+reaction_TEMP_HEAT: Close 'CW_SPLY_VLV'
+reaction_TEMP_HEAT: Open 'STM_SPLY_VLV'
+reaction_TEMP_HEAT: Open 'BC_VLV'
+reaction_TEMP_HEAT: Open 'TJ_VLV'
+reaction_TEMP_HEAT: Open 'MJ_VLV'
+reaction_TEMP_HEAT: Set 'STM_CTL' to ROUT
+reaction_TEMP_HEAT: Open 'STM_CTL' to reaction_target
+
+reaction_TEMP_HEAT --> reaction_PRESSURE_UP: wait for 'RX_TEMPERATURE' > 250 F
+reaction_PRESSURE_UP: Open 'nitrogen_valve'
+reaction_PRESSURE_UP: Verify 'RX_PRESSURE' > pressure_target
+
+reaction_PRESSURE_UP --> reaction_HOLD_TIME
+reaction_HOLD_TIME: wait for reaction_hold_time
+
+reaction_HOLD_TIME --> OAR_Ester_Peak
+OAR_Ester_Peak: OAR message: "Ester Peak Present?"
+
+OAR_Ester_Peak -up-> OAR_Ester_Peak: OAR response = no
+
+OAR_Ester_Peak --> [*]: OAR response = yes
+}
+
+@enduml
