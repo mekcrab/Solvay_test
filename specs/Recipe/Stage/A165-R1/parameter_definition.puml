@@ -15,7 +15,7 @@
 !define CW_SPLY_VLV  CV-1608
 !define	CND_RTN_VLV	CV-1612
 !define	SCRUB_VENT_VLV  CV-1639
-!define 'RX_JKT_CTRL_EM' R1-TEMP-EM
+!define RX_JKT_CTRL_EM R1-TEMP-EM
 !define TEMP_COOL   2
 !define STOP_VACUUM 3
 !define PRESSURE_UP 6

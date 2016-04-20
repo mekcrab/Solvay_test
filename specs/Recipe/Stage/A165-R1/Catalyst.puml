@@ -62,10 +62,10 @@ catalyst_RAMP: Set 'VAC_RAMP/RAMP_ENABLE' to True
 catalyst_RAMP: Set 'VAC_CTL' to ROUT
 catalyst_RAMP: Open 'VAC_CTL' to 50%
 
-catalyst_RAMP --> Wait_Pressure: Open 'STEAM_VLV'
-Wait_Pressure: Wait for 'RX_PRESSURE' < 300 mmHg
+catalyst_RAMP --> catalyst_Wait_Pressure: Open 'STEAM_VLV'
+catalyst_Wait_Pressure: Wait for 'RX_PRESSURE' < 300 mmHg
 
-Wait_Pressure --> catalyst_STOP_VACUUM2
+catalyst_Wait_Pressure --> catalyst_STOP_VACUUM2
 catalyst_STOP_VACUUM2: Stop 'VAC_PMP'
 catalyst_STOP_VACUUM2: Close 'STEAM_VLV'
 catalyst_STOP_VACUUM2: Close 'VAC_CTL' to 0

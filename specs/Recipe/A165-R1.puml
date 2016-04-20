@@ -16,8 +16,10 @@ Coco_Oil --> Moisture
 !include    Stage/A165-R1/Moisture.puml
 
 Moisture --> Catalyst
+!include    Stage/A165-R1/Catalyst.puml
 
 Catalyst --> DMAPA
+!include    Stage/A165-R1/DMAPA.puml
 
 DMAPA --> Reaction
 
