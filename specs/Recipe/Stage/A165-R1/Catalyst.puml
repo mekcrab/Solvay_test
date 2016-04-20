@@ -1,0 +1,79 @@
+@startuml
+state Catalyst{
+
+[*] --> catalyst_OAR_Start
+
+catalyst_OAR_Start: OAR message:"Close manual vacuum valve on reactor. \n\
+Stop N2 sparge. Open manual vacuum valva to hopper."
+
+catalyst_OAR_Start --> catalyst_START_VACUUM
+
+catalyst_START_VACUUM: Close 'DECANT_VENT_VLV'
+catalyst_START_VACUUM: Close 'SCRUB_VENT_VLV'
+catalyst_START_VACUUM: Start 'VAC_PMP'
+catalyst_START_VACUUM: Set 'VAC_CTL' to ROUT
+catalyst_START_VACUUM: Open 'VAC_CTL' to 20%
+
+catalyst_START_VACUUM --> OAR_charge_catalyst
+OAR_charge_catalyst: OAR message: Charge catalyst through hopper."
+
+OAR_charge_catalyst --> close_VAC_CTRL: OAR response = ok
+close_VAC_CTRL: Close 'VAC_CTL' to 0
+
+close_VAC_CTRL --> OAR_open_manual
+OAR_open_manual: OAR message: Open manual reactor vacuum valve."
+
+OAR_open_manual --> Ramp_VAC_CTRL: OAR response = ok
+Ramp_VAC_CTRL: Set 'VAC_RAMP/RAMP_RATE' to 0.16% /second
+Ramp_VAC_CTRL: Set 'VAC_RAMP/RAMP_PAUSE' to False
+Ramp_VAC_CTRL: Set 'VAC_RAMP/RAMP_ENABLE' to True
+Ramp_VAC_CTRL: Set 'VAC_CTL' to ROUT
+Ramp_VAC_CTRL: Open 'VAC_CTL' to 50%
+
+Ramp_VAC_CTRL --> Open_Steam_VLV
+Open_Steam_VLV: Open 'STEAM_VLV'
+
+Open_Steam_VLV --> catalyst_STOP_VACUUM: wait for 'RX_PRESSURE' < 100 mmHg
+catalyst_STOP_VACUUM: Close 'STEAM_VLV'
+catalyst_STOP_VACUUM: Stop 'VAC_PMP'
+catalyst_STOP_VACUUM: Close 'VAC_CTL' to 0
+
+catalyst_STOP_VACUUM --> catalyst_PRESSURE_UP
+catalyst_PRESSURE_UP: Verify 'RX_PRESSURE' > pressure_target
+
+catalyst_PRESSURE_UP --> OAR_soap_test
+OAR_soap_test: OAR message: "Soap test hopper valve. \n\
+Fix any leaks before continuing."
+
+OAR_soap_test --> catalyst_VENT
+catalyst_VENT: Open 'SCRUB_VENT_VLV' to target
+
+catalyst_VENT --> catalyst_START_VACUUM2
+catalyst_START_VACUUM2: Close 'DECANT_VENT_VLV'
+catalyst_START_VACUUM2: Close 'SCRUB_VENT_VLV'
+catalyst_START_VACUUM2: Start 'VAC_PMP'
+catalyst_START_VACUUM2: Set 'VAC_CTL' to ROUT
+catalyst_START_VACUUM2: Open 'VAC_CTL' to 20%
+
+catalyst_START_VACUUM2 --> catalyst_RAMP
+catalyst_RAMP: Set 'VAC_RAMP/RAMP_RATE' to 0.42% /second
+catalyst_RAMP: Set 'VAC_RAMP/RAMP_PAUSE' to False
+catalyst_RAMP: Set 'VAC_RAMP/RAMP_ENABLE' to True
+catalyst_RAMP: Set 'VAC_CTL' to ROUT
+catalyst_RAMP: Open 'VAC_CTL' to 50%
+
+catalyst_RAMP --> Wait_Pressure: Open 'STEAM_VLV'
+Wait_Pressure: Wait for 'RX_PRESSURE' < 300 mmHg
+
+Wait_Pressure --> catalyst_STOP_VACUUM2
+catalyst_STOP_VACUUM2: Stop 'VAC_PMP'
+catalyst_STOP_VACUUM2: Close 'STEAM_VLV'
+catalyst_STOP_VACUUM2: Close 'VAC_CTL' to 0
+
+catalyst_STOP_VACUUM2 --> [*]
+
+
+
+
+}
+@enduml

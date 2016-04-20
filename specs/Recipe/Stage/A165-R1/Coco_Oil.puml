@@ -1,5 +1,3 @@
-!define RX_AGITATOR_CM  HS-1657
-!define TEMP_HEAT   2
 @startuml
 
 state Coco_Oil{
