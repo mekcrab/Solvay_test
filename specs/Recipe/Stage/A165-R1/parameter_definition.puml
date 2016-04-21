@@ -1,6 +1,7 @@
 @startuml
 
 !define RX_AGITATOR_CM  HS-1657
+!define	STM_CTL	TIC-1628B
 !define TEMP_HEAT   2
 !define	DECANT_VENT_VLV	ignore
 !define	SCRUB_VENT_VLV  CV-1639
