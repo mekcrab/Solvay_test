@@ -7,7 +7,7 @@ Initialize --> Coco_Oil_R1
 
 !include    Stage/A165-R1/Coco_Oil_R1.puml
 
-Coco_Oil_R1 --> Coco_Oil: wait for 'RX_WEIGHT' > 7000lb
+Coco_Oil_R1 --> Coco_Oil
 
 !include    Stage/A165-R1/Coco_Oil.puml
 
@@ -22,12 +22,16 @@ Catalyst --> DMAPA
 !include    Stage/A165-R1/DMAPA.puml
 
 DMAPA --> Reaction
+!include    Stage/A165-R1/Reaction.puml
 
 Reaction --> DMAPA_Strip
+!include    Stage/A165-R1/DMAPA_Strip.puml
 
 DMAPA_Strip --> Cooldown
+!include    Stage/A165-R1/Cooldown.puml
 
 Cooldown --> Transfer
+!include    Stage/A165-R1/Transfer.puml
 
 Transfer --> Complete
 

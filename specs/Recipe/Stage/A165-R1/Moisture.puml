@@ -6,7 +6,11 @@ state Moisture{
 OAR_StartN2: OAR message: "Start N2 Sparge at 2 scfm"
 
 OAR_StartN2 --> mois_Start_Vacuum
-mois_Start_Vacuum: Set 'RX_PRESSURE_EM/A_COMMAND' to START_VACUUM
+mois_Start_Vacuum: Close 'DECANT_VENT_VLV'
+mois_Start_Vacuum: Close 'SCRUB_VENT_VLV'
+mois_Start_Vacuum: Start 'VAC_PMP'
+mois_Start_Vacuum: Set 'VAC_CTL' to ROUT
+mois_Start_Vacuum: Open 'VAC_CTL' to 20%
 mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_RATE' to 0.33% /second
 mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_PAUSE' to False
 mois_Start_Vacuum: Set 'VAC_RAMP/RAMP_ENABLE' to True
@@ -22,18 +26,31 @@ Wait_Press --> Wait_Mois_Chain: Wait for 30 mins
 
 Wait_Mois_Chain --> mois_Cool
 mois_Cool: OAR message: "Cooling for catalyst."
-mois_Cool: Set 'RX_JKT_CRTL_EM/A_COMMAND' to TEMP_COOL
-
-
+mois_Cool: Close 'STEAM_VLV'
+mois_Cool: Open 'CW_SPLY_VLV'
+mois_Cool: Open 'CND_RTN_VLV'
+mois_Cool: Open 'BC_VLV'
+mois_Cool: Open 'TJ_VLV'
+mois_Cool: Set 'CW_CTL' to ROUT
+mois_Cool: Open 'CW_CTL' to 100%
+mois_Cool: Set 'CW_CTL' to RCAS
+mois_Cool: Open 'CW_CTL' to 115 F
 
 mois_Cool --> mois_Stop_Vacuum: wait for 'RX_TEMPERTUARE' < 160 F
-mois_Stop_Vacuum: Set 'RX_PRESS_EM/A_COMMAND' to STOP_VACUUM
+mois_Stop_Vacuum: Close 'STEAM_VLV'
+mois_Stop_Vacuum: Stop 'VAC_PMP'
+mois_Stop_Vacuum: Close 'VAC_CTL' to 0
 
 mois_Stop_Vacuum --> mois_Pressure_Up
-mois_Pressure_Up: Set 'RX_PRESS_EM/A_COMMAND' to PRESSURE_UP
+mois_Pressure_Up: Open 'nitrogen_valve'
+mois_Pressure_Up: Verify 'RX_PRESSURE' > pressure_target
 
 mois_Pressure_Up --> mois_Close_Temp: wait for 'RX_TEMPERATURE' < 120F
-mois_Close_Temp: Set 'RX_JKT_CTRL_EM/A_COMMAND' to TEMP_OFF
+mois_Close_Temp: Close 'STEAM_VLV'
+mois_Close_Temp: Close 'CW_SPLY_VLV'
+mois_Close_Temp: Close 'BC_VLV'
+mois_Close_Temp: Close 'TJ_VLV'
+mois_Close_Temp: Close 'MJ_VLV'
 
 mois_Close_Temp --> mois_Check_Pressure
 

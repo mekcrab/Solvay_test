@@ -18,7 +18,7 @@ Acquire_TK12_Transfer: Acquire 'TK12_CHG_EM'
 
 Acquire_TK12_Transfer --> coco_TK12_Transfer: 'TK12_WEIGHT' > target_weight
 
-coco_TK12_Transfer: Set 'TK12_CHG_EM/A_COMMAND' to CHARGE_CHARGE
+coco_TK12_Transfer: Wait for 'RX_WEIGHT' > 7000 lb
 
 coco_TK12_Transfer --> [*]
 }
