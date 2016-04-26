@@ -1,0 +1,43 @@
+@startuml
+state Water {
+
+[*] --> water_Tare
+water_Tare: Set 'RX_WEIGHT' to 0
+water_Tare: Set 'RX_TARE1' to 0
+water_Tare: Set 'RX_TARE2' to 0
+
+water_Tare --> water_Valve_Position
+water_Valve_Position: Close 'RX_VENT' to 0
+water_Valve_Position: Set 'RX_PRESSURE' to RCAS
+water_Valve_Position: Open 'RX_PRESSURE' to pressure_setpoint
+
+water_Valve_Position --> water_Start_Charge: wait for 'RX_PRESSURE' > pressure_setpoint - 0.2
+water_Start_Charge: 'RX_PRESSURE' > 0
+
+state water_Start_Charge{
+[*] --> water_Monitor
+water_Monitor --> water_Stop_Charge: 'RX_PRESSURE' < stop_pressure
+water_Stop_Charge: OAR message: "Stopping water charge at < stop_charge"
+water_Stop_Charge: Close 'WTR_CHG_VLV'
+
+water_Stop_Charge --> water_Resume_Charge: wait for 'RX_PRESSURE' > resume_pressure
+water_Resume_Charge: OAR message: "Resuming water charge at > resume_pressure"
+water_Resume_Charge: Open 'WTR_CHG_VLV'
+
+water_Resume_Charge --> water_Monitor
+
+water_Monitor --> water_Pressure: 'RX_PRESSURE' > end_pressure
+water_Pressure: Set 'RX_VENT' to RCAS
+water_Pressure: Open 'RX_VENT' to vent_pressure
+water_Pressure: Set 'RX_PRESSURE' to RCAS
+water_Pressure: Open 'RX_PRESSURE' to pad_pressure
+
+}
+
+water_Start_Charge --> water_OAR_Complete
+water_OAR_Complete: OAR message: "Cleanout is complete."
+
+water_OAR_Complete --> [*]
+
+}
+@enduml

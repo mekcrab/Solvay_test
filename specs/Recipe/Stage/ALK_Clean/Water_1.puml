@@ -1,0 +1,26 @@
+@startuml
+state Water {
+
+[*] --> water_Tare
+water_Tare: Set 'RX_WEIGHT' to 0
+water_Tare: Set 'RX_TARE1' to 0
+water_Tare: Set 'RX_TARE2' to 0
+
+water_Tare --> water_Valve_Position
+water_Valve_Position: Close 'RX_VENT' to 0
+water_Valve_Position: Set 'RX_PRESSURE' to RCAS
+water_Valve_Position: Open 'RX_PRESSURE' to pressure_setpoint
+
+water_Valve_Position --> water_Start_Charge: wait for 'RX_PRESSURE' > pressure_setpoint - 0.2
+water_Start_Charge: Set 'RX_VENT' to RCAS
+water_Start_Charge: Open 'RX_VENT' to 4 psig
+water_Start_Charge: Set 'RX_PRESSURE' to RCAS
+water_Start_Charge: Open 'RX_PRESSURE' to 2 psig
+
+water_Start_Charge --> water_OAR_Complete
+water_OAR_Complete: OAR message: "Cleanout is complete."
+
+water_OAR_Complete --> [*]
+
+}
+@enduml

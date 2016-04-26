@@ -1,0 +1,13 @@
+@startuml
+
+[*] --> Initialize
+
+Initialize --> Steam
+!include    Stage/ALK_Clean/Steam.puml
+
+Steam --> Water
+!include    Stage/ALK_Clean/Water_2.puml
+
+Water --> [*]
+
+@enduml
