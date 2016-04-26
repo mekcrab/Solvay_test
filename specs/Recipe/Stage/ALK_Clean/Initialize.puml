@@ -1,0 +1,23 @@
+@startuml
+state Initialize {
+
+[*] --> CloseAll
+CloseAll: Close 'SPRAYBALL_CM'
+CloseAll: Stop 'RX_AGITATOR_CM'
+CloseAll: Close 'COND_FLOWVLV_CM' to 0
+CloseAll: Close 'COND_BLOCK_VLV'
+CloseAll: Close 'OVHD_CHG_VLVRX'
+CloseAll: Close 'RECIRC_VLV_CM'
+CloseAll: Close 'RX_DISCHVLV_CM'
+CloseAll: Close 'RX_VENT' to 0
+CloseAll: Close 'RX_PRESSURE' to 0
+
+CloseAll --> init_Tare
+init_Tare: Set 'RX_WEIGHT' to 0
+init_Tare: Set 'RX_TARE1' to 0
+init_Tare: Set 'RX_TARE2' to 0
+
+init_Tare --> [*]
+
+}
+@enduml
