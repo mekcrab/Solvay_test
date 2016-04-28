@@ -1,0 +1,15 @@
+@startuml
+state Transfer{
+
+[*] --> transfer_STOP_AGIT
+transfer_STOP_AGIT: Stop 'RX_AGITATOR_CM'
+
+transfer_STOP_AGIT --> transfer_Blowdown
+transfer_Blowdown: Set 'RX_JKT_CTRL_EM/A_COMMAND' to TEMP_BLOWDOWN
+
+transfer_Blowdown --> OAR_ready
+OAR_ready: OAR message: "Ready for transfer"
+
+OAR_ready --> [*]: Wait 'RX_WEIGHT' < 1500 lb
+}
+@enduml

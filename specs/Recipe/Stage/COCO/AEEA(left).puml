@@ -1,0 +1,7 @@
+@startuml
+state AEEA{
+
+[*] --> AEEA_CheckWeight
+
+}
+@enduml

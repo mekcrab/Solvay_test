@@ -1,0 +1,28 @@
+@startuml
+[*] --> Initialize
+
+Initialize --> AEEA
+
+AEEA --> Heatup_1
+
+Heatup_1 --> CFA
+
+CFA --> CFA_Hold
+
+CFA_Hold --> Heatup_2
+
+Heatup_2 --> Reaction
+
+
+Reaction --> AEEA_Strip
+
+
+AEEA_Strip --> Cooldown
+
+
+Cooldown --> Transfer
+
+
+Transfer --> [*]
+
+@enduml
