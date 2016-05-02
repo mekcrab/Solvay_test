@@ -632,6 +632,30 @@ class PhaseCMDAttribute(NamedDiscrete):
     def __int__(self):
         raise NotImplementedError
 
+class OwnerAttribute(AttributeBase):
+    #FIXME: Acquire requires target value to be #THISUNIT#/THISUNIT.CV. Release target value should be None.
+    def __init__(self, tag, attr_path = 'OWNER_ID', target_value = '(None'):
+        self.tag = tag
+        self.attr_path = attr_path
+        self.target_value = target_value
+        AttributeBase.__init__(self, self.tag, attr_path=self.attr_path, target_value=self.target_value)
+
+    def write(self):
+        return self._write(self.target_value)
+
+    def read(self):
+        return self._read()[0]
+
+    def check_value(self):
+
+        if self.read() == self.target_value:
+            return self.set_complete(True)
+        else:
+            return self.set_complete(False)
+
+    def force(self):
+        raise NotImplementedError
+
 
 class Calculate(AttributeBase):
 

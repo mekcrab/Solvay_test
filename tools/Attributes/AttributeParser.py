@@ -167,6 +167,8 @@ if __name__ == "__main__":
 
     test_strings = [
         "Open 'CV-2394'",
+        "Acquire 'R10-TK36CHG-EM'",
+        "release 'R10-TK36CHG-EM'",
         "'HS-2231' is stopped",
         "'PIC-2295' = \n 'OP001_VALUE'",
         "Set 'VAC_CTL' to ROUT",

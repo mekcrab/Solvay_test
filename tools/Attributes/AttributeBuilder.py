@@ -113,6 +113,10 @@ class AttributeBuilder(object):
                     self.logger.debug('Creating PositionAttribute %s', raw_string)
                     new_attribute = self.generate_attribute(parse_results, 'position')
 
+                elif action in ['acquire', 'release']:
+                    self.logger.debug('Creating OwnerAttribute %s', raw_string)
+                    new_attribute = self.generate_attribute(parse_results, 'owner')
+
                 elif action in ['wait']:
                     self.logger.debug("Adding wait action: %s", raw_string)
                     new_attribute = self.generate_attribute(parse_results, 'compare')
@@ -201,6 +205,17 @@ class AttributeBuilder(object):
                 return IndicationAttribute(tag, attr_path='PV')
             else:
                 self.logger.error("No path found in parsed expression %s", parse_dict)
+
+        elif attribute_type == 'owner':
+            tag = parse_dict.tag
+            # FIXME: Verify that the default tag = diagram title = Batch Area (R6-Batch/R9-Batch/etc)
+            thisunit = self.default_tag
+            if parse_dict.action_word is 'acquire':
+                #Owner_ID = THISUNIT
+                return OwnerAttribute(tag, attr_path='OWNER_ID', target_value = thisunit)
+            elif parse_dict.action_word is 'release':
+                # Owner_ID = None
+                return OwnerAttribute(tag)
 
         elif attribute_type == 'prompt':
             # get target from diagram

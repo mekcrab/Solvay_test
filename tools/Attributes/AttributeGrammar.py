@@ -87,6 +87,8 @@ close_vlv = keyword_list(['close', 'closed', 'shut']).setParseAction(normalize('
 start_mtr = keyword_list(['on', 'turn on', 'start', 'started', 'run', 'running']).setParseAction(normalize('start'))
 stop_mtr = keyword_list(['off', 'stop', 'shutdown', 'stopped']).setParseAction(normalize('stop'))
 ramp = pp.CaselessKeyword('ramp').setParseAction(normalize('ramp'))
+acquire = keyword_list(['acquire']).setParseAction(normalize('acquire'))
+release = keyword_list(['release']).setParseAction(normalize('release'))
 ilk_trip = keyword_list(['trip', 'tripped', 'interlock trip']).setParseAction(normalize('trip'))
 ilk_reset = keyword_list(['reset', 'interlock reset']).setParseAction(normalize('reset'))
 
@@ -119,12 +121,12 @@ get_opc = (pp.CaselessKeyword('Read OPC') +
 
 # ============= Action Keywords and Action Phrases======
 # action words as the first part of an argument, followed by one or more expressions
-action_word = pp.Or(write_keyword ^ read_keyword ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ wait_keyword)  # NOTE:: pp.Or matches longest string in argument - could introduce bug for overlapping lists
+action_word = pp.Or(write_keyword ^ read_keyword ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ wait_keyword ^ acquire ^ release)  # NOTE:: pp.Or matches longest string in argument - could introduce bug for overlapping lists
 # action phrases do not require expressions to correctly parse
 action_phrase = prompt ^ wait_time ^ get_opc ^ set_opc
 
 # ===========Expressions - each type below returns a ParseResult=================
-value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ ilk_trip ^ ilk_reset) +
+value = ((tag ^ NUMBER ^ BOOL ^ modes ^ STRING ^ open_vlv ^ close_vlv ^ start_mtr ^ stop_mtr ^ ilk_trip ^ ilk_reset ^ acquire ^ release) +
          pp.Suppress(pp.Optional(eng_units))).setResultsName('value')
 
 condition = (pp.Group(tag).setResultsName('lhs') + compare + pp.Group(value).setResultsName('rhs')). \
