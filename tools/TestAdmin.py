@@ -31,6 +31,7 @@ class TestAdmin():
         [(attr.set_read_hook(self.connection.read), attr.set_write_hook(self.connection.write)) for attr in state.attrs]
 
         self.logger.debug("Testing state::: %r, %r attribute(s) found", state.name, num_attributes)
+        self.last_state_complete_cnt = None
 
         mark_timeout = time.time()
         # As long as (not any state.attrs.complete), keep attempting attr.execute at specified polling interval
@@ -42,11 +43,18 @@ class TestAdmin():
             # TODO - find out how long attr.execute() method takes for each attribute type (see timeit)
             for attr in state.attrs:
                 type_error_mark = []
-                try:
-                    complete_count += attr.execute()
-                except TypeError:
-                    type_error_mark.append(attr)
-                    continue
+                if attr._complete != True:
+                    try:
+                        complete_count += attr.execute()
+                    except TypeError:
+                        type_error_mark.append(attr)
+                        continue
+                else:
+                    try:
+                        complete_count += attr._complete
+                    except TypeError:
+                        type_error_mark.append(attr)
+                        continue
 
                 if type_error_mark != []:
                     type_error_mark = remove_duplicates(type_error_mark)
@@ -55,7 +63,10 @@ class TestAdmin():
 
             # (2) look at results
             #   (a) check if all attributes have passed,
-            print "complete_count:", complete_count, "num_attr:", num_attributes
+            if self.last_state_complete_cnt != complete_count:
+                print "complete_count:", complete_count, "num_attr:", num_attributes
+                self.last_state_complete_cnt = complete_count
+
             if complete_count == num_attributes:
                 return True
             #  (b)  or the state has timed out...
@@ -92,11 +103,18 @@ class TestAdmin():
                     tran_attr.set_read_hook(self.connection.read)
                     tran_attr.set_write_hook(self.connection.write)
                     type_error_mark = []
-                    try:
-                        complete_count += tran_attr.execute()
-                    except TypeError:
-                        type_error_mark.append(tran_attr)
-                        continue
+                    if tran_attr._complete != True:
+                        try:
+                            complete_count += tran_attr.execute()
+                        except TypeError:
+                            type_error_mark.append(tran_attr)
+                            continue
+                    else:
+                        try:
+                            complete_count += tran_attr._complete
+                        except TypeError:
+                            type_error_mark.append(tran_attr)
+                            continue
 
                     if type_error_mark != []:
                         type_error_mark = remove_duplicates(type_error_mark)
@@ -133,7 +151,7 @@ class Test(TestAdmin):
         # self.start_state = diagram.get_state(state_id = 'START')
 
     def start(self):
-        self.logger.debug("Start Testing Diagram::: %r", self.diagram.id)
+        print "+++++++++++++++++++++++++++++++++++Test Start ++++++++++++++++++++++++++++++++++"
         in_state = self.start_state
         while in_state and TestAdmin(self.test_case, self.diagram,  self.connection).recur(in_state):
             # FIXME: remove duplicated sources/destinations in TestSolver/ModelBuilder

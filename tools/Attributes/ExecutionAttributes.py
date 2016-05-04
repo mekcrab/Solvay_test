@@ -183,6 +183,7 @@ class PositionAttribute(AttributeBase):
     # mode: attr_path dictionary--> used for reads by default
     mode_pv_dict = {'AUTO': 'PV_D', 'CAS': 'PV_D', 'ROUT': 'OUT', 'RCAS': 'PV_D',
                     16: 'PV_D', 32: 'PV_D', 128: 'OUT', 64: 'PV_D'}
+    last_read_val = None
 
     def __init__(self, tag, attr_path='PV_D', target_mode='CAS', **kwargs):
 
@@ -195,6 +196,8 @@ class PositionAttribute(AttributeBase):
 
         mode_path = kwargs.pop('mode_path', 'MODE')
         self.mode = ModeAttribute(tag, attr_path=mode_path, target_mode=target_mode)
+
+        self.logger = dlog.MakeChild('PositionAttribute')
 
         AttributeBase.__init__(self, tag, attr_path=self.attr_path, target_value=self.target_value, **kwargs)
 
@@ -236,8 +239,13 @@ class PositionAttribute(AttributeBase):
     def read(self, param='CV'):
         if not self.read_path:
             if self.read_mode() in PositionAttribute.mode_pv_dict:
-                self.attr_path = PositionAttribute.mode_pv_dict[self.read_mode()]
-        return self._read(param=param)[0]
+                self.read_path = PositionAttribute.mode_pv_dict[self.read_mode()]
+                self.attr_path = self.read_path
+        val = self._read(param=param)[0]
+        if PositionAttribute.last_read_val != round(val):
+            self.logger.debug('Read %s, target value: %s, actual value: %s', self.OPC_path(), self.target_value, val)
+            PositionAttribute.last_read_val = round(val)
+        return val
 
     def write_mode(self, target_mode=None):
         '''Wrapper to write this position's mode attribute, defaults to required mode'''
@@ -585,6 +593,8 @@ class AttributeDummy(AttributeBase):
     def __init__(self, id='', **kwargs):
         '''Constructor'''
         self.id = id
+        self.attr_path = ''
+        self.tag = ''
         AttributeBase.__init__(self, tag='dummy', **kwargs)
 
     def read(self):
@@ -595,11 +605,11 @@ class AttributeDummy(AttributeBase):
         print 'Dummy write', self.id, 'as ', val
 
     def execute(self):
-        if not self.complete:
-            self.set_complete(True)
+        if not self._complete:
             self.deactivate()
+            return self.set_complete(True)
         else:
-            pass
+            return self.set_complete(True)
 
     def force(self):
         print 'Dummy force'
@@ -647,6 +657,11 @@ class Compare(AttributeBase):
                      '<': operator.lt,
                      '<=': operator.le,
                      '!=': operator.ne}
+    last_op = None
+    last_result = None
+    last_lhs_val = None
+    last_rhs_val = None
+
 
     def __init__(self, lhs=AttributeDummy(), op='', rhs=AttributeDummy(), deadband=0.01):
         '''
@@ -697,14 +712,28 @@ class Compare(AttributeBase):
 
         self.leftval = self.lhs.read()
         self.rightval = self.rhs.read()
-        cmp_val = str(self.leftval) +'-'+str(self.rightval)+self.op+str(self.deadband)
+        cmp_val = str(self.leftval) +'-'+str(self.rightval)+'+'+str(self.deadband)+self.op+'0'
 
         if self.op == '=' or self.op == '==':
             self.op = '=='
             cmp_val = 'abs('+str(self.leftval) +'-'+str(self.rightval)+')<'+str(self.deadband)
 
-        self.logger.debug('Evaluating: %s', cmp_val)
-        return eval(cmp_val)
+        result = eval(cmp_val)
+
+        rounded_left = round(float(str(self.leftval)))
+        rounded_right = round(float(str(self.rightval)))
+        if Compare.last_lhs_val == rounded_left and Compare.last_rhs_val == rounded_right \
+                and self.op == Compare.last_op and result == Compare.last_result:
+            pass
+        else:
+            self.logger.debug('Evaluating %s %s %s: %s to %s', self.lhs.OPC_path(), self.op, self.rhs.OPC_path(),
+                              cmp_val, result)
+            Compare.last_op = self.op
+            Compare.last_result = result
+            Compare.last_lhs_val = rounded_left
+            Compare.last_rhs_val = rounded_right
+
+        return result
 
         # op = ComparisonAttributes.operator_dict[self.op]
         # return op(self.leftval, self.rightval)
