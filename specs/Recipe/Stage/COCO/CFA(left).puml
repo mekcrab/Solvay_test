@@ -1,0 +1,22 @@
+@startuml
+state CFA{
+[*] --> CFA_Acquire
+CFA_Acquire: Acquire 'TK64_CHG_EM'
+
+CFA_Acquire --> CFA_CheckWeight
+CFA_CheckWeight --> CFA_Transfer: if 'TK64_WEIGHT' >= 'P_ACID_TGT'
+CFA_Transfer: wait for 'TK64_charge_target'> = 'R_CFA_TGT'
+CFA_Transfer --> CFA_Complete
+
+CFA_CheckWeight --> CFA_Manual: if 'TK64_WEIGHT' < 'P_ACID_TGT'
+CFA_Manual: OAR message: "charge CFA manually."
+
+CFA_Manual --> CFA_Man_charge: OAR response = ok
+CFA_Man_charge: OAR message: "confirm transfer is complete"
+CFA_Man_charge --> CFA_Complete: OAR response = yes
+
+CFA_Complete: Release 'TK64_CHG_EM'
+
+CFA_Complete --> [*]
+}
+@enduml

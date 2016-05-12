@@ -1,0 +1,17 @@
+@startuml
+state CFA_Hold{
+[*] --> CFAHold_CloseVlv
+CFAHold_CloseVlv: Set 'HO_CTL_VLV' to ROUT
+CFAHold_CloseVlv: Close 'HO_CTL_VLV' to 0%
+
+CFAHold_CloseVlv --> CFA_Set_Temp
+CFA_Set_Temp: Set 'HO_CTL_VLV' to RCAS
+CFA_Set_Temp: Open 'HO_CTL_VLV' to 280 F
+
+CFA_Set_Temp --> CFA_Hold_Complete
+CFA_Hold_Complete: Wait for 60 mins
+
+CFA_Hold_Complete --> [*]
+}
+
+@enduml

@@ -1,7 +1,26 @@
+!define TK42_flowrate   'TK42_CHG_EM/OP002_VALUE'
 @startuml
 state AEEA{
 
-[*] --> AEEA_CheckWeight
+[*] --> AEEA_Acquire_TK42
+AEEA_Acquire_TK42: Acquire 'TK42_CHG_EM'
+
+AEEA_Acquire_TK42 --> AEEA_CheckWeight
+
+AEEA_CheckWeight --> AEEA_Charge_Manually: if 'TK42_WEIGHT' < 'P_AEEA_TGT'
+AEEA_Charge_Manually: OAR message: "charge TK42 manually"
+
+AEEA_Charge_Manually -up-> AEEA_Charge_Manually: OAR response = no
+AEEA_Charge_Manually --> AEEA_Complete: OAR response = yes
+
+AEEA_CheckWeight --> AEEA_TK42_Transfer: if 'TK42_WEIGHT' >= 'P_AEEA_TGT'
+AEEA_TK42_Transfer: TK42_flowrate = 'R_AEEA_FLOW'
+
+AEEA_TK42_Transfer --> AEEA_Complete
+
+AEEA_Complete: Release 'TK42_CHG_EM'
+
+AEEA_Complete --> [*]
 
 }
 @enduml
