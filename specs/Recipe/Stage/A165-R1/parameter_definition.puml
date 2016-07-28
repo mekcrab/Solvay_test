@@ -1,0 +1,26 @@
+@startuml
+
+!define RX_AGITATOR_CM  HS-1657
+!define	STM_CTL	TIC-1628B
+!define TEMP_HEAT   2
+!define	DECANT_VENT_VLV	ignore
+!define	SCRUB_VENT_VLV  CV-1639
+!define	VAC_CTL	PIC-1637
+!define	VAC_PMP	HS-2804
+!define TK12_CHG_EM   R1-TK12CHG-EM
+!define CHARGE_CHARGE   2
+!define TK12_WEIGHT WI-4112
+!define START_VACUUM    2
+!define	VAC_RAMP	PIC-1637_RAMP
+!define STEAM_VLV CV-1647
+!define CW_SPLY_VLV  CV-1608
+!define	CND_RTN_VLV	CV-1612
+!define	SCRUB_VENT_VLV  CV-1639
+!define RX_JKT_CTRL_EM R1-TEMP-EM
+!define TEMP_COOL   2
+!define STOP_VACUUM 3
+!define PRESSURE_UP 6
+!define TEMP_OFF    1
+!define nitrogen_valve  CV-1606
+
+@enduml

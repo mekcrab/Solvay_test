@@ -1,0 +1,45 @@
+@startuml
+state Steam {
+
+[*] --> OAR_Start
+OAR_Start: OAR messgae: "Set up reactor for steamout. \n\
+Rinse reactor through spray balls. \n\
+Open all drain valves. \n\
+Program steams through Cond/Ovhd lines."
+
+OAR_Start --> OAR_Select: OAR response = ok
+OAR_Select: OAR message: "enter cleanout time: \n\
+small = 1, medium = 2, large = 3."
+
+OAR_Select --> OAR_Slct_Confirm: OAR Input = 1
+OAR_Slct_Confirm: OAR message: "confirm cleanout time."
+
+OAR_Slct_Confirm --> steam_Start_Agit: OAR response = yes
+steam_Start_Agit: Start 'RX_AGITATOR_CM'
+steam_Start_Agit: Set 'RX_AGITATOR_CM/SPEED_RSP' to 12%
+
+steam_Start_Agit --> steam_Open_Valves
+steam_Open_Valves: Set 'COND_FLOWVLV_CM' to ROUT
+steam_Open_Valves: Open 'COND_FLOWVLV_CM' to 100%
+steam_Open_Valves: Open 'COND_BLOCK_VLV'
+steam_Open_Valves: Open 'OVHD_CHG_VLVRX'
+steam_Open_Valves: Open 'RECIRC_VLV_CM'
+steam_Open_Valves: Open 'RX_DISCHVLV_CM'
+steam_Open_Valves: Open 'SPRAYBALL_CM'
+
+steam_Open_Valves --> steam_Close_Valves: Wait for 'RX_TEMPERATURE' > clean_temperature
+steam_Close_Valves: Close 'SPRAYBALL_CM'
+steam_Close_Valves: Stop 'RX_AGITATOR_CM'
+steam_Close_Valves: Close 'COND_FLOWVLV_CM' to 0
+steam_Close_Valves: Close 'COND_BLOCK_VLV'
+steam_Close_Valves: Close 'OVHD_CHG_VLVRX'
+steam_Close_Valves: Close 'RECIRC_VLV_CM'
+steam_Close_Valves: Close 'RX_DISCHVLV_CM'
+
+steam_Close_Valves --> OAR_Complete
+OAR_Complete: OAR message: "Steam cleaning complete. Close all manual drain valves."
+
+OAR_Complete --> [*]: OAR response = ok
+
+}
+@enduml

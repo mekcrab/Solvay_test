@@ -1,0 +1,34 @@
+@startuml
+[*] --> Initialize
+!include    Stage/COCO/Initialize.puml
+
+Initialize --> AEEA
+!include    Stage/COCO/AEEA(left).puml
+
+AEEA --> Heatup_1
+!include    Stage/COCO/Heatup_1(left).puml
+
+Heatup_1 --> CFA
+!include    Stage/COCO/CFA(left).puml
+
+CFA --> CFA_Hold
+!include    Stage/COCO/CFA_Hold(left).puml
+
+CFA_Hold --> Heatup_2
+!include    Stage/COCO/Heatup_2.puml
+
+Heatup_2 --> Reaction
+!include    Stage/COCO/Reaction.puml
+
+Reaction --> AEEA_Strip
+!include    Stage/COCO/AEEA_Strip.puml
+
+AEEA_Strip --> Cooldown
+!include    Stage/COCO/Cooldown(left).puml
+
+Cooldown --> Transfer
+!include    Stage/COCO/Transfer.puml
+
+Transfer --> [*]
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+
+state Cooldown{
+
+[*] --> cooldown_TEMP
+cooldown_TEMP: Close 'STEAM_VLV'
+cooldown_TEMP: Open 'CW_SPLY_VLV'
+cooldown_TEMP: Open 'CND_RTN_VLV'
+cooldown_TEMP: Open 'BC_VLV'
+cooldown_TEMP: Open 'TJ_VLV'
+cooldown_TEMP: Set 'CW_CTL' to ROUT
+cooldown_TEMP: Open 'CW_CTL' to 100%
+cooldown_TEMP: Set 'CW_CTL' to RCAS
+cooldown_TEMP: Open 'CW_CTL' to 140 F
+
+cooldown_TEMP --> cooldown_PRESSURE_UP
+cooldown_PRESSURE_UP: Open 'nitrogen_valve'
+cooldown_PRESSURE_UP: Verify 'RX_PRESSURE' > pressure_target
+
+cooldown_PRESSURE_UP --> OAR_pull_sample: close 'nitrogen_valve'
+OAR_pull_sample: OAR message: "Pull sample for %"
+
+OAR_pull_sample --> cooldown_Temp_Off: wait for 'RX_TEMPERATURE' < 160 F
+
+cooldown_Temp_Off: Close 'STEAM_VLV'
+cooldown_Temp_Off: Close 'CW_SPLY_VLV'
+cooldown_Temp_Off: Close 'BC_VLV'
+cooldown_Temp_Off: Close 'TJ_VLV'
+cooldown_Temp_Off: Close 'MJ_VLV'
+
+cooldown_Temp_Off --> [*]
+
+}
+@enduml

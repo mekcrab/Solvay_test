@@ -1,0 +1,26 @@
+@startuml
+
+state Coco_Oil{
+
+[*] --> coco_Start_Agitate
+coco_Start_Agitate: Start 'RX_AGITATOR_CM'
+coco_Start_Agitate: Set'RX_AGITATOR_CM/SPEED_RSP' to 80%
+
+coco_Start_Agitate --> coco_Steam_Heat
+coco_Steam_Heat: Open 'STEAM_VLV'
+coco_Steam_Heat: Close 'CW_SPLY_VLV'
+coco_Steam_Heat: Open 'STM_SPLY_VLV'
+coco_Steam_Heat: Open 'CND_RTN_VLV'
+coco_Steam_Heat: Open 'MJ_VLV'
+coco_Steam_Heat: Set 'STM_CTL_VLV' to ROUT
+coco_Steam_Heat: Open 'STM_CTL_VLV' to 100%
+
+coco_Steam_Heat --> coco_Steam_CTL
+coco_Steam_CTL: Set 'STM_CTL_VLV' to RCAS
+coco_Steam_CTL: Set 'STM_CTL_VLV' to 185 F
+
+coco_Steam_CTL --> [*]
+
+}
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+state Heatup_1{
+
+[*] --> Heatup1_Acquire
+Heatup1_Acquire: Acquire 'RX_TEMP_EM'
+
+
+Heatup1_Acquire --> Heatup1_Temp
+Heatup1_Temp: Close 'STM_CTL_VLV'
+Heatup1_Temp: Open 'HO_SPLY_VLV'
+Heatup1_Temp: Open 'HO_RTN_VLV'
+Heatup1_Temp: Open 'BC_VLV'
+Heatup1_Temp: Set 'HO_CTL_VLV' to ROUT
+Heatup1_Temp: Open 'HO_CTL_VLV' to 40%
+
+Heatup1_Temp --> Heatup1_Man: Wait for 'RX_TEMP' > 260 F
+Heatup1_Man: Set 'HO_CTL_VLV' to ROUT
+Heatup1_Man: Open 'HO_CTL_VLV' to 25%
+
+Heatup1_Man --> Heatup1_Complete: Wait for 'RX_TEMP' > 280 F
+
+Heatup1_Complete: Set 'HO_CTL_VLV' to ROUT
+Heatup1_Complete: Open 'HO_CTL_VLV' to 5%
+Heatup1_Complete: Release 'RX_TEMP_EM'
+
+Heatup1_Complete --> [*]
+
+
+}
+@enduml

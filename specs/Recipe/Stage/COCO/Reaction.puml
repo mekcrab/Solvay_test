@@ -1,0 +1,51 @@
+@startuml
+
+state Reaction{
+
+[*] --> Reaction_Acquire
+Reaction_Acquire: Acquire 'RX_TEMP_EM'
+
+Reaction_Acquire --> Reaction_Temp
+Reaction_Temp: Close 'STM_CTL_VLV'
+Reaction_Temp: Open 'HO_SPLY_VLV'
+Reaction_Temp: Open 'HO_RTN_VLV'
+Reaction_Temp: Open 'BC_VLV'
+Reaction_Temp: Set 'HO_CTL_VLV' to RCAS
+Reaction_Temp: Open 'HO_CTL_VLV' to 355 F
+
+Reaction_Temp --> Reaction_Reflux
+Reaction_Reflux: Set 'RX_RFLXFLOW_CM' to RCAS
+Reaction_Reflux: Open 'RX_RFLXFLOW_CM' to 5 lbs/min
+
+Reaction_Reflux --> Reaction_Ramp1
+Reaction_Ramp1: Set 'RX_VACUUM/RAMP_RATE' to 0.0067 %/sec
+Reaction_Ramp1: Set 'RX_VACUUM/RAMP_PAUSE' to False
+Reaction_Ramp1: Set 'RX_VACUUM/RAMP_ENABLE' to True
+Reaction_Ramp1: wait for 'RX_VACUUM/OUT' to 50%
+
+Reaction_Ramp1 --> Reaction_Ramp2
+Reaction_Ramp2: Set 'RX_VACUUM/RAMP_RATE' to 0.05 %/sec
+Reaction_Ramp2: Set 'RX_VACUUM/RAMP_PAUSE' to False
+Reaction_Ramp2: Set 'RX_VACUUM/RAMP_ENABLE' to True
+Reaction_Ramp2: wait for 'RX_VACUUM/OUT' to 100%
+
+Reaction_Ramp2 --> OAR_N2Sweep_Off: wait for 'COLUMN_DP' < 35 mmHg
+OAR_N2Sweep_Off: OAR message: "Shut off the N2 sweep on the Decanter"
+OAR_N2Sweep_Off: OAR response = ok
+
+OAR_N2Sweep_Off --> Reaction_Hold: wait for 'RX_PRESS' < 50 mmHg
+Reaction_Hold: wait for 180 minutes
+
+Reaction_Hold --> OAR_DiamideSample
+OAR_DiamideSample: OAR message: "Take sample for Diamide. Do not wait on Diamide results"
+
+OAR_DiamideSample --> Reaction_Complete: OAR response = ok
+Reaction_Complete: OAR message: "Proceeding to AEEA Strip."
+Reaction_Complete: Release 'RX_TEMP_EM'
+
+Reaction_Complete --> [*]
+
+
+}
+
+@enduml

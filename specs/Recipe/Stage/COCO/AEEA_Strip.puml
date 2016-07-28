@@ -1,0 +1,33 @@
+@startuml
+
+state AEEA_Strip{
+
+[*] --> AEEA_Strip_Reflux
+AEEA_Strip_Reflux: Set 'RX_RFLXFLOW_CM' to ROUT
+AEEA_Strip_Reflux: Close 'RX_RFLXFLOW_CM' to 0%
+
+AEEA_Strip_Reflux --> AEEA_Strip_OAR_CloseVlv
+AEEA_Strip_OAR_CloseVlv: OAR message: "Close valves to column. Open valves to bypass. Pump decanter to storage."
+AEEA_Strip_OAR_CloseVlv: OAR response = ok
+
+AEEA_Strip_OAR_CloseVlv --> AEEA_Strip_OpenSteam: Wait for 'RX_PRESSURE' < 100 mmHg
+AEEA_Strip_OpenSteam: Open 'RX_JETVLV_CM'
+
+AEEA_Strip_OpenSteam --> AEEA_Strip_RampHO: wait for 'RX_PRESS' < 10 mmHg
+AEEA_Strip_RampHO: Set 'RX_TEMP/RAMP_RATE' to 0.0033 F/sec
+AEEA_Strip_RampHO: Set 'RX_TEMP/RAMP_PAUSE' to False
+AEEA_Strip_RampHO: Set 'RX_TEMP/RAMP_ENABLE' to True
+AEEA_Strip_RampHO: wait for 'RX_TEMP' to 360 F
+
+AEEA_Strip_RampHO --> AEEA_Strip_Hold: wait for 'RX_PRESS' < 6 mmHg
+AEEA_Strip_Hold: wait for 150 minutes
+AEEA_Strip_Hold: OAR message: "Take sample for AEEA. Wait for approved AEEA strip results."
+
+AEEA_Strip_Hold --> AEEA_Strip_Complete: OAR response = ok
+AEEA_Strip_Complete: OAR message: "Proceeding to Cooldown."
+
+AEEA_Strip_Complete --> [*]
+
+}
+
+@enduml

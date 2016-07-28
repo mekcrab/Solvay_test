@@ -1,0 +1,33 @@
+@startuml
+state DMAPA {
+
+[*] --> OAR_DMAPA_Start
+OAR_DMAPA_Start: OAR message:"Close 10 inch riser valve. \n\
+Ensure reactor sealed and ready for DMAPA."
+
+OAR_DMAPA_Start --> DMAPA_Acquire_TK23: OAR response = ok
+DMAPA_Acquire_TK23: Acquire 'TK23_CHG_EM'
+
+DMAPA_Acquire_TK23 --> DMAPA_Start_TK23: if 'TK23_WEIGHT' >= DMAPA_target
+DMAPA_Acquire_TK23 --> OAR_Continue: if 'TK23_WEIGHT' < DMAPA_target
+OAR_Continue: OAR message: "TK23 weight < DMAPA target, continue with charge?"
+
+OAR_Continue --> DMAPA_Start_TK23: OAR response = yes
+OAR_Continue -up-> OAR_Continue: OAR response = no
+
+DMAPA_Start_TK23: 'TK23_FLOW_TOT/TOTAL' > DMAPA_target
+
+DMAPA_Start_TK23 --> DMAPA_Temp_Heat
+DMAPA_Temp_Heat: Open 'STEAM_VLV'
+DMAPA_Temp_Heat: Close 'CW_SPLY_VLV'
+DMAPA_Temp_Heat: Open 'STM_SPLY_VLV'
+DMAPA_Temp_Heat: Open 'BC_VLV'
+DMAPA_Temp_Heat: Open 'TJ_VLV'
+DMAPA_Temp_Heat: Open 'MJ_VLV'
+DMAPA_Temp_Heat: Set 'STM_CTL' to ROUT
+DMAPA_Temp_Heat: Open 'STM_CTL' to reaction_target
+
+DMAPA_Temp_Heat --> [*]
+
+}
+@enduml

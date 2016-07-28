@@ -1,0 +1,58 @@
+@startuml
+state Heatup_2 {
+[*] --> Heatup2_CheckTemp
+Heatup2_CheckTemp --> Heatup2_Complete: if 'RX_TEMP' >= 353 F
+
+Heatup2_CheckTemp --> Heatup2_HOVlv1
+Heatup2_HOVlv1: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv1: Open 'HO_CTL_VLV' to ['TIC-647/PV.CV' * (-0.03) + 20.5]
+
+Heatup2_HOVlv1 --> Heatup2_ColmPress1: Wait for 5 mins
+
+Heatup2_ColmPress1: Wait for 'COLUMN_DP' < 25 mmHg
+
+Heatup2_ColmPress1 --> Heatup2_Complete: if 'RX_TEMP' >= 353 F
+
+Heatup2_ColmPress1 --> Heatup2_HOVlv2: if 'RX_TEMP' < 353 F
+Heatup2_HOVlv2: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv2: Open 'HO_CTL_VLV' to ['TIC-647/PV.CV' * (-0.04) + 28]
+
+Heatup2_HOVlv2 --> Heatup2_ColmPress2: wait for 5 mins
+
+Heatup2_ColmPress2: Wait for 'COLUMN_DP' < 25 mmHg
+
+Heatup2_ColmPress2 --> Heatup2_Complete: if 'RX_TEMP' >= 353 F
+
+Heatup2_ColmPress2 --> Heatup2_HOVlv3: if 'RX_TEMP' < 353 F
+Heatup2_HOVlv3: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv3: Open 'HO_CTL_VLV' to ['TIC-647/PV.CV' * (-0.06) + 42]
+
+Heatup2_HOVlv3 --> Heatup2_ColmPress3: wait for 10 mins
+
+Heatup2_ColmPress3: Wait for 'COLUMN_DP' < 25 mmHg
+
+Heatup2_ColmPress3 --> Heatup2_Complete: if 'RX_TEMP' >= 353 F
+
+Heatup2_ColmPress3 --> Heatup2_HOVlv4: if 'RX_TEMP' < 353 F
+Heatup2_HOVlv4: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv4: Open 'HO_CTL_VLV' to ['TIC-647/PV.CV' * (-0.08) + 54]
+
+Heatup2_HOVlv4 --> Heatup2_ColmPress4: Wait for 'RX_TEMP' > 325 F
+
+Heatup2_ColmPress4: Wait for 'COLUMN_DP' < 25 mmHg
+
+Heatup2_ColmPress4 --> Heatup2_HOVlv5
+Heatup2_HOVlv5: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv5: Open 'HO_CTL_VLV' to ['TIC-647/PV.CV' * (-0.10) + 70]
+
+Heatup2_HOVlv5 --> Heatup2_HOVlv6: Wait for 'RX_TEMP' > 355 F
+Heatup2_HOVlv6: Set 'HO_CTL_VLV' to RCAS
+Heatup2_HOVlv6: Open 'HO_CTL_VLV' to 355 F
+
+Heatup2_HOVlv6 --> Heatup2_Complete
+
+Heatup2_Complete --> [*]
+}
+
+
+@enduml

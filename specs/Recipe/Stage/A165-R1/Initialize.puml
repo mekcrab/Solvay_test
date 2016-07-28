@@ -1,0 +1,23 @@
+@startuml
+state Initialize{
+[*] --> Init_CloseAll
+
+Init_CloseAll --> Init_Blowdown
+
+Init_Blowdown --> Init_Tare
+Init_Tare: Set 'RX_WEIGHT' to 0
+Init_Tare: Set 'RX_TARE1' to 0
+Init_Tare: Set 'RX_TARE2' to 0
+
+Init_Tare --> OAR_RXClean
+OAR_RXClean: OAR message: "Reactor must be clean. \nOpen manual valves for Coco Oil and DMAPA. \n\
+Open cooling water flow to condenser."
+
+OAR_RXClean --> OAR_Start: OAR response = ok
+
+OAR_Start: OAR message: "Ready to start?"
+
+OAR_Start --> [*]
+
+}
+@enduml

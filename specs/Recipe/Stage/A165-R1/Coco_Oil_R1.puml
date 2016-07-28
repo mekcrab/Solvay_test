@@ -1,0 +1,26 @@
+@startuml
+
+state Coco_Oil_R1{
+[*] --> coco_Start_Vacuum
+
+coco_Start_Vacuum: Close 'SCRUB_VENT_VLV'
+coco_Start_Vacuum: Close 'DECANT_VENT_VLV'
+coco_Start_Vacuum: Set 'VAC_CTL' to ROUT
+coco_Start_Vacuum: Open 'VAC_CTL' to 20%
+coco_Start_Vacuum: Start 'VAC_PMP'
+
+coco_Start_Vacuum --> coco_VAC_CTRL
+coco_VAC_CTRL: Set 'VAC_CTL' to RCAS
+coco_VAC_CTRL: Open 'VAC_CTL' to 80 mmHg
+
+coco_VAC_CTRL --> Acquire_TK12_Transfer
+Acquire_TK12_Transfer: Acquire 'TK12_CHG_EM'
+
+Acquire_TK12_Transfer --> coco_TK12_Transfer: 'TK12_WEIGHT' > target_weight
+
+coco_TK12_Transfer: Wait for 'RX_WEIGHT' > 7000 lb
+
+coco_TK12_Transfer --> [*]
+}
+
+@enduml

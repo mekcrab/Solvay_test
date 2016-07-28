@@ -1,0 +1,69 @@
+@startuml
+state DMAPA_Strip{
+
+[*] --> OAR_Setup_Decanter
+OAR_Setup_Decanter: OAR message: "Apply full cooling to overhead conderser. Setup decanter."
+
+OAR_Setup_Decanter --> Set_Steam_CTRL
+Set_Steam_CTRL: Set 'STM_CTL' to ROUT
+Set_Steam_CTRL: Open 'STM_CTL' to strip_temp
+
+Set_Steam_CTRL --> strip_START_VAC
+strip_START_VAC: Close 'DECANT_VENT_VLV'
+strip_START_VAC: Close 'SCRUB VENT VLV'
+strip_START_VAC: Start 'VAC_PMP'
+strip_START_VAC: Set 'VAC_CTL' to ROUT
+strip_START_VAC: Open 'VAC_CTL' to 20%
+
+strip_START_VAC --> strip_Ramp_VAC
+strip_Ramp_VAC: Set 'VAC_RAMP/RAMP_RATE' to 0.16% /second
+strip_Ramp_VAC: Set 'VAC_RAMP/RAMP_PAUSE' to False
+strip_Ramp_VAC: Set 'VAC_RAMP/RAMP_ENABLE' to True
+strip_Ramp_VAC: Set 'VAC_CTL' to ROUT
+strip_Ramp_VAC: Open 'VAC_CTL' to 100%
+
+strip_Ramp_VAC --> Open_Steam_vlv: wait for 'RX_PRESSURE' < 250 mmHg
+Open_Steam_vlv: Open 'STEAM_VLV'
+
+Open_Steam_vlv --> strip_STOP_VAC: wait for 'RX_PRESSURE' < 25 mmHg
+strip_STOP_VAC: Stop 'VAC_PMP'
+strip_STOP_VAC: Close 'STEAM_VLV'
+strip_STOP_VAC: Close 'VAC_CTL' to 0
+
+strip_STOP_VAC --> strip_PRESSURE_UP
+strip_PRESSURE_UP: Open 'nitrogen_valve'
+strip_PRESSURE_UP: Verify 'RX_PRESSURE' >= pressure_setpoint
+
+strip_PRESSURE_UP --> OAR_empty_decanter: close 'nitrogen_valve'
+
+OAR_empty_decanter: OAR message:"Empty the decanter."
+
+OAR_empty_decanter --> strip_START_VACUUM
+strip_START_VACUUM: Close 'DECANT_VENT_VLV'
+strip_START_VACUUM: Close 'SCRUB VENT VLV'
+strip_START_VACUUM: Start 'VAC_PMP'
+strip_START_VACUUM: Set 'VAC_CTL' to ROUT
+strip_START_VACUUM: Open 'VAC_CTL' to 20%
+
+strip_START_VACUUM --> strip_Ramp
+strip_Ramp: Set 'VAC_RAMP/RAMP_RATE' to 0.16% /second
+strip_Ramp: Set 'VAC_RAMP/RAMP_PAUSE' to False
+strip_Ramp: Set 'VAC_RAMP/RAMP_ENABLE' to True
+strip_Ramp: Set 'VAC_CTL' to ROUT
+strip_Ramp: Open 'VAC_CTL' to 100%
+
+strip_Ramp --> strip_open_steam: wait for 'RX_PRESSURE' < 250 mmHg
+strip_open_steam: Open 'STEAM_VLV'
+
+strip_open_steam --> strip_HOLD_Time: wait for 'RX_PRESSURE' < 10 mmHg
+strip_HOLD_Time: Wait for strip_hold_timer
+
+strip_HOLD_Time --> strip_STOP_VACUUM
+strip_STOP_VACUUM: Stop 'VAC_CTL'
+strip_STOP_VACUUM: Close 'STEAM_VLV'
+strip_STOP_VACUUM: Close 'VAC_CTL' to 0
+
+strip_STOP_VACUUM --> [*]
+
+}
+@enduml

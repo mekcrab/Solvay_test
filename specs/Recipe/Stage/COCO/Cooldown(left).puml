@@ -1,0 +1,71 @@
+@startuml
+
+state Cooldown{
+
+[*] --> Cooldown_Acquire
+Cooldown_Acquire: Acquire 'RX_TEMP_EM'
+
+Cooldown_Acquire --> Cooldown_Temp1
+Cooldown_Temp1: Close 'HO_CTL_VLV' to 0
+Cooldown_Temp1: Close 'STM_CTL_VLV'
+Cooldown_Temp1: Open 'TO_SPLY_VLV'
+Cooldown_Temp1: Open 'TO_RTN_VLV'
+Cooldown_Temp1: Open 'BC_VLV'
+Cooldown_Temp1: Open 'TC_VLV'
+
+Cooldown_Temp1 --> Cooldown_Temp2: wait for 'RX_TEMP' < 350 F
+Cooldown_Temp2: Close 'HO_CTL_VLV' to 0
+Cooldown_Temp2: Close 'STM_CTL_VLV'
+Cooldown_Temp2: Open 'TO_SPLY_VLV'
+Cooldown_Temp2: Open 'TO_RTN_VLV'
+Cooldown_Temp2: Open 'CW_SPLY_VLV'
+Cooldown_Temp2: Open 'CW_RTN_VLV'
+Cooldown_Temp2: Open 'TJ_VLV'
+Cooldown_Temp2: Open 'MJ_VLV'
+Cooldown_Temp2: Open 'BJ_VLV'
+Cooldown_Temp2: Open 'BC_VLV'
+Cooldown_Temp2: Open 'TC_VLV'
+Cooldown_Temp2: Set 'TO_CTL_VLV' to ROUT
+Cooldown_Temp2: Open 'TO_CTL_VLV' to 100%
+Cooldown_Temp2: Set 'CW_CTL_VLV' to ROUT
+Cooldown_Temp2: Open 'CW_CTL_VLV' to 100%
+
+Cooldown_Temp2 --> Cooldown_Temp3: wait for 'RX_TEMP' < 170 F
+Cooldown_Temp3: Close 'HO_CTL_VLV' to 0
+Cooldown_Temp3: Close 'STM_CTL_VLV'
+Cooldown_Temp3: Close 'TO_SPLY_VLV'
+Cooldown_Temp3: Close 'TO_CTL_VLV' to 0
+Cooldown_Temp3: Close 'TO_RTN_VLV'
+Cooldown_Temp3: Open 'CW_SPLY_VLV'
+Cooldown_Temp3: Open 'CW_RTN_VLV'
+Cooldown_Temp3: Open 'TJ_VLV'
+Cooldown_Temp3: Open 'MJ_VLV'
+Cooldown_Temp3: Open 'BJ_VLV'
+Cooldown_Temp3: Close 'BC_VLV'
+Cooldown_Temp3: Close 'TC_VLV'
+Cooldown_Temp3: Set 'CW_CTL_VLV' to ROUT
+Cooldown_Temp3: Open 'CW_CTL_VLV' to 100%
+
+Cooldown_Temp3 --> Cooldown_OAR_Sample: wait for 'RX_TEMP' < 170 F
+Cooldown_OAR_Sample: OAR message: "Pull sample for product specs."
+
+Cooldown_OAR_Sample --> Cooldown_Complete: wait for 'RX_TEMP' < cooling_temperature
+Cooldown_Complete: Close 'HO_CTL_VLV' to 0
+Cooldown_Complete: Close 'STM_CTL_VLV'
+Cooldown_Complete: Close 'TO_SPLY_VLV'
+Cooldown_Complete: Close 'TO_CTL_VLV' to 0
+Cooldown_Complete: Close 'TO_RTN_VLV'
+Cooldown_Complete: Close 'CW_SPLY_VLV'
+Cooldown_Complete: Close 'CW_RTN_VLV'
+Cooldown_Complete: Close 'CW_CTL_VLV' to 100%
+Cooldown_Complete: Close 'TJ_VLV'
+Cooldown_Complete: Close 'MJ_VLV'
+Cooldown_Complete: Close 'BJ_VLV'
+Cooldown_Complete: Close 'BC_VLV'
+Cooldown_Complete: Close 'TC_VLV'
+
+Cooldown_Complete --> [*]
+
+}
+
+@enduml
